@@ -1,9 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Your product</h1>
-<p>This page is yours. Put your product's own features here: the records your
-agent works on, and a way to do the core task by hand, with no agent at all.</p>
-<p class="muted">Edit <code>app/product.py</code> and <code>app/templates/home.html</code>.
-The pages in the menu are the operator's: the console, the queue, the threads,
-the approvals and the traces.</p>
+<h1>Requests</h1>
+<p><a href="/query">Query page</a> &middot; <span class="muted">distributors' files and questions, and what is waiting to be sent</span></p>
+<div class="scroll"><table>
+<tr><th>Request</th><th>Distributor</th><th>Period</th><th>Question</th><th>Status</th></tr>
+{% for r in requests %}
+<tr><td><a href="/requests/{{ r.id }}">{{ r.id }}</a></td><td>{{ r.distributor_id }}</td><td>{{ r.period }}</td>
+<td>{{ r.question[:90] }}</td><td>{{ r.status }}</td></tr>
+{% else %}<tr><td colspan="5" class="muted">No requests.</td></tr>{% endfor %}
+</table></div>
+<h2>Waiting for you to send</h2>
+<div class="scroll"><table>
+<tr><th>Id</th><th>Kind</th><th>To</th><th>Request</th></tr>
+{% for p in pending %}
+<tr><td>{{ p.id }}</td><td>{{ p.kind }}</td><td>{{ p.recipient }}</td><td><a href="/requests/{{ p.request_id }}">{{ p.request_id }}</a></td></tr>
+{% else %}<tr><td colspan="4" class="muted">Nothing pending.</td></tr>{% endfor %}
+</table></div>
 {% endblock %}

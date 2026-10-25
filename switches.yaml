@@ -9,22 +9,23 @@
 # added: <date> goes on a switch, never on a group. Quote "off" and "on": YAML
 # reads them bare as false and true. The README's "Your switches" says more.
 
+# DRAFT: the use cases and their paths are the team's first argument by the four gates (M1.md).
+# A use case lists only the paths built; add the other when a pass builds it.
 control:
-  setting: agent
-  values: [workflow, agent]
-  about: Who picks each next step and ends the run. workflow, your code; agent, the model, on the bounded loop. Lecture 1.
+  standard_report: {setting: workflow, values: [workflow], about: "Clean known-format file to the standard quarterly report. Gate 1 fails (steps known in advance)."}
+  messy_file: {setting: agent, values: [agent], about: "Unknown or messy file layout. Gate 1 passes (next step depends on what the parse found)."}
+  compare_check: {setting: agent, values: [agent], about: "Operator asks to check a table against last quarter's."}
+  status_question: {setting: workflow, values: [workflow], about: "A question about work already done, answered from records."}
+  out_of_scope: {setting: workflow, values: [workflow], about: "Asks for other distributors' or margin data; declined by rule."}
+  batch_reports: {setting: agent, values: [agent], about: "Operator asks for several distributors' reports in one request."}
 
 plan:
-  setting: "off"
-  values: ["off", "on"]
-  about: Whether the agent writes a plan that is validated before any step runs, and follows it. Lecture 2.
+  batch_reports: {setting: "on", values: ["off", "on"], about: "Plan helps where the operator's request fixes the steps once read. Lecture 2."}
 
 notes:
   setting: "off"
   values: ["off", "on"]
-  about: Whether the agent keeps notes outside the conversation, in every context, untouched by compaction. Lecture 2.
+  about: Milestone 2. Stays off.
 
 critique:
-  setting: "off"
-  values: ["off", "self", "external"]
-  about: The critique loop on the way out. self, the same model rereads its draft; external, a check on an outside signal. Lecture 2.
+  report_email: {setting: external, values: ["off", "external"], about: "Recompute figures, period and recipient from the sandbox before a draft email is written. Lecture 2."}

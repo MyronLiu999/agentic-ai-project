@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Query</h1>
+<form method="get"><input type="text" name="distributor" value="{{ distributor }}" style="width:14em">
+<input type="text" name="period" value="{{ period }}" style="width:8em"> <button>Show</button></form>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+{% if data %}
+<p>{{ data.total_units }} units, revenue {{ data.total_revenue }}</p>
+<div class="scroll"><table><tr><th>Product</th><th>Units</th><th>Revenue</th><th></th></tr>
+{% for r in data.by_product %}<tr><td>{{ r.name }}</td><td>{{ r.units }}</td><td>{{ r.revenue }}</td>
+<td><div style="background:var(--accent);height:12px;width:{{ (r.revenue / top * 100)|round|int if top else 0 }}%"></div></td></tr>{% endfor %}
+</table></div>{% endif %}
+{% endblock %}

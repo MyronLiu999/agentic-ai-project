@@ -1,3 +1,25 @@
+# Data analyst agent (draft)
+
+An analyst's assistant for a sales team: distributors send a data file and a question; the system
+decodes the file, compares it with the sales database, saves a report with charts and prepares the
+email for the analyst to send.
+
+**Requirements:** Python 3.10+, git, make. Model: TODO (name it here). Set the key in the environment
+(for example `export ANTHROPIC_API_KEY=...`), never commit it.
+
+```bash
+make setup && source .venv/bin/activate
+make app          # resets the sandbox, seeds the demo data, serves http://localhost:8000
+make test && make check
+python run.py --tasks tasks/ --sweeps 3 --arm baseline     # an arm
+python experiments/analysis/<script>.py                    # TODO: the analysis script
+```
+
+Pages: `/` requests and pending emails, `/requests/<id>`, `/query`, then the operator's console, queue,
+threads and traces. Plan and ownership: `docs/milestones/M1.md`.
+
+---
+
 # Your project
 
 This repository is your team's project: a local web application in which your

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ req.id }}</h1>
+<p class="muted">{{ req.distributor_id }} &middot; {{ req.contact_email }} &middot; period {{ req.period }} &middot; {{ req.status }}</p>
+<p>{{ req.question }}</p>
+<h2>File: {{ req.file_name }}</h2>
+<pre>{{ upload }}</pre>
+<h2>Thread</h2>
+{% for m in messages %}<div class="line {{ 'outside' if m.from_outside else 'reply' }}"><span class="who">{{ m.sender }}</span>
+{{ m.text }}</div>{% else %}<p class="muted">No messages.</p>{% endfor %}
+<h2>Reports</h2>
+{% for r in reports %}<div class="line"><span class="who">v{{ r.version }} &middot; {{ r.kind }} &middot; {{ r.stamp }}</span>
+{{ r.body }}</div>{% else %}<p class="muted">None saved.</p>{% endfor %}
+<h2>Pending records</h2>
+{% for p in pending %}<div class="line"><span class="who">{{ p.kind }} &middot; to {{ p.recipient }} &middot; {{ p.status }}</span>
+<b>{{ p.subject }}</b>
+{{ p.body }}
+{% if p.status == 'pending' %}<form method="post" action="/pending/{{ p.id }}/send"><button>Send as the operator</button></form>{% endif %}
+</div>{% else %}<p class="muted">None.</p>{% endfor %}
+{% endblock %}
