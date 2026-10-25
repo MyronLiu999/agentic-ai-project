@@ -44,3 +44,4 @@ models:
   gemini-3.1-flash-lite: {input: 0.25, output: 1.50, cache_read: 0.025, source: "https://ai.google.dev/gemini-api/docs/pricing (updated 2026-10-09)", read: 2026-10-11}
   
   gpt-6-luna: {input: 0.10, output: 0.50, cache_read: 0.01, cache_write_5m: 0.125}
+  gpt-4o-mini: {input: 0.15, output: 0.60, cache_read: 0.075, source: "https://platform.openai.com/docs/pricing", read: 2026-10-25}
