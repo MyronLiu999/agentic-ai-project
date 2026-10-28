@@ -4,15 +4,16 @@ An analyst's assistant for a sales team: distributors send a data file and a que
 decodes the file, compares it with the sales database, saves a report with charts and prepares the
 email for the analyst to send.
 
-**Requirements:** Python 3.10+, git, make. Model: TODO (name it here). Set the key in the environment
-(for example `export ANTHROPIC_API_KEY=...`), never commit it.
+**Requirements:** Python 3.10+, git, make. Model: `gpt-4o-mini`, held fixed across measured arms.
+Set `OPENAI_API_KEY` in the environment and never commit it.
 
 ```bash
 make setup && source .venv/bin/activate
 make app          # resets the sandbox, seeds the demo data, serves http://localhost:8000
 make test && make check
 python run.py --tasks tasks/ --sweeps 3 --arm baseline     # an arm
-python experiments/analysis/<script>.py                    # TODO: the analysis script
+python scripts/definition_cost.py                          # definition-token measurement
+python experiments/analysis/analyze.py                     # recompute evidence from results/
 ```
 
 Pages: `/` requests and pending emails, `/requests/<id>`, `/query`, then the operator's console, queue,
