@@ -15,3 +15,9 @@ test task `standard_report_clean` with its check and tests.
 **Fixes after the baseline:** none yet.
 
 **Reused code:** none yet (name each assignment and whose repository).
+
+**Abraham — B2, first fixture:** added a synthetic messy-file request with semicolon-separated
+headers and decimal-comma amounts. Tests exercise the real sandbox seed and existing report check:
+the upload remains intact, an empty completion claim fails, and a correct report plus pending email
+passes. The fixture stays outside the official evaluation tasks. Routing and agent execution follow
+in later reviewed steps.

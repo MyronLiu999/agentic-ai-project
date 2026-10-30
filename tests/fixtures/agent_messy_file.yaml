@@ -1,0 +1,28 @@
+# Abraham's controlled input for the messy-file path (PLAN.md B2).
+# This lives outside tasks/ so it is not part of the official evaluation suite.
+# The existing report check verifies final effects, not routing or parsing;
+# subsequent agent tests must assert those behaviors separately.
+id: agent_messy_file
+title: "A Q3 report from a semicolon-separated upload with decimal commas"
+
+input:
+  thread: SYN-thread-agent-messy
+  from: SYN-contact-brightline
+  distributor: SYN-DIST-002
+  contact_email: contact@brightline.example
+  period: 2026Q3
+  text: "SYNTHETIC. Please prepare our Q3 sales report using the attached export and our sales records."
+  file:
+    name: brightline_q3_export.csv
+    content: |
+      Artikel;Menge;Netto_Betrag
+      SYN-SKU-003;98;2940,00
+      SYN-SKU-004;42;1890,00
+
+operator:
+  - "Handle the new request on the outside channel."
+  - "What did you do, and is anything still open?"
+
+outside: []
+
+check: checks/standard_report.py
