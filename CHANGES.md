@@ -21,3 +21,12 @@ headers and decimal-comma amounts. Tests exercise the real sandbox seed and exis
 the upload remains intact, an empty completion claim fails, and a correct report plus pending email
 passes. The fixture stays outside the official evaluation tasks. Routing and agent execution follow
 in later reviewed steps.
+
+**Abraham — B1, routing:** added request/thread selection from stored records, use-case routing
+from request questions and CSV headers, switch-controlled paths, and route trace events. An
+ambiguous work-versus-status message uses one metered classification call with no tools. Unknown
+references, ambiguous request selection, and invalid classifier replies require clarification.
+Excluded/alternative IDs and qualified batch phrases cannot silently widen request selection;
+ambiguous status questions beginning with "check" use classification before any rerun.
+Tests cover all six use cases using the sandbox and free scripted model responses. Service dispatch
+and agent execution remain the next implementation steps.
