@@ -1,0 +1,92 @@
+{
+  "run_id": "baseline-status_question_done_work-s03-f5eabd",
+  "arm": "baseline",
+  "task": "status_question_done_work",
+  "task_file": "tasks\\status_question_done_work.yaml",
+  "sweep": 3,
+  "started": "2026-10-31T20:59:54.058+00:00",
+  "switches": {
+    "control.standard_report": "workflow",
+    "control.messy_file": "agent",
+    "control.compare_check": "agent",
+    "control.status_question": "workflow",
+    "control.out_of_scope": "workflow",
+    "control.batch_reports": "agent",
+    "plan.batch_reports": "on",
+    "notes": "off",
+    "critique.report_email": "external",
+    "examples.parse_file": "on",
+    "examples.query_sales": "on",
+    "examples.render_chart": "off",
+    "examples.save_report": "off",
+    "examples.draft_report_email": "off",
+    "examples.draft_clarifying_question": "off",
+    "strict.parse_file": "off",
+    "strict.query_sales": "on",
+    "strict.render_chart": "off",
+    "strict.save_report": "off",
+    "strict.draft_report_email": "off",
+    "strict.draft_clarifying_question": "off"
+  },
+  "overrides": [],
+  "backend": "openai-compatible",
+  "model": "gpt-4o-mini",
+  "free": false,
+  "settings": "2a5d0a5cd26d",
+  "price_sheet": "2026-06-24",
+  "commit": "71b13b9a3d4f4816d2551d5e7e31ef722762e312",
+  "dirty": false,
+  "finished": "2026-10-31T20:59:56.479+00:00",
+  "tokens": {
+    "input": 87,
+    "output": 2,
+    "cache_read": 0,
+    "cache_write": 0,
+    "total": 89
+  },
+  "cost_usd": 1.4e-05,
+  "unpriced_calls": 0,
+  "model_calls": 1,
+  "latency_s": 1.53,
+  "wait_s": 0.0,
+  "throttled_s": 0.0,
+  "latency_without_wait_s": 1.53,
+  "turn_latency_s": [
+    1.514
+  ],
+  "outcome": "completed",
+  "end_reasons": [
+    "done"
+  ],
+  "end_reason": "done",
+  "error": null,
+  "outside": [],
+  "approvals": {
+    "asked": 0,
+    "answered": 0,
+    "unanswered": 0
+  },
+  "notes": [],
+  "check": {
+    "function": "checks/status_question.py",
+    "passed": true,
+    "reason": "answered 51,264.85 from the records (0 open); nothing written"
+  },
+  "passed": true,
+  "measures": {
+    "writes": 0,
+    "answered_revenue": 1
+  },
+  "trace": "results\\baseline\\baseline-status_question_done_work-s03-f5eabd.trace.jsonl",
+  "tool_calls": [],
+  "replies": [
+    {
+      "function": "operator_turn",
+      "text": "REQ-SYN-thread-1401 (SYN-DIST-001, 2026Q3): status done.\n  Report v1 (standard, 2026Q3): revenue 51,264.85, 1085 units.\n  report_email to contact@acme.example: sent.\nNothing is still open.",
+      "actions": [
+        "read records for 1 request(s); wrote nothing"
+      ],
+      "waiting_for": null
+    }
+  ]
+}
