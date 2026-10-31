@@ -231,3 +231,17 @@ Published interface inspection: `origin/claudea/domain` exposes
 two-argument service call. Its code is not merged or copied into Abraham's files.
 The remote main still contains registry/tool/critique stubs. The milestone handout
 is still absent; exact handout wording and assignment numbers cannot be invented.
+
+## Task 4: Public service and path tests (B4/B5)
+
+Implemented `operator_turn` dispatch through the real harness, preservation of action
+lines and waiting threads, scope recovery from durable route events, and status updates
+based on saved reports/pending records. Model completion alone becomes `unfinished`,
+not `done`. A status question without prior session selection requires explicit IDs.
+Unplanned batches stop on a pending question or non-success terminal reason. Planned
+batches delegate to B6. Outside replies and approvals remain Milestone 2 operations.
+
+Evidence: 12 new service tests; the never-stops harness test reaches `step_limit`
+after 12 model calls and fails the effects check, as intended. Standard/status/decline
+workflow dispatch uses substitutes for the team-owned stubs. Published standard
+workflow signature verified read-only; no teammate source was merged or modified.

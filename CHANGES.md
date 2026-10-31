@@ -42,3 +42,10 @@ executed inputs to the model, and isolate mutable arguments/figures. Tests use t
 sandbox, metering, and traces with scripted models and substitutes for team-owned stubs.
 The initial 12-call/150,000-token/90-second limits are provisional; in-flight synchronous
 operations are not interrupted. Service integration and batch planning follow separately.
+
+**Abraham — B4/B5, service:** connected public operator turns to record-based routing,
+the bounded loop, and the shared workflow signatures. Status follow-ups recover request
+scope from the session trace after restart; ambiguous selection asks for clarification.
+Replies preserve action lines and pending questions. Request states come from recorded
+effects, not a model's completion claim. Harness-level tests exercise never-stops,
+each dispatch path, session follow-ups, and isolated unplanned batch requests.
