@@ -1,23 +1,43 @@
-# Data analyst agent (draft)
+# Data analyst agent
 
-An analyst's assistant for a sales team: distributors send a data file and a question; the system
-decodes the file, compares it with the sales database, saves a report with charts and prepares the
-email for the analyst to send.
+An analyst's assistant for a sales team. Distributors send a data file and a question ("how did our region
+do this quarter?"). The system decodes the file, sets it against the sales database, saves a report with a
+chart, and drafts the covering email as a **pending record**: the analyst sends it from the product page.
+Nothing the agent does can email a distributor by itself. All data is synthetic (`SYN-` IDs).
 
-**Requirements:** Python 3.10+, git, make. Model: `gpt-4o-mini`, held fixed across measured arms.
-Set `OPENAI_API_KEY` in the environment and never commit it.
+**Requirements:** Python 3.10 or later, git and make; nothing else (no Docker).
+**Model:** OpenAI `gpt-4o-mini` (`settings.yaml`; price line in `pricing.yaml`: $0.15 input, $0.60 output,
+$0.075 cached input per million tokens, read 2026-10-27), held fixed for every arm. Set the key in your shell, never in a file:
+`export OPENAI_API_KEY=...`
 
 ```bash
 make setup && source .venv/bin/activate
-make app          # resets the sandbox, seeds the demo data, serves http://localhost:8000
-make test && make check
-python run.py --tasks tasks/ --sweeps 3 --arm baseline     # an arm
-python scripts/definition_cost.py                          # definition-token measurement
-python experiments/analysis/analyze.py                     # recompute evidence from results/
+make app            # the one command: resets the sandbox, seeds the demo data, serves http://localhost:8000
+make test           # every test, on fake models: no tokens
+make check          # the structure checks: one path, switches recorded, tasks valid, ledger
 ```
 
-Pages: `/` requests and pending emails, `/requests/<id>`, `/query`, then the operator's console, queue,
-threads and traces. Plan and ownership: `docs/milestones/M1.md`.
+**Run an arm** (every test task in `tasks/`, three sweeps; records go to `results/<arm>/`):
+
+```bash
+python run.py --tasks tasks/ --sweeps 3 --arm baseline
+python run.py --tasks tasks/ --sweeps 3 --arm critique-off --set critique.report_email=off   # one switch changed
+python -m harness.summarize results/baseline                                             # passes, tokens, cost, slowest turn
+```
+
+**The analysis script** prints every number the summarizer does not (median turn, m and f, distinct tool-call
+sequences, repeats, false finishes, plan diff counts, critique rounds and held drafts, misroutes, runs ended at
+the bound, boundary rejections, and the checks' measures):
+
+```bash
+python experiments/analysis/analyze.py results/baseline
+python experiments/analysis/analyze.py results/arm-a results/arm-b --agent arm-a --workflow arm-b   # m and f
+```
+
+**Pages:** `/` the requests and the pending records waiting to be sent; `/requests/<id>` one request with
+its file, thread, reports, charts, pending records and a form to email a report by hand; `/query` one
+distributor's quarter with a chart and the change from last quarter; then the operator's `/console`,
+`/queue`, `/threads` and `/traces`. Write-up, decision table and owners: `docs/milestones/M1.md`.
 
 ---
 

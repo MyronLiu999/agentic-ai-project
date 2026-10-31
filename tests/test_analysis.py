@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from experiments.analysis.analyze import analyze, load_records
+from experiments.analysis.basic_analyze import analyze, load_records
 
 
 class AnalysisTest(unittest.TestCase):
