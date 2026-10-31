@@ -8,7 +8,7 @@ from agent import bounds, critique, plan
 from harness import runtime, turns
 from harness.client import Usage
 from sandbox import inbox, pending, reports
-from tests.fixtures.agent_loop_fakes import SandboxRegistry, revise_recipient
+from tests.fixtures.agent_loop_fakes import SandboxRegistry, hold_revision_error, revise_recipient
 from tests.test_agent_plan import RID, TASK, sample_plan
 from tests.support import ScratchTest, check_run, fixed_run
 
@@ -199,6 +199,15 @@ class AgentPlanExecutionTest(ScratchTest):
             self.run_plan(limits=bounds.Limits(token_budget=15))
             self.assertEqual(self.reason(), "agent_budget")
             self.assertEqual(reports.for_request(RID), [])
+
+    def test_critic_cannot_hide_the_shared_planner_revision_step_limit(self):
+        with fixed_run(TASK, "plan-caught-limit", backend=MODEL):
+            self.script(sample_plan())
+            with mock.patch("agent.loop.critique.run", side_effect=hold_revision_error):
+                self.run_plan(limits=bounds.Limits(max_steps=1))
+            self.assertEqual(self.reason(), "step_limit")
+            self.assertEqual(runtime.client().calls, 1)
+            self.assertEqual(pending.all_pending(), [])
 
     def test_uncooperative_planner_stops_without_calling_its_proposed_tools(self):
         with fixed_run(TASK, "never-plan"):

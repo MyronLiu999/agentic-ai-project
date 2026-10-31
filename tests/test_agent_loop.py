@@ -7,7 +7,7 @@ from agent import bounds, critique, loop
 from harness import runtime
 from harness.client import Usage
 from sandbox import inbox, pending, reports
-from tests.fixtures.agent_loop_fakes import SandboxRegistry, revise_recipient, tool
+from tests.fixtures.agent_loop_fakes import SandboxRegistry, hold_revision_error, revise_recipient, tool
 from tests.support import ScratchTest, check_run, fixed_run
 
 
@@ -256,6 +256,16 @@ class AgentLoopTest(ScratchTest):
                     result = self.run_loop()
                 self.assertEqual(result.reason, "critique_held")
                 self.assertEqual(pending.all_pending(), [])
+
+    def test_critic_cannot_relabel_a_revision_step_limit_as_a_held_draft(self):
+        with fixed_run(TASK, "caught-revision-limit", backend=BACKEND):
+            self.model(([tool("draft_report_email", self.email(recipient="wrong@example.test"))], "tool_use"))
+            with mock.patch("agent.loop.critique.run", side_effect=hold_revision_error):
+                result = self.run_loop(limits=bounds.Limits(max_steps=1))
+            self.assertEqual(result.reason, "step_limit")
+            self.assertEqual(runtime.client().calls, 1)
+            self.assertEqual(pending.all_pending(), [])
+            self.end_reason("step_limit")
 
     def test_time_is_checked_after_critique_before_writing(self):
         with fixed_run(TASK, "slow-critique", backend=BACKEND):

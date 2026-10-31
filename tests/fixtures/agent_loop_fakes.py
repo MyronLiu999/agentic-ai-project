@@ -109,3 +109,12 @@ def revise_recipient(request_id, draft, revise, *, rounds=2):
         runtime.trace().event(events.CRITIQUE, round=number, verdict="revise", reason=reason, changed=False)
         draft = revise(reason)
     return critique.CritiqueResult(False, draft, rounds, "Recipient still wrong")
+
+
+def hold_revision_error(request_id, draft, revise, *, rounds=2):
+    """Model the published critic's conversion of callback exceptions to held drafts."""
+    try:
+        revise("Fix the recipient")
+    except Exception as exc:
+        return critique.CritiqueResult(False, draft, rounds, str(exc))
+    return critique.CritiqueResult(False, draft, rounds, "Still held")

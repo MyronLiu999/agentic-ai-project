@@ -319,3 +319,21 @@ must come from Myron's A1/A2 evidence. T3 must compare the inventory to a real t
 There are no official run records here to populate baseline failure rows. No live
 tuning, economic benefit, real-component integration, or final project completion is
 claimed from the synthetic checks.
+
+## Task 9: Published-component compatibility (continued 2026-10-31)
+
+Fresh inspection found production implementations and assignment references on
+`origin/myron` (`4ab3d29`) and domain code on `origin/claudea/domain` (`ac8997e`).
+Earlier dependency notes described the unmerged checkout, not everything available
+on remote branches. The sources are now being checked directly.
+
+Ruling: inspect compatibility in a temporary archive snapshot, without merging
+teammate code or changing their contracts. Published tools differ from PLAN.md in
+all six interfaces; silently adapting Abraham's code would also leave Claudea's
+workflow incompatible. Record the exact differences for the contract owners.
+
+The published critic converts callback exceptions to held results. Two regressions
+reproduced incorrect `critique_held` endings when the revision exceeded `max_steps`.
+EmailGate now records and rethrows the execution limit after the critic returns.
+Both regressions and five focused probes with the real critic/status workflow pass.
+These probes use scripted model responses, not paid or official evaluation runs.

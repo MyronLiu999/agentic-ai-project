@@ -88,3 +88,11 @@ tuning is claimed while production tools, registry, critique and workflows are
 unintegrated. Exact handout gate/test wording, Myron's A1/A2 values, and official
 run evidence remain explicit dependencies. Final code verification: 169 tests and
 four structural checks passed on 2026-10-31, using no live API calls.
+
+**Abraham — critique integration:** tested the published domain implementation in
+an isolated snapshot. Its critic catches callback exceptions, which had relabeled
+an exhausted model-call allowance as `critique_held`. The shared email gate now
+preserves the original execution-limit reason. Regressions cover both reactive and
+planned execution; five focused probes using the real critic/status workflow pass
+with scripted models and sandbox-writing tool substitutes. The published tool
+branch still differs from PLAN.md's six-tool contract; full integration remains pending.
