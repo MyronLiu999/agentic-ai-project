@@ -218,7 +218,7 @@ class Registry:
         raise AssertionError("bounded retry loop exited unexpectedly")
 
     def _write_key(self, spec: ToolSpec, args: dict, step: str | None) -> str:
-        identity = {field: args.get(field) for field in spec.key_fields}
+        identity = {field: _nested_value(args, field) for field in spec.key_fields}
         payload = {
             "v": 1,
             "scope": _scope_id(),
@@ -232,10 +232,25 @@ class Registry:
     @staticmethod
     def _error(error_type: str, message: str, repair: str, *, transient: bool = False,
                ambiguous: bool = False, details: dict | None = None) -> dict:
+        # PLAN.md's shared caller contract uses kind/retry.  Keep the more
+        # specific type/repair/transient/ambiguous fields as useful extensions,
+        # but always expose the shared fields so workflows and agent loops can
+        # classify a failure without knowing registry internals.
+        if transient:
+            kind = "transient"
+        elif error_type in {
+            "unknown_tool", "invalid_caller", "caller_denied", "invalid_arguments",
+            "hook_denied", "invalid_result",
+        }:
+            kind = "protocol"
+        else:
+            kind = "permanent"
         error = {
             "type": error_type,
+            "kind": kind,
             "message": message,
             "repair": repair,
+            "retry": transient,
             "transient": transient,
             "ambiguous": ambiguous,
         }
@@ -285,6 +300,17 @@ def _normalize_enums(value, schema: dict):
     if isinstance(value, list) and isinstance(schema.get("items"), dict):
         return [_normalize_enums(item, schema["items"]) for item in value]
     return value
+
+
+def _nested_value(value: dict, dotted: str):
+    """Read an effect-identity field such as ``figures.period`` without
+    widening the model-visible schema merely to construct a stable key."""
+    current = value
+    for part in dotted.split("."):
+        if not isinstance(current, dict):
+            return None
+        current = current.get(part)
+    return current
 
 
 def _scope_id() -> str:

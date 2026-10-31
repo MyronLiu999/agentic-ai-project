@@ -19,18 +19,23 @@ class RegistryTest(ScratchTest):
 
     def test_boundary_rejection_contains_a_repair_fact(self):
         result = build(self.request_id).call(
-            "query_sales", {"period": "2026Q3"}, MODEL, step="sales"
+            "query_sales", {"period": "third quarter"}, MODEL, step="sales"
         )
         self.assertFalse(result["ok"])
         self.assertEqual(result["error"]["type"], "invalid_arguments")
-        self.assertIn("metric", result["error"]["repair"])
+        self.assertIn("2026Q3", result["error"]["repair"])
+        self.assertEqual(result["error"]["kind"], "protocol")
+        self.assertFalse(result["error"]["retry"])
 
     def test_enum_values_are_compared_case_insensitively(self):
         result = build(self.request_id).call(
-            "query_sales", {"period": "2026q3", "metric": "REVENUE"}, MODEL
+            "save_report",
+            {"kind": "STANDARD", "figures": {"period": "2026Q3", "total_revenue": 10.0},
+             "body": "Synthetic report."},
+            CODE,
         )
         self.assertTrue(result["ok"], result)
-        self.assertEqual(result["output"]["metric"], "revenue")
+        self.assertEqual(result["output"]["kind"], "standard")
 
     def test_unknown_tool_is_logged_with_a_short_generic_result(self):
         trace = SessionTrace(self.tmp / "unknown.jsonl", "SYN-session")
