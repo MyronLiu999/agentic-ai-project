@@ -268,7 +268,9 @@ class Registry:
         if trace is not None:
             latency = time.monotonic() - started
             traced_result = SimpleNamespace(
-                content=_summary(result.get("output")),
+                # Keep the same complete envelope returned to the caller,
+                # including error details. Only result_summary is truncated.
+                content=copy.deepcopy(result),
                 is_error=result["is_error"],
                 latency_s=latency,
             )
