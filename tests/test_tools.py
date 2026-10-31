@@ -3,7 +3,7 @@ import unittest
 from agent.registry import CODE, MODEL
 from agent.tools import build
 from harness.paths import state_dir
-from sandbox import inbox, pending, reports, seed
+from sandbox import charts, inbox, pending, reports, seed
 from tests.support import ScratchTest
 
 
@@ -55,7 +55,9 @@ class ToolsTest(ScratchTest):
         second = build(self.request_id).call("render_chart", args, CODE, step="chart")
         self.assertTrue(first["output"]["created"])
         self.assertFalse(second["output"]["created"])
-        self.assertEqual(len(list((state_dir() / "artifacts" / self.request_id).glob("*.svg"))), 1)
+        # Claudea's merged domain layer stores chart metadata and SVGs under charts/.
+        self.assertEqual(len(charts.for_request(self.request_id)), 1)
+        self.assertTrue(charts.read_svg(charts.for_request(self.request_id)[0]).startswith("<svg"))
 
     def test_report_and_email_writes_are_idempotent_and_bound(self):
         report_args = {

@@ -1,5 +1,6 @@
 id: standard_report_clean
 title: "A clean Q3 file from a distributor: the standard quarterly report"
+use_case: standard_report      # the expected route (analyze.py counts misroutes against it)
 
 # Draft written to show the shape: the structured fields (distributor, contact_email, period) are what
 # sandbox/seed.py reads; the stranger's text and file are untrusted input.

@@ -51,7 +51,7 @@ his repositories. He shares his OpenAI key so all three can use the model while 
 someone's branch:
 
 - `tests/fakes.py`: **`FakeRegistry`**, with the same calls as the real registry
-  (`call(name, args, caller, step=None)` and `definitions()`), and **`ScriptedTools`**, a fake model.
+  (`call(name, args, caller, step=None, trace_step=None)` and `definitions()`), and **`ScriptedTools`**, a fake model.
 - `agent/critique.py`, `agent/workflows.py`, `agent/domain_workflows.py`: **stubs** with the final function
   signatures. The critique passes drafts through when its switch is off.
 - `agent/events.py`: the shared **trace event names and end reasons**.
@@ -77,6 +77,11 @@ by the model.
 `error` is `{"kind": "transient" | "permanent" | "protocol", "message": ..., "retry": true | false}`.
 **Callers must handle failures**, not only success: the real registry rejects bad arguments; the fake
 only rejects unknown tool names unless told otherwise.
+
+`step` is a code-owned logical plan/workflow step and can determine a write's key.
+Reactive execution leaves it unset so `ToolSpec.key_fields` determine effect identity;
+its optional `trace_step` records the originating model round without changing the key.
+This integration correction was authorized with Abraham's milestone fixes on 2026-10-31.
 
 **The Part 3 rewrite** (myron, C5) may change each tool's description, examples, error messages, result
 caps and strict mode. It **may not change a tool's name, arguments or output fields** unless all three agree

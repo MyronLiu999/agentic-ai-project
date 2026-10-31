@@ -1,0 +1,37 @@
+id: batch_reports_two
+title: "The operator asks for the standard Q3 report on two new requests at once"
+use_case: batch_reports
+
+inputs:
+  - thread: SYN-thread-1301
+    from: SYN-contact-delta
+    distributor: SYN-DIST-004
+    contact_email: contact@delta.example
+    period: 2026Q3
+    text: "SYNTHETIC. Q3 sell-out attached. How did we do?"
+    file:
+      name: delta_q3.csv
+      content: |
+        sku,units_sold
+        SYN-SKU-002,180
+        SYN-SKU-003,95
+  - thread: SYN-thread-1302
+    from: SYN-contact-acme
+    distributor: SYN-DIST-001
+    contact_email: contact@acme.example
+    period: 2026Q3
+    text: "SYNTHETIC. Here is our Q3 file. How did our region do?"
+    file:
+      name: acme_q3.csv
+      content: |
+        sku,units_sold
+        SYN-SKU-001,310
+        SYN-SKU-002,205
+
+operator:
+  - "Make the standard Q3 report for every new request and draft each email."
+  - "Which reports did you save, and is anything still open?"
+
+outside: []
+
+check: checks/batch_reports.py

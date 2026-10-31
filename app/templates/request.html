@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>{{ req.id }}</h1>
-<p class="muted">{{ req.distributor_id }} &middot; {{ req.contact_email }} &middot; period {{ req.period }} &middot; {{ req.status }}</p>
+<p class="muted">{{ req.distributor_id }} &middot; {{ req.contact_email }} &middot; period {{ req.period }} &middot; {{ req.status }}
+&middot; <a href="/query?distributor={{ req.distributor_id }}&period={{ req.period }}">query its sales</a></p>
 <p>{{ req.question }}</p>
 <h2>File: {{ req.file_name }}</h2>
 <pre>{{ upload }}</pre>
@@ -10,11 +11,20 @@
 {{ m.text }}</div>{% else %}<p class="muted">No messages.</p>{% endfor %}
 <h2>Reports</h2>
 {% for r in reports %}<div class="line"><span class="who">v{{ r.version }} &middot; {{ r.kind }} &middot; {{ r.stamp }}</span>
-{{ r.body }}</div>{% else %}<p class="muted">None saved.</p>{% endfor %}
+<pre>{{ r.body }}</pre></div>{% else %}<p class="muted">None saved.</p>{% endfor %}
+<h2>Charts</h2>
+{% for c in charts %}<div class="line"><span class="who">chart {{ c.id }} &middot; {{ c.stamp }}</span>{{ c.svg|safe }}</div>
+{% else %}<p class="muted">None.</p>{% endfor %}
 <h2>Pending records</h2>
-{% for p in pending %}<div class="line"><span class="who">{{ p.kind }} &middot; to {{ p.recipient }} &middot; {{ p.status }}</span>
+{% for p in pending %}<div class="line"><span class="who">{{ p.kind }} &middot; to {{ p.recipient }} &middot; {{ p.status }} &middot; {{ p.stamp }}</span>
 <b>{{ p.subject }}</b>
-{{ p.body }}
+<pre>{{ p.body }}</pre>
 {% if p.status == 'pending' %}<form method="post" action="/pending/{{ p.id }}/send"><button>Send as the operator</button></form>{% endif %}
 </div>{% else %}<p class="muted">None.</p>{% endfor %}
+<h2>Email a report by hand</h2>
+<form method="post" action="/requests/{{ req.id }}/email">
+<p class="muted">To {{ draft.recipient }} (the request's contact). Sent as the operator; it cannot be recalled.</p>
+<p><input type="text" name="subject" value="{{ draft.subject }}" style="width:30em"></p>
+<p><textarea name="body" rows="7" style="width:40em">{{ draft.body }}</textarea></p>
+<button>Send as the operator</button></form>
 {% endblock %}

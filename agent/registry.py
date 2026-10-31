@@ -88,12 +88,14 @@ class Registry:
             definitions.append(definition)
         return definitions
 
-    def call(self, name: str, args: dict, caller: str, *, step: str | None = None) -> dict:
+    def call(self, name: str, args: dict, caller: str, *, step: str | None = None,
+             trace_step: int | None = None) -> dict:
         """Validate, authorize, execute and record one call without leaking an exception.
 
         ``step`` is a program-owned plan/checkpoint identifier.  It is used in a
         write key when present; otherwise only a spec's explicitly named
-        ``key_fields`` contribute to effect identity.
+        ``key_fields`` contribute to effect identity. ``trace_step`` attributes a
+        reactive call to its model response without changing its write identity.
         """
         started = time.monotonic()
         spec = self._specs.get(name)
@@ -104,23 +106,23 @@ class Registry:
                 "Use one of the tool definitions supplied for this turn.",
             )
             return self._record(name, args, caller, step, None, result, started, attempts=0,
-                                outcome="rejected")
+                                outcome="rejected", trace_step=trace_step)
 
         if caller not in CALLERS:
             result = self._error("invalid_caller", "Tool call was not accepted.",
                                  f"Caller must be one of {', '.join(CALLERS)}.")
             return self._record(name, args, caller, step, None, result, started, attempts=0,
-                                outcome="rejected")
+                                outcome="rejected", trace_step=trace_step)
         if caller not in spec.callers:
             result = self._error("caller_denied", "Tool call was not accepted.",
                                  f"The {caller} caller is not authorized for this tool.")
             return self._record(name, args, caller, step, None, result, started, attempts=0,
-                                outcome="denied")
+                                outcome="denied", trace_step=trace_step)
         if not isinstance(args, dict):
             result = self._error("invalid_arguments", "Tool arguments must be a JSON object.",
                                  "Send an object matching the tool's input schema.")
             return self._record(name, args, caller, step, None, result, started, attempts=0,
-                                outcome="rejected")
+                                outcome="rejected", trace_step=trace_step)
 
         normalized = _normalize_enums(copy.deepcopy(args), spec.input_schema)
         problems = schema_errors(normalized, spec.input_schema)
@@ -134,7 +136,7 @@ class Registry:
             result = self._error("invalid_arguments", "Tool arguments failed validation.", repair,
                                  details={"problems": problems[:8]})
             return self._record(name, normalized, caller, step, None, result, started, attempts=0,
-                                outcome="rejected")
+                                outcome="rejected", trace_step=trace_step)
 
         key = self._write_key(spec, normalized, step) if spec.writes else None
         try:
@@ -147,7 +149,7 @@ class Registry:
                                  "Ask the operator or correct the call before retrying.",
                                  details={"hook_error": f"{type(exc).__name__}: {str(exc)[:160]}"})
             return self._record(name, normalized, caller, step, key, result, started, attempts=0,
-                                outcome="denied")
+                                outcome="denied", trace_step=trace_step)
 
         attempts = 0
         while attempts <= self._max_retries:
@@ -163,10 +165,10 @@ class Registry:
                         details={"problems": result_problems[:8]},
                     )
                     return self._record(name, normalized, caller, step, key, result, started, attempts,
-                                        outcome="invalid_result")
+                                        outcome="invalid_result", trace_step=trace_step)
                 result = {"ok": True, "output": output, "is_error": False, "error": None}
                 return self._record(name, normalized, caller, step, key, result, started, attempts,
-                                    outcome="ok")
+                                    outcome="ok", trace_step=trace_step)
             except AmbiguousToolError as exc:
                 result = self._error(
                     "ambiguous_write",
@@ -176,7 +178,7 @@ class Registry:
                     details={"exception": str(exc)[:200]},
                 )
                 return self._record(name, normalized, caller, step, key, result, started, attempts,
-                                    outcome="ambiguous")
+                                    outcome="ambiguous", trace_step=trace_step)
             except Exception as exc:  # the registry turns tool failures into the public error contract
                 retryable = isinstance(exc, TransientToolError)
                 if spec.retryable is not None:
@@ -213,7 +215,7 @@ class Registry:
                     )
                     outcome = "execution_error"
                 return self._record(name, normalized, caller, step, key, result, started, attempts,
-                                    outcome=outcome)
+                                    outcome=outcome, trace_step=trace_step)
 
         raise AssertionError("bounded retry loop exited unexpectedly")
 
@@ -263,7 +265,8 @@ class Registry:
             "error": error,
         }
 
-    def _record(self, name, args, caller, step, key, result, started, attempts: int, outcome: str) -> dict:
+    def _record(self, name, args, caller, step, key, result, started, attempts: int, outcome: str,
+                *, trace_step=None) -> dict:
         trace = self._trace or _current_trace()
         if trace is not None:
             latency = time.monotonic() - started
@@ -275,7 +278,7 @@ class Registry:
                 latency_s=latency,
             )
             trace.tool_call(
-                step if step is not None else 0,
+                trace_step if trace_step is not None else (step if step is not None else 0),
                 {"name": name, "input": args if isinstance(args, dict) else {"value": args}},
                 traced_result,
                 plan_step=step,

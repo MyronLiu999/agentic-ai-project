@@ -11,9 +11,9 @@
 </table></div>
 <h2>Waiting for you to send</h2>
 <div class="scroll"><table>
-<tr><th>Id</th><th>Kind</th><th>To</th><th>Request</th></tr>
+<tr><th>Id</th><th>Kind</th><th>To</th><th>Subject</th><th>Request</th></tr>
 {% for p in pending %}
-<tr><td>{{ p.id }}</td><td>{{ p.kind }}</td><td>{{ p.recipient }}</td><td><a href="/requests/{{ p.request_id }}">{{ p.request_id }}</a></td></tr>
-{% else %}<tr><td colspan="4" class="muted">Nothing pending.</td></tr>{% endfor %}
+<tr><td>{{ p.id }}</td><td>{{ p.kind }}</td><td>{{ p.recipient }}</td><td>{{ p.subject }}</td><td><a href="/requests/{{ p.request_id }}">{{ p.request_id }}</a></td></tr>
+{% else %}<tr><td colspan="5" class="muted">Nothing pending.</td></tr>{% endfor %}
 </table></div>
 {% endblock %}

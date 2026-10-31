@@ -33,6 +33,9 @@ CREATE TABLE IF NOT EXISTS pending (
     id INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT NOT NULL, request_id TEXT NOT NULL, thread_id TEXT NOT NULL,
     recipient TEXT NOT NULL, subject TEXT NOT NULL, body TEXT NOT NULL, report_id INTEGER,
     key TEXT NOT NULL UNIQUE, status TEXT NOT NULL DEFAULT 'pending', stamp TEXT NOT NULL, created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS charts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, request_id TEXT NOT NULL, title TEXT NOT NULL, labels_json TEXT NOT NULL,
+    values_json TEXT NOT NULL, path TEXT NOT NULL, key TEXT NOT NULL UNIQUE, stamp TEXT NOT NULL, created_at TEXT NOT NULL);
 """
 
 FILENAME = "sales.sqlite3"
@@ -59,8 +62,9 @@ def reset() -> None:
     p = path()
     if p.exists():
         p.unlink()
-    uploads = state_dir() / "uploads"
-    if uploads.exists():
-        for f in sorted(uploads.rglob("*"), reverse=True):
-            f.unlink() if f.is_file() else f.rmdir()
-        uploads.rmdir()
+    for name in ("uploads", "charts"):
+        folder = state_dir() / name
+        if folder.exists():
+            for f in sorted(folder.rglob("*"), reverse=True):
+                f.unlink() if f.is_file() else f.rmdir()
+            folder.rmdir()
