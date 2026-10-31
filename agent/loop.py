@@ -41,7 +41,7 @@ class LoopResult:
     tokens: int
 
 
-class _HeldCritique(Exception):
+class CritiqueHeld(Exception):
     pass
 
 
@@ -133,7 +133,7 @@ class _Loop:
                 self.messages.append({"role": "user", "content": results})
         except bounds.LimitReached as exc:
             return self.finish(exc.reason, f"Stopped at the {exc.reason} bound; work may remain unfinished.")
-        except _HeldCritique as exc:
+        except CritiqueHeld as exc:
             return self.finish(events.CRITIQUE_HELD, f"Email draft held: {exc}")
 
     def reject(self, call, step, message):
@@ -144,14 +144,23 @@ class _Loop:
     def call_tool(self, call, step):
         args = deepcopy(call.input)  # Registry normalization must not rewrite assistant history.
         if call.name == "draft_report_email":
+            gate = EmailGate(self.request["id"], self.model_call, self.check)
             try:
-                draft = self.email_draft(args)
+                draft = gate.email_draft(args)
             except ValueError as exc:
                 return self.reject(call, step, str(exc)), None
-            args = self.checked_email(draft)
+            args = gate.checked_email(draft)
         self.check()
         result = self.registry.call(call.name, args, MODEL, step=str(step))
         return result, args if result["ok"] and not result["is_error"] else None
+
+
+class EmailGate:
+    """The same request/report critique boundary for reactive and planned execution."""
+    def __init__(self, request_id, model_call, check):
+        self.request = {"id": request_id}
+        self.model_call = model_call
+        self.check = check
 
     def email_draft(self, args):
         required = {"recipient", "subject", "body", "report_id"}
@@ -179,26 +188,26 @@ class _Loop:
                 messages=[{"role": "user", "content": json.dumps({"draft": current, "feedback": reason})}],
                 definitions=[], purpose="critique_revision")
             if response.stop_reason != "end_turn" or response.tool_calls:
-                raise _HeldCritique("Revision did not return a complete text draft.")
+                raise CritiqueHeld("Revision did not return a complete text draft.")
             try:
                 revised = json.loads(response.text)
             except (ValueError, TypeError) as exc:
-                raise _HeldCritique("Revision was not valid JSON.") from exc
+                raise CritiqueHeld("Revision was not valid JSON.") from exc
             if (not isinstance(revised, dict) or set(revised) != editable
                     or any(not isinstance(v, str) or not v.strip() for v in revised.values())):
-                raise _HeldCritique("Revision must contain only recipient, subject, and body.")
+                raise CritiqueHeld("Revision must contain only recipient, subject, and body.")
             current = {**deepcopy(draft), **revised}
             return deepcopy(current)
 
         result = critique.run(self.request["id"], deepcopy(draft), revise, rounds=2)
         self.check()
         if not result.passed:
-            raise _HeldCritique(result.reason)
+            raise CritiqueHeld(result.reason)
         passed = result.draft
         if (not isinstance(passed, dict) or passed.get("report_id") != draft["report_id"]
                 or passed.get("figures") != draft["figures"]
                 or any(not isinstance(passed.get(k), str) or not passed[k].strip() for k in editable)):
-            raise _HeldCritique("Critique changed the saved report or returned an invalid email draft.")
+            raise CritiqueHeld("Critique changed the saved report or returned an invalid email draft.")
         return {k: passed[k] for k in ("recipient", "subject", "body", "report_id")}
 
 

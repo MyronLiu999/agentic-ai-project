@@ -139,3 +139,14 @@ class AgentPlanTest(ScratchTest):
             raw["steps"][0]["expect"][key] = []
             with self.subTest(key=key), self.assertRaises(plan.PlanError):
                 plan.validate(raw, [RID])
+
+    def test_a_request_cannot_plan_duplicate_terminal_or_report_writes(self):
+        for source in (1, 2):
+            raw = sample_plan()
+            extra = deepcopy(raw["steps"][source])
+            extra["id"] = "duplicate"
+            if source == 1:
+                raw["steps"][-1]["depends_on"].append("duplicate")
+            raw["steps"].append(extra)
+            with self.subTest(source=source), self.assertRaises(plan.PlanError):
+                plan.validate(raw, [RID])

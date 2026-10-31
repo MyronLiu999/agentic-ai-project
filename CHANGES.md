@@ -55,3 +55,12 @@ and `$fill` bindings, cycle/orphan checks, immutable completed steps, observable
 predicates, off-plan call refusal, plan-difference records, and request-scoped repeat
 detection. Twelve tests cover valid bindings and malformed, unauthorized, or incomplete
 plans. Batch planning/execution is connected in the following step.
+
+**Abraham — B6b, batch execution:** connected the batch switch to a bounded planner
+and dependency scheduler. Plans and fills are traced; sandbox checks verify queries
+and writes. Failed read checkpoints may revise remaining work at most twice, preserving
+completed steps and effects. Exactly one terminal and at most one saved report are
+allowed per request. Planned email uses the same critique gate as the reactive loop;
+approved email amendments are recorded in the plan before execution. Tests include
+actual report/email effects, two-request isolation, bounded bad planners, parse repair,
+no duplicate writes across replan, false tool success, and held/revised email drafts.

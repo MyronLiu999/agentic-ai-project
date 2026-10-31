@@ -272,3 +272,16 @@ remaining plan; unverified writes stop. Never repeat completed writes after revi
 The existing email critique gate applies before each planned email. The batch switch
 selects this executor or independent unplanned loops. Fakes exercise both through
 `operator_turn`; live-model prompt tuning remains contingent on real tool integration.
+
+Implemented B6a/B6b: initial plan plus two total revisions, up to 48 steps/eight
+requests, one terminal and at most one saved report per request. The reactive and
+planned paths share `loop.EmailGate`; a passing critique may amend only email text
+and recipient, with the amended plan recorded before the write. Other off-plan
+arguments remain prohibited. B6 tests cover the five named classes in the execution
+sequence plus schema failures, cross-request scope, false write success, duplicate
+writes, and critique handling. The exact missing handout's five test definitions
+still need reconciliation at team integration.
+
+Verification on 2026-10-31: 155 tests and all four structural checks pass. The planned
+single-request test passes the existing independent SQL effects check. Two-request
+tests verify separate report and pending records. This is synthetic evidence only.
