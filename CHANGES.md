@@ -78,3 +78,13 @@ Added regressions for a report persisted before an error, oversized public batch
 unrepresentable numeric values, and deeply nested plan data. Plan nesting is capped
 before recursive processing; invalid input returns traced bounded rejection rather
 than an uncaught exception. No baseline or live-model run was used for these fixes.
+
+**Abraham — B9 and integration handoff:** filled the agent-owned build/decision entries,
+plan design, checkpoint/step-size explanation, per-step batch/messy persistence
+inventory, and first-failure table skeleton in `docs/milestones/M1.md`. Added
+`docs/abraham-handoff.md` with public interfaces, verification, prompt assumptions,
+and the ordered integration/development steps. B7 remains unmeasured: no real-model
+tuning is claimed while production tools, registry, critique and workflows are
+unintegrated. Exact handout gate/test wording, Myron's A1/A2 values, and official
+run evidence remain explicit dependencies. Final code verification: 169 tests and
+four structural checks passed on 2026-10-31, using no live API calls.

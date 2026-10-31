@@ -300,3 +300,22 @@ selecting more than eight requests raised an exception. Four regression tests fa
 before the fixes and now pass. Writes with uncertain outcomes stop; only read
 checkpoints may replan. Plan data has a depth bound before recursive processing;
 numeric checks reject overflow; invalid batch selection returns a traced rejection.
+
+Final code verification on 2026-10-31: 169 tests passed, all four structural checks
+passed, and `git diff --check` passed. Review fixes committed/pushed as `4b01924`.
+
+## Task 8: Milestone sections and team handoff (B9/B10)
+
+Completed Abraham's implementation-grounded milestone sections: build/decision
+entries, gate evidence for messy versus standard reports, plan design and step sizes,
+each path's per-step persistence/readability inventory, and the first-failure table
+skeleton. Added `docs/abraham-handoff.md` with verified interfaces, reproducible
+checks, prompt assumptions, and the T1/T2/T3 integration sequence.
+
+Remaining external evidence is explicit: B7 needs the integrated production tools,
+registry, workflows, and critique plus coordinated real-model access. B9's exact
+four-gate wording/five-plan-test mapping needs the absent handout; assignment figures
+must come from Myron's A1/A2 evidence. T3 must compare the inventory to a real trace.
+There are no official run records here to populate baseline failure rows. No live
+tuning, economic benefit, real-component integration, or final project completion is
+claimed from the synthetic checks.
