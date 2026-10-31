@@ -4,6 +4,25 @@ Status as of 2026-10-31, on the user-requested `abraham` branch. The user author
 automatic commits and pushes of verified steps. This branch supplies the agent core
 against the contracts in `PLAN.md`; it does not supply the other owners' implementations.
 
+## Open note: is the missing material required for Abraham's part?
+
+**Yes for completing the milestone write-up and checking it against the course
+requirements; it does not block implementing or testing the agent core.**
+The user requested that this dependency be recorded here on 2026-10-31.
+
+| Missing input | Why Abraham needs it | Who supplies it / completion action |
+|---|---|---|
+| `../milestone1_handout.md` | B9 requires the four gates for `messy_file` and `standard_report`; B6 also references five plan tests whose exact definitions need verification | Obtain the handout from the team's course materials, then map the existing write-up and tests to its exact requirements |
+| Myron's A1 measurements and repository/commit | Support the gate assessment with cost, success, latency, and tool-sequence evidence | Myron owns these references under C1; Abraham incorporates them into Part 1 |
+| Myron's A2 results and repository/commit | Support Part 2's planning/checkpoint discussion | Myron supplies the evidence; Abraham cites the applicable findings in the plan section |
+
+Abraham does **not** need to redo Myron's assignments. B9 explicitly permits A1
+placeholders during individual work; T6 requires the team to fill the placeholders
+before submission. Until those sources arrive, keep the current placeholders and
+do not claim that the final gate assessment or assignment citations are complete.
+Real-model prompt tuning (B7) is a separate outstanding task with its own integration
+dependencies, described below.
+
 ## What is implemented
 
 | PLAN.md step | Delivered | Evidence / remaining dependency |
