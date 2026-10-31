@@ -13,7 +13,7 @@ from tests.support import ScratchTest
 
 def imports_of(path: Path) -> set[str]:
     names = set()
-    for node in ast.walk(ast.parse(path.read_text())):
+    for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
         if isinstance(node, ast.Import):
             names |= {a.name for a in node.names}
         elif isinstance(node, ast.ImportFrom) and node.module:

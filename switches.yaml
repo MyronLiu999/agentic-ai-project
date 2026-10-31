@@ -29,3 +29,22 @@ notes:
 
 critique:
   report_email: {setting: external, values: ["off", "external"], about: "Recompute figures, period and recipient from the sandbox before a draft email is written. Lecture 2."}
+
+# Tool-surface treatments. Examples are embedded in descriptions because the Chat
+# Completions function format has no separate examples field. Strict controls the
+# function's strict flag; the registry validates every call regardless of this flag.
+examples:
+  parse_file: {setting: "on", values: ["off", "on"], about: "Show the bounded parse result shape for an unfamiliar upload."}
+  query_sales: {setting: "on", values: ["off", "on"], about: "Show valid quarter and metric calls for the most-used read."}
+  render_chart: {setting: "off", values: ["off", "on"], about: "The schema is concrete enough without an example."}
+  save_report: {setting: "off", values: ["off", "on"], about: "Avoid spending definition tokens on a plain versioned write."}
+  draft_report_email: {setting: "off", values: ["off", "on"], about: "The critique, not a schema example, checks email facts."}
+  draft_clarifying_question: {setting: "off", values: ["off", "on"], about: "A short subject/body contract needs no example."}
+
+strict:
+  parse_file: {setting: "off", values: ["off", "on"], about: "No arguments exist to constrain."}
+  query_sales: {setting: "on", values: ["off", "on"], about: "Constrain the quarter and the units/revenue/both metric enum."}
+  render_chart: {setting: "off", values: ["off", "on"], about: "Nested series are locally validated; keep the first measured surface simple."}
+  save_report: {setting: "off", values: ["off", "on"], about: "The program normally chooses this write and the registry validates it."}
+  draft_report_email: {setting: "off", values: ["off", "on"], about: "External critique supplies the important factual boundary."}
+  draft_clarifying_question: {setting: "off", values: ["off", "on"], about: "A plain bounded pending-record write."}
