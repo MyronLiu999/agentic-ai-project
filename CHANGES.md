@@ -30,3 +30,15 @@ Excluded/alternative IDs and qualified batch phrases cannot silently widen reque
 ambiguous status questions beginning with "check" use classification before any rerun.
 Tests cover all six use cases using the sandbox and free scripted model responses. Service dispatch
 and agent execution remain the next implementation steps.
+
+**Abraham — B3, bounded loop:** added a request-bound model/tool loop with externally
+enforced step, token, and monotonic-time limits, traced values and rationales, bounded
+repair attempts, and preserved assistant/tool history. Email writes require a passed
+critique over the selected request's saved report; revisions consume the same budget.
+Held drafts, malformed revisions, and foreign report references leave no pending email.
+Successful clarifying questions retain their pending state even when a time limit expires.
+Review fixes preserve tool-step attribution, trace local rejections, expose revised
+executed inputs to the model, and isolate mutable arguments/figures. Tests use the real
+sandbox, metering, and traces with scripted models and substitutes for team-owned stubs.
+The initial 12-call/150,000-token/90-second limits are provisional; in-flight synchronous
+operations are not interrupted. Service integration and batch planning follow separately.

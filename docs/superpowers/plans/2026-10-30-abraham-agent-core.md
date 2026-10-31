@@ -1,6 +1,6 @@
 # Abraham's agent core implementation plan
 
-> Execute this plan inline with the executing-plans and test-driven-development workflows. Stop after each reviewable step: show the changes, verification, and proposed commit message. Commit or push only after the user's explicit approval for that action.
+> Execute this plan inline with the executing-plans and test-driven-development workflows. On 2026-10-31 the user authorized completing all remaining Abraham work in steps and automatically committing and pushing each verified step. This supersedes the earlier approval pauses.
 
 **Goal:** Implement Abraham's responsibilities from PLAN.md in independently reviewable steps.
 
@@ -13,7 +13,7 @@
 ## Global constraints
 
 - Work on the user-requested `abraham` branch in this checkout.
-- Wait for the user's review after each implementation step; no automatic commits or pushes.
+- Commit and push verified implementation steps to `origin/abraham` automatically, as authorized on 2026-10-31.
 - Edit Abraham's files, tests, and documentation; preserve other owners' interfaces.
 - Do not edit `harness/`, `channel/`, or `run.py`.
 - Use only synthetic inputs. No API keys in source or fixtures.
@@ -54,7 +54,7 @@ Approval is applied to the local commit; pushing still requires explicit instruc
 
 ## Subsequent checkpoints
 
-Each checkpoint is specified further when its preceding review is accepted. This preserves the user's opportunity to change direction between steps.
+Each checkpoint is specified before implementation and verified before its commit and push.
 
 1. Complete the remaining controlled fixtures as their test consumers are introduced (B2).
 2. Implement trusted-data routing and trace decisions (B1).
@@ -130,9 +130,104 @@ Approval covers the local commit; pushing remains unauthorized.
 
 Task 1 local commit: `3182b64`. No push has been authorized.
 
+## Task 3: Bounded agent loop (B3)
+
+Task 2 local commit: `0817e3b`.
+
+**Files:** `agent/loop.py`, `agent/bounds.py`, `tests/test_agent_loop.py`,
+`tests/test_agent_bounds.py`, `tests/fixtures/agent_loop_fakes.py`, and this plan/changelog.
+
+**Consumes:** the metered runtime client and trace; `Registry.definitions()` and
+`call(name, args, caller, step=...)`; `critique.run(request_id, draft, revise, rounds=2)`;
+request records and saved reports. Default registry construction binds the request ID.
+
+**Produces:** `loop.run(session_id, request_id, text, *, registry=None, limits=None,
+clock=None) -> LoopResult`, with terminal reason, model/operator text, action lines,
+waiting thread, step count, and loop token use. B4 adapts this result to `Reply`.
+
+Design decisions:
+
+- A step is one model invocation, including retries and critique revisions. The
+  initial limit is 12: six ordinary tool rounds, a final response, up to two draft
+  revisions, and three repair rounds. This is a provisional engineering allowance,
+  not an A1 measurement. The token allowance is 150,000 (below the 400,000 harness
+  ceiling); 90 seconds limits further work after a slow turn. All values and their
+  rationales are traced. A monotonic clock avoids clock-adjustment errors.
+- Check token/time limits before and after model calls, before every tool, and
+  after tools/critique. A synchronous operation already running cannot be interrupted;
+  the guard prevents subsequent work once it returns. Token usage includes cached
+  tokens and revisions, measured from loop entry; the harness ceiling still applies.
+- Preserve complete assistant content and return all tool results together with
+  error flags. Registry errors go back to the model for a bounded repair attempt.
+  The registry owns tool-call traces and retries; the loop owns model-call traces.
+  Calls rejected before reaching the registry are traced with `executed=false` and
+  `rejected_by=loop`. A changed executed input accompanies model feedback separately
+  from the original assistant blocks and unchanged registry result fields.
+- Label the operator's instruction separately from the outside request and file
+  data. Scope is bound by code. Never infer successful effects from model prose.
+- Before `draft_report_email`, resolve its report only within the bound request and
+  attach its saved figures for critique. Execute only the passed draft. Revision
+  calls have no tools and can edit recipient, subject, and body; the report link and
+  its saved figures stay fixed. Wrong saved figures therefore hold the email for
+  correction in a later turn instead of making the email disagree with the report.
+- A held critique or exhausted bound writes no email. A successful clarifying
+  question ends immediately as `needs_answer`; later calls in that response are
+  not executed. Service/status integration and batch planning remain B4/B6.
+  If its write returns after the deadline, the result keeps the waiting thread
+  while reporting `wall_clock`; the pending effect is not lost from the reply state.
+- Test-only substitutes are necessary because registry/tool bodies and the enabled
+  critique are still stubs. Pending/report writes in these tests use the real sandbox.
+
+- [x] Write failing tests for step/token/time boundaries and invalid limits.
+- [x] Implement external bounds and their rationales.
+- [x] Write failing tests for the model/tool conversation, failures, scope, critique,
+  revision limits, and actual pending effects.
+- [x] Implement the loop and critique gate against the shared contracts.
+- [x] Run the focused and full suites, structural checks, and whitespace checks.
+- [x] Present the checkpoint and proposed commit message; subsequent user authorization covers committing and pushing.
+
+Proposed message: `feat(agent): enforce loop bounds and critique pending emails`
+
+Review: a separate read-only review reproduced waiting-state loss after a slow
+question write, tool-step attribution shifting during critique, and missing context
+about revised email arguments. Local validation rejections also lacked trace evidence,
+and shallow copying allowed critique to mutate the figures comparison baseline.
+Regression tests failed before the fixes and passed afterward. A further regression
+proved that registry argument normalization must not mutate assistant history; the
+loop now passes independent argument copies. All 31 focused tests pass.
+Final verification on 2026-10-30: all 118 tests pass, all four structural checks pass,
+and tracked/new-file whitespace checks pass. No live model calls were made.
+
+Rulings retained from the review: numerical limits are provisional pending run evidence;
+time/token checks are cooperative and can overshoot within one synchronous call;
+critique-off deliberately uses the shared pass-through; saved figures stay fixed
+during email revision, so a bad report requires a later correction; production
+registry/critique/service/planner integration is deferred to its assigned checkpoint.
+
 ## Known dependencies
 
 - The referenced milestone handout is absent; exact gate definitions and the five plan-test requirements remain unverified.
 - Claudea must supply the standard-workflow callable interface.
 - Myron must supply argument-validating fakes and the registry pre-call hook interface.
 - These dependencies do not prevent the fixture and routing checkpoints.
+
+## Remaining execution sequence (authorized 2026-10-31)
+
+1. B4/B5: wire the public service to the router, loop and domain workflows; preserve
+   request scope and pending questions; prove path dispatch and never-stops behavior
+   through the actual harness. Do not mark requests done from model text alone.
+2. B6: validate and trace batch plans, including dependency cycles/orphans and explicit
+   `$fill` bindings; enforce each call, compare calls with plans, count repeats, check
+   observable outcomes, and bound planning/revision. Test invalid plans, off-plan
+   calls, placeholder resolution, checkpoint recovery, and exhaustion.
+3. B8: implement a read-only failure report with terminal reasons and the physical
+   trace line of the first failure; distinguish missing evidence and synthetic runs.
+4. B7/B9/B10: document prompts, gates, step sizes, durable effects, and integration
+   requirements; run final checks and a fresh code review. Real-model tuning requires
+   working team-owned tools and coordinated access; never substitute fake evidence.
+
+Published interface inspection: `origin/claudea/domain` exposes
+`standard_report(session_id, request_id, registry=None)`, matching the intended
+two-argument service call. Its code is not merged or copied into Abraham's files.
+The remote main still contains registry/tool/critique stubs. The milestone handout
+is still absent; exact handout wording and assignment numbers cannot be invented.
