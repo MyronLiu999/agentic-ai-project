@@ -26,6 +26,51 @@ def sample_plan(rid=RID, prefix=""):
 
 
 class AgentPlanTest(ScratchTest):
+    def test_dependency_only_artifact_is_an_orphan_without_downstream_use(self):
+        raw = sample_plan()
+        raw["steps"].insert(1, {"id": "chart", "request_id": RID, "tool": "render_chart",
+            "args": {"title": "Revenue", "labels": ["Total"], "values": [{"$fill": "query.total_revenue"}]},
+            "depends_on": ["query"], "expect": {"field": "chart_id", "op": "exists"}})
+        raw["steps"][2]["depends_on"].append("chart")
+        with self.assertRaisesRegex(plan.PlanError, "Orphan|consumed|used"):
+            plan.validate(raw, [RID])
+
+    def test_request_bindings_resolve_only_scoped_period_and_contact(self):
+        raw = sample_plan()
+        raw["steps"][0]["args"]["period"] = {"$fill": "request.period"}
+        raw["steps"][2]["args"]["recipient"] = {"$fill": "request.contact_email"}
+        steps = plan.validate(raw, [RID])
+        request = {"period": "2026Q3", "contact_email": "contact@brightline.example", "question": "OUTSIDE"}
+        self.assertEqual(plan.resolve(steps[0]["args"], {}, request=request), {"period": "2026Q3"})
+        raw["steps"][2]["args"]["recipient"] = {"$fill": "request.question"}
+        with self.assertRaises(plan.PlanError):
+            plan.validate(raw, [RID])
+
+    def test_forward_dependencies_are_rejected_even_when_graph_is_acyclic(self):
+        raw = sample_plan()
+        raw["steps"].reverse()
+        with self.assertRaisesRegex(plan.PlanError, "earlier|later|order"):
+            plan.validate(raw, [RID])
+
+    def test_guard_refuses_an_independent_later_step(self):
+        other = "REQ-other"
+        raw = sample_plan()
+        raw["steps"] += sample_plan(other, "other_")["steps"]
+        with fixed_run(TASK, "independent-order"):
+            guard = plan.Guard(plan.validate(raw, [RID, other]), runtime.trace())
+            self.assertFalse(guard.authorize("other_query", other, "query_sales", {"period": "2026Q3"}))
+            self.assertEqual([s["id"] for s in guard.ready()], ["query"])
+            self.assertEqual(runtime.trace().lines()[-1]["label"], "out_of_order")
+
+    def test_revision_cannot_move_completed_steps_or_insert_before_them(self):
+        other = "REQ-other"
+        raw = sample_plan()
+        raw["steps"] += sample_plan(other, "other_")["steps"]
+        old = plan.validate(raw, [RID, other])
+        moved = {"steps": raw["steps"][3:] + raw["steps"][:3]}
+        with self.assertRaisesRegex(plan.PlanError, "Completed|prefix|order"):
+            plan.validate(moved, [RID, other], completed={s["id"]: s for s in old[:3]})
+
     def test_valid_plan_resolves_whole_outputs_and_fields_without_mutation(self):
         raw = sample_plan()
         steps = plan.validate(raw, [RID])

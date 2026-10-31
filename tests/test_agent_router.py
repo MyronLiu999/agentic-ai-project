@@ -12,6 +12,42 @@ INTENTS = "tests.fixtures.agent_intent_models:"
 
 
 class AgentRouterTest(ScratchTest):
+    def test_official_batch_command_selects_both_requests_without_a_model(self):
+        task = tasks.load(ROOT / "tasks/batch_reports_two.yaml")
+        with fixed_run(task, "official-batch-route"):
+            decision = router.route_operator_message("operator", task["operator"][0])
+            self.assert_route(decision, "batch_reports", "agent", "record",
+                              ["REQ-SYN-thread-1301", "REQ-SYN-thread-1302"])
+            self.assertEqual(runtime.client().calls, 0)
+
+    def test_extended_batch_grammar_does_not_accept_qualified_scope(self):
+        messages = (
+            "Make the standard Q3 report for every new request except Acme and draft each email.",
+            "Make the standard Q3 report for every new request for Acme and draft each email.",
+            "Make the standard Q3 report for every product and draft each email.",
+        )
+        for n, message in enumerate(messages):
+            with self.subTest(message=message), fixed_run("tasks/batch_reports_two.yaml", f"qualified-batch-{n}",
+                                                         backend=INTENTS + "NewTaskIntent"):
+                with self.assertRaises(router.RoutingError):
+                    router.route_operator_message("operator", message)
+                self.assertEqual(pending.all_pending(), [])
+
+    def test_qualified_batch_does_not_fall_back_to_the_only_new_request(self):
+        for suffix in ("except Delta", "for UnknownCo"):
+            with self.subTest(suffix=suffix), fixed_run("tasks/batch_reports_two.yaml", "one-new-batch",
+                                                       backend=INTENTS + "NewTaskIntent"):
+                inbox.set_status("REQ-SYN-thread-1302", "report_drafted")
+                with self.assertRaises(router.RoutingError):
+                    router.route_operator_message("operator",
+                        f"Make the standard Q3 report for every new request {suffix} and draft each email.")
+
+    def test_batch_quarter_mismatch_requires_clarification(self):
+        with fixed_run("tasks/batch_reports_two.yaml", "wrong-quarter-batch", backend=INTENTS + "NewTaskIntent"):
+            with self.assertRaises(router.RoutingError):
+                router.route_operator_message("operator", "Make the standard Q2 report for every new request.")
+
+
     def task(self, **changes):
         task = tasks.load(ROOT / CLEAN)
         task["input"].update(changes)

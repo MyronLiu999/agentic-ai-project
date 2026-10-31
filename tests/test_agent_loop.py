@@ -328,9 +328,9 @@ class AgentLoopTest(ScratchTest):
 
     def test_registry_argument_normalization_does_not_rewrite_assistant_history(self):
         class NormalizingRegistry(SandboxRegistry):
-            def call(self, name, args, caller, *, step=None):
+            def call(self, name, args, caller, *, step=None, trace_step=None):
                 args["delimiter"] = ";"
-                return super().call(name, args, caller, step=step)
+                return super().call(name, args, caller, step=step, trace_step=trace_step)
 
         with fixed_run(TASK, "normalized-args", backend=BACKEND):
             model = self.model(([tool("parse_file", {"decimal": ","})], "tool_use"))

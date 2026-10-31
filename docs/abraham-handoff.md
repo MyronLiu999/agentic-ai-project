@@ -1,260 +1,126 @@
-# Abraham's agent core: implementation and integration handoff
+# Abraham's agent core: implementation and evidence handoff
 
-## Merge verification update — 2026-10-31
+Status: 2026-10-31. The agent core, domain workflows, sandbox, registry and tools are
+integrated on `main`. The earlier six tool-call mismatches and parser row-shape mismatch
+are resolved. Their pre-merge diagnosis is preserved in Git history; it is not a current blocker.
 
-The merge of `abraham` at `de33be5` into `main` at `60bcdce` includes the real domain
-and tool implementations. The only Git conflict was in `docs/milestones/M1.md`;
-the resolution preserves the domain/critique write-up and Abraham's routing,
-gate evidence, planning, and persistence inventory. Production code merged unchanged.
+## Course requirements and sources
 
-Verified on that combined tree: 250 routine tests, all four structural checks,
-all ten `tests/fixtures/agent_integration_probe.py` tests, and three additional
-scripted-model checks through the real registry for `standard_report_clean`,
-`out_of_scope_margins`, and `status_question_done_work`. All passed. Myron's merged
-changes resolve the six tool-call mismatches and parser row-shape failure described
-in the historical snapshot below. The chart test and analyzer import also pass.
+The actual **Project Milestone 1** PDF is available and was read on 2026-10-31. Its course
+source is [Canvas](https://canvas.uchicago.edu/courses/75218/assignments/921328).
+The absent `../milestone1_handout.md` path in `plan.md` no longer blocks the audit.
 
-These free checks do not establish live-model quality or complete every T2/T3
-integration task. B7 tuning, the handout-dependent assessment, and official
-baseline/pass evidence remain outstanding. The sections below retain the earlier
-branch handoff and pinned audit for provenance; this update supersedes their
-statements that the production components are unmerged or those contract tests fail.
+- Part 1 task 5, pp. 5–7, defines the four gates: variable next steps, limited damage,
+  timely detection/undo or prior human review, and the value of added correct cases.
+  M1 now distinguishes `c*(m-1)/f` and break-even `f*=c*(m-1)/W` from routing cost
+  `c*((1-r)+r*m)`. Domain `f`, routing share `r` and repair duration are labeled estimates.
+- Part 2 task 1, pp. 9–10, requires a planner isolated from outside text, no later-step
+  dependencies, execution in listed order, checkpoint-only revision, immutable completed
+  steps, repeat detection on both agent paths, five fake-model scenarios, and a step-size
+  assessment of **one plan the live planner wrote**.
+- Myron's A1/A2 reports and commits are cited in `docs/assignment_refs.md` and M1. They are
+  prior issue-triage results, not project measurements. No assignment needs to be rerun.
 
-## Pre-merge branch handoff
+## Implemented interfaces and boundaries
 
-Status as of 2026-10-31, on the user-requested `abraham` branch. The user authorized
-automatic commits and pushes of verified steps. This branch supplies the agent core
-against the contracts in `PLAN.md`; it does not supply the other owners' implementations.
+The app and runner enter through `harness.turns.operator_turn`, then
+`agent.service.operator_turn`. The router selects request scope from records and applies
+`control.<use_case>`. Clear intent stays in code; ambiguous work/status intent uses one
+bounded classification call with no tools or outside file contents. Named status questions
+resolve a unique request; generic follow-ups recover selected IDs from the session trace.
 
-## Open note: is the missing material required for Abraham's part?
+The reactive loop uses a request-bound registry and shared call/token/time limits. The
+batch planner receives the operator request, tool contracts and allowlisted record IDs/counts.
+It receives no stranger questions, file text, period or contact address. The executor resolves
+the two allowlisted `request.period` and `request.contact_email` runtime bindings. Replanning
+receives code-owned status/counts/integer record IDs, never raw tool output or error messages. The validator
+rejects forward dependencies; the executor follows the listed order and preserves the
+completed prefix across revisions. Only a failed read checkpoint permits replanning;
+an uncertain write stops because its effect may already exist.
 
-**Yes for completing the milestone write-up and checking it against the course
-requirements; it does not block implementing or testing the agent core.**
-The user requested that this dependency be recorded here on 2026-10-31.
+Both paths call `loop.EmailGate` before a pending email. The gate fixes the saved report and
+figures while the critic/reviser checks the draft; a held draft creates no pending email.
+A pending question stops work with its waiting thread. Sending remains an operator action.
 
-| Required input | Why Abraham needs it | Current status / completion action |
-|---|---|---|
-| `../milestone1_handout.md` | B9 requires the four gates for `messy_file` and `standard_report`; B6 also references five plan tests whose exact definitions need verification | Obtain the handout from the team's course materials, then map the existing write-up and tests to its exact requirements |
-| Myron's A1 measurements and repository/commit | Support the gate assessment with cost, success, latency, and tool-sequence evidence | Located on `origin/myron` at `4ab3d29`; raw report and format definitions verified on 2026-10-31; cost/success/latency citations now filled in Part 1 |
-| Myron's A2 results and repository/commit | Support Part 2's planning/checkpoint discussion | Raw report verified on 2026-10-31; planning/checkpoint results now cited in Part 2 |
+Both agent paths emit repeat diagnostics from request/tool/canonical arguments. Reactive
+writes use effect identity for idempotency, with model-round origin recorded separately;
+planned writes retain their logical step identity. The registry owns actual tool-call traces,
+keys and retries. The executor additionally verifies persisted effects. None of these records
+alone proves business correctness: independent task checks still read the sandbox.
 
-Abraham does **not** need to redo Myron's assignments. B9 explicitly permits A1
-placeholders during individual work; T6 requires the team to fill the placeholders
-before submission. The A1/A2 sources have now been located and cited; the missing
-handout still prevents confirming the exact four-gate assessment and five-plan-test mapping.
-Real-model prompt tuning (B7) is a separate outstanding task with its own integration
-dependencies, described below.
+Domain records and traces survive reopening a run. The tool conversation, active plan,
+output map and repeat counters are not resumed automatically after restart. A new work
+turn starts a new execution; a status follow-up can read durable records and recover scope.
 
-## What is implemented
+| `plan.md` step | Evidence / remaining dependency |
+|---|---|
+| B1 router | `tests/test_agent_router.py`, `tests/test_agent_status_routing.py`; live ambiguous-intent quality still needs B7 |
+| B2 fixtures | `tests/fixtures/agent_*`, `tests/test_agent_fixtures.py`; scripted responses, not live-model evidence |
+| B3 loop/bounds | `tests/test_agent_loop.py`, `tests/test_agent_bounds.py`, `tests/test_agent_effects.py`; external stops, repeats, real effects and critique integration |
+| B4 service | `tests/test_agent_service.py`; scope, effects, waiting questions and status follow-ups |
+| B5 fake paths | Per-use-case routing and harness never-stops test; effects and terminal reasons checked |
+| B6 plan | `tests/test_agent_plan.py`, `tests/test_agent_plan_execution.py`; all five required scenarios on the official plan-enabled task in `tests/test_agent_batch_scenarios.py`; scripted specimen/full flows in `tests/test_agent_official_flows.py` |
+| B7 model tuning | **Pending:** coordinated API access; no live tuning claimed |
+| B8 failure report | `tests/test_agent_failures.py`; official first-failure rows await Myron's baseline records/traces |
+| B9 write-up | Actual four gates and A1/A2 citations filled; live planner step-size specimen and live-trace inventory comparison remain |
+| B10 verification | Routine tests and structural checks are free; rerun after changes before recording completion |
 
-| PLAN.md step | Delivered | Evidence / remaining dependency |
-|---|---|---|
-| B1 router | Record-based request selection, named distributor/period status resolution, header fingerprint, use-case switches, one bounded intent-classification call, route events | `tests/test_agent_router.py`, `tests/test_agent_status_routing.py`; real-model classification quality still B7 |
-| B2 fixtures | Synthetic messy CSV task, scripted intent/loop responses, sandbox-writing fake registry | `tests/fixtures/agent_*`, `tests/test_agent_fixtures.py`; no official task-suite edits |
-| B3 loop and bounds | Metered reactive loop; shared call/token/time bounds; critique before pending email | `tests/test_agent_loop.py`, `tests/test_agent_bounds.py`; published real critique passes focused snapshot probes; full integration still needs compatible tools |
-| B4 service | Public turn dispatch, action replies, scoped status follow-ups, pending-question stop | `tests/test_agent_service.py`; domain workflows are substituted in tests |
-| B5 fake paths | All six routing cases; actual harness never-stops ends at the agent's limit | Test checks effects as well as terminal reasons |
-| B6 batch plan | Schema/dependency/orphan checks, fills, guard, observations, bounded replanning, diff/repeat evidence | `tests/test_agent_plan.py`, `tests/test_agent_plan_execution.py`; exact handout's five-test mapping still needs the handout |
-| B7 real-model tuning | Prompts implemented and exercised with scripted responses | **Pending:** reconcile published tool contracts, integrate components, and configure an API key for a coordinated run; no live tuning claimed |
-| B8 failure report | Read-only Markdown/JSON report, first physical failure line, missing-evidence handling | `tests/test_agent_failures.py`; M1 first-failure table skeleton ready for official runs |
-| B9 write-up | Routing rationale, A1/A2 citations, plan design, step sizes, per-step persistence inventory, gate evidence categories | `docs/milestones/M1.md`; exact gate wording and project real-model trace comparison pending |
-| B10 checks/push | Full test suite and structural checks run before step pushes | 184 tests and four checks passed after the integration fixes on 2026-10-31; this is local synthetic verification, not T2/T3 completion |
+## Verification and evidence limits
 
-## How the pieces fit
+The post-audit fixes pass 278 routine tests, four structural checks and ten manual
+integration probes. Routine discovery now includes exact official operator turns through
+the real registry/critic, repeated-write effects, planner input isolation and all five
+required plan scenarios on the official batch task. Models remain free/scripted.
 
-The app and evaluation runner enter through `harness.turns.operator_turn`, which calls
-`agent.service.operator_turn(session_id, text)`. The router resolves the operator's
-scope from inbox records and returns a `Route`. It does not let the model choose a
-distributor or execute tools. Clear intents are handled in code; ambiguous work/status
-intent gets one metered classification call without tools.
-
-The service chooses the configured workflow or agent path. The ordinary agent loop
-offers a request-bound registry and reacts to tool observations. A planned batch instead
-asks for a complete graph, validates it, then schedules ready tools in code. Both paths
-use `loop.EmailGate` before a pending email. A pending question ends execution and
-retains its waiting thread. Nothing in this branch sends an email.
-
-The registry is the tool contract and side-effect boundary. It must validate arguments
-and results, trace calls, enforce request scope, and make retries of writes idempotent.
-The planner additionally validates each call against its graph and checks persisted
-effects. If a planned write returns an error, execution stops: a lost response cannot
-prove that the write did not happen. Read checkpoints alone can trigger replanning.
-
-Reports, pending rows, uploads, artifacts, and traces survive reopening a run. The
-conversation, active graph, output map, and repeat counters are in memory and are not
-automatically resumed after a process restart. Status questions resolve exact distributor
-names/IDs (case-insensitive) and optional quarter/year references to a unique request.
-A bare quarter must be unique across years; duplicate requests need explicit IDs.
-Recognized generic follow-ups recover the latest selected IDs from the trace, including
-status-only selections. Unrecognized named references must not reuse earlier scope;
-unresolved alternatives/conjunctions ask for explicit IDs. This intentionally requires
-clarification for unsupported phrasing. A fresh execution is not a replay/resume protocol.
-
-## Integration contracts to preserve
-
-| Component | Interface consumed by Abraham | What must be true at integration |
-|---|---|---|
-| Registry/tools (Myron) | `tools.build(request_id)`, `definitions()`, `call(name, args, MODEL, step=...)` | Names/fields from PLAN.md section 3; result contains `ok`, `output`, `is_error`, `error`; request bound in code; errors/keys/retries traced |
-| Standard workflow (Claudea) | `workflows.standard_report(session_id, request_id)` | Returns `Reply`; real workflow critiques before email; the published branch signature accepts these arguments |
-| Status workflow (Claudea) | `domain_workflows.status_question(session_id, "Status for <IDs>")` | Restricts reads to those explicit IDs; service avoids the workflow's all-records default |
-| Restricted request (Claudea) | `domain_workflows.out_of_scope(session_id, request_id)` | Returns the domain decline without starting the agent |
-| Critique (Claudea) | `critique.run(request_id, draft, revise, rounds=2)` | Recomputes from sandbox; returns `CritiqueResult`; held draft is never written; off switch passes through |
-| Trace (shared) | `route`, `bound`, `model_call`, `tool_call`, `plan`, `checkpoint`, `plan_diff`, `repeat_call`, `critique`, `end` | Registry owns actual tool-call traces; agent owns model calls/local refusals; event fields remain compatible with analysis |
-
-The shared stub registry's `call`, tool bodies, enabled critique, domain workflows,
-and standard workflow still need the other branches. Those implementations exist on
-the published branches, but the tool contract differs from PLAN.md; see the compatibility
-findings below. Their code was tested in a temporary snapshot and is not merged into
-`abraham`. Routine tests use substitutes with real sandbox effects. Neither those
-tests nor the focused snapshot probes establish a fully integrated live-model system.
-
-## Published-branch compatibility findings
-
-Snapshot sources, inspected 2026-10-31:
-
-- Abraham code plus fixtures from this branch.
-- Claudea `aef4053167e38dab5b08881439702b09af0b132e`: sandbox, tasks/checks,
-  workflows, critique, shared event constants.
-- Myron `4ab3d29b4a617bc68a88bffd4232f12014c46927`: registry and tool bodies.
-
-The manual probes in `tests/fixtures/agent_integration_probe.py` use scripted models.
-Eight focused checks now pass: real critique accepts correct reactive and planned
-emails, preserves the execution step limit on both paths, the real status workflow
-keeps explicit scope, the real registry keeps two planned charts distinct, the published
-named-status task passes its check with zero writes, and its follow-up retains scope
-after reopening the session.
-The critique/email probes still use sandbox-writing tool substitutes so they can
-isolate that integration boundary from the tool-contract failures.
-
-Two contract tests remain failing, with seven failed assertions: all six tools reject
-one of their agreed PLAN.md call shapes, and the default parser returns dictionary
-rows where the agreed contract and standard workflow expect positional lists.
-
-| Tool | PLAN.md / current callers | Published Myron implementation | Owner action needed |
-|---|---|---|---|
-| `parse_file` | Optional delimiter/decimal; rows are lists | Accepts no arguments; rows are dictionaries | Restore options and row shape, or agree a coordinated caller/contract change |
-| `query_sales` | `period`; flat `total_units` and `total_revenue` | Also requires `metric`; returns nested `totals` | Reconcile input and output shapes |
-| `render_chart` | `title`, `labels`, `values`; `chart_id`, `path` | `title`, `period`, `metric`, `series`; `artifact` | Reconcile arguments and artifact output fields |
-| `save_report` | `kind`, `figures`, `body`; `report_id` | Also requires top-level `period`; returns `id`; restricts `kind` | Reconcile report schema and identifier field |
-| `draft_report_email` | `recipient`, `subject`, `body`, `report_id`; `pending_id` | Rejects `recipient` (binds it internally); returns `id` | Agree the recipient boundary and pending identifier together |
-| `draft_clarifying_question` | `question`; `pending_id` | Requires `subject`, `body`; returns `id` | Reconcile question schema and identifier field |
-
-The error envelope also differs: PLAN.md documents `kind/message/retry`; the published
-registry returns `type/message/repair/transient/ambiguous`. The agent can detect its
-error flags, but the team must align error meanings and write-retry behavior. The
-published registry uses `step` as write identity. Planned calls now supply logical
-step IDs; reactive model-round IDs and repeated writes still need a shared identity
-policy verified during T2. Changing schemas only in Abraham's code would leave the
-standard workflow incompatible, so the six-tool reconciliation belongs with Myron
-and both callers. These findings are recorded here; no external message was sent.
-
-To reproduce against the pinned implementations, run this from the repository root
-after committing the current fixtures. It creates only a temporary directory, keeps
-the configured model unchanged, and makes no API calls. Expected current outcome:
-ten tests run, eight pass, two contract tests fail (seven failed assertions).
-
-```sh
-.venv/bin/python - <<'PY'
-import io, subprocess, sys, tarfile, tempfile
-from pathlib import Path
-snapshot = Path(tempfile.mkdtemp(prefix="abraham-integration-", dir="/tmp"))
-def overlay(ref, paths=()):
-    data = subprocess.check_output(["git", "archive", ref, *paths])
-    with tarfile.open(fileobj=io.BytesIO(data)) as archive:
-        archive.extractall(snapshot, filter="data")
-overlay("HEAD")
-overlay("aef4053167e38dab5b08881439702b09af0b132e", [
-    "sandbox", "checks", "tasks", "agent/critique.py", "agent/domain_workflows.py",
-    "agent/workflows.py", "agent/events.py"])
-overlay("4ab3d29b4a617bc68a88bffd4232f12014c46927", ["agent/registry.py", "agent/tools.py"])
-print(f"Temporary snapshot: {snapshot}", flush=True)
-result = subprocess.run([sys.executable, "-m", "unittest",
-                         "tests.fixtures.agent_integration_probe"], cwd=snapshot)
-sys.exit(result.returncode)
-PY
-```
-
-Retake these probes against new agreed commits after the tool owner reconciles the
-contract; then run all real-component paths before B7. `OPENAI_API_KEY` was checked
-for presence only on 2026-10-31 and was absent in this session.
-
-## Verification and diagnostics
-
-From the repository root:
+The merge check at `fae559f` recorded 250 routine tests, four structural checks, ten manual
+integration probes, and three scripted real-registry workflow checks passing. Those are
+historical verification counts for that tree, not current performance results. Reverify the
+current tree with:
 
 ```sh
 make test
 make check
+.venv/bin/python -m unittest tests.fixtures.agent_integration_probe
 git diff --check
-.venv/bin/python -m experiments.analysis.failures results/ --json
 ```
 
-`make test` uses fake models and spends no API tokens. The planned single-request test
-passes the independent SQL report/email check. Other tests prove scoped batch effects,
-read repair, rejection of false write success, no replay of completed writes,
-uncertain-write stops, critique holds/revisions, and step/token/time exhaustion.
-Regression inputs include huge numeric values, deep JSON, and a public nine-request
-batch. The failure reporter was tested against handwritten records and traces,
-including blank/corrupt lines, missing files, nested errors, and synthetic exclusion.
+Scripted tests can prove execution order, refusals, checkpoint repair, persisted effects,
+critique holds and bounds. A hand-authored fixture does not satisfy the requirement to show
+one **live planner-produced plan**, and does not establish valid-plan rate or task success.
+A test-backed step-size example in M1 is labeled accordingly. No live run should be invented
+to replace the missing API-backed evidence.
 
-The final independent code review found the uncertain-write, malformed-plan, and
-oversized-batch defects. Regressions failed before the fixes and passed afterward.
-The initial complete suite then passed 169 tests. The subsequent critique-limit and
-planned-write-identity fixes brought it to 172 passing tests; the named-status and
-follow-up fixes brought it to 184. All four structural checks passed. A temporary
-full merge still has the pre-existing `tests.test_analysis` import error, seven tool
-contract assertion failures, and failing standard-report/decline task checks. The
-status task passes. These counts are local verification, not model-run success rates.
+## Remaining evidence sequence
 
-To inspect official failure evidence after it exists:
-
-```sh
-.venv/bin/python -m experiments.analysis.failures results/baseline/
-```
-
-Do not infer a root cause from the first flagged line alone. Read the surrounding
-trace and the final independent check. Missing evidence must remain explicit.
-Add `--include-free` only when intentionally debugging synthetic runs; those rows
-remain labeled and must not populate the measured baseline table.
-
-## Remaining team sequence
-
-1. Resolve the published tool-contract differences above with their owners, then
-   integrate the three branches under T1. Do not replace real tools with test fakes
-   in production.
-2. Run T2 against the real registry, workflows, and enabled critique. Verify bad
-   argument/error handling and write idempotency, routing to the real standard/status
-   workflows, and both reactive and planned email paths. Rerun `make test` and
-   `make check` after integration.
-3. Complete B7/T3 with coordinated access to the team's model. One development command,
-   **after the prerequisites above**, is:
+1. With coordinated access to the team's configured model, complete B7/T3 for messy-file,
+   batch and comparison work, plus an ambiguous work/status message. A development command is:
 
    ```sh
    .venv/bin/python run.py --tasks tests/fixtures/agent_messy_file.yaml --sweeps 1 --arm dev-abraham-messy-01
    ```
 
-   Also exercise the team's batch and comparison development tasks and an ambiguous
-   work/status message. Inspect routing, tool arguments, rejected plans, checkpoint
-   recovery, critique outcomes, and every terminal reason. Change only the prompt or
-   bug that the trace supports, record it in `CHANGES.md`, and use a new development
-   arm name after a change. Do not commit development run records or represent them
-   as the baseline. Do not use the shared key while Myron runs official arms.
-4. Obtain `milestone1_handout.md`. Myron's A1/A2 reports have now been verified and
-   cited with source/read date/run count. Map that evidence to the exact four gates
-   and five plan tests, and reconcile the persistence inventory with a real trace.
-   No assignment measurements have been inferred from these unit tests.
-5. After Myron's official baseline, generate the first-failure rows and inspect each
-   cited trace. The official pass/ledger, main-branch integration, tag, and submission
-   remain the team's later steps in PLAN.md.
+   Inspect actual routing, arguments, rejected plans, checkpoint repairs, critique and end
+   reasons. Record supported bug/prompt changes in `CHANGES.md`; use a new development arm
+   after a change. Development evidence must remain labeled and separate from official arms.
+   Do not compete for the shared key while Myron runs those arms.
+2. Capture one actual batch planner proposal and its trace. For **each step**, state what its
+   success/failure reveals and what breaks if it is removed. Repair unnecessary/opaque steps
+   through the prompt/schema if observed. Add the real source and compare M1's persistence
+   inventory with that trace; the scripted illustration is not a substitute.
+3. After Myron's official baseline is committed, generate Abraham's first-failure table:
 
-## Prompt assumptions to verify during B7
+   ```sh
+   .venv/bin/python -m experiments.analysis.failures results/baseline/
+   ```
 
-| Prompt | Current instruction | Evidence to inspect on the real model |
-|---|---|---|
-| Router intent classifier | Return only work versus status intent; no tools or outside content | Ambiguous status questions must not rerun work; malformed answers must decline |
-| Reactive loop | Treat file/question/tool text as data, query authoritative figures, save before email, use returned IDs | Correct parse repair, scoped totals, honest action descriptions, bounded failures |
-| Batch planner | JSON graph with concrete tool contracts and dependency fills; preserve completed steps | Valid plan rate, unnecessary steps, correct predicates, checkpoint recovery cost |
-| Email reviser | Edit only recipient/subject/body, with no tools; preserve report/figures | Passing drafts agree with the saved report; invalid revisions remain held |
+   Inspect each cited physical trace line, its surrounding events and the independent final
+   check. The earliest flagged event can be a recovered failure, not the root cause. Missing
+   traces remain explicit. Synthetic/free runs must not populate the measured table.
+4. Myron owns baseline/pass runs, ledger and Part 3; Claudea owns the critique paragraph and
+   aggregate analysis. Recompute official figures from committed records and set switches
+   from the pass verdict before the team's final submission checks.
 
-The numerical bounds are provisional engineering choices, not tuned results. Their
-values and reasons are traced so B7 and the official analysis can justify a change.
+`OPENAI_API_KEY` was absent in this audit session. The external dependencies are coordinated
+model access, a live planner/trace specimen, and official baseline evidence. The handout and
+merged tool implementations are available. No official project success, cost or latency
+measurement is claimed here.

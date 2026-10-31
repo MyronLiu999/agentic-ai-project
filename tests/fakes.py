@@ -26,7 +26,7 @@ class FakeRegistry:
     def definitions(self) -> list[dict]:
         return list(self._definitions)
 
-    def call(self, name: str, args: dict, caller: str, *, step=None) -> dict:
+    def call(self, name: str, args: dict, caller: str, *, step=None, trace_step=None) -> dict:
         self.calls.append({"name": name, "args": args, "caller": caller, "step": step})
         if name not in self.results:
             return {"ok": False, "output": "unknown tool", "is_error": True,

@@ -50,7 +50,7 @@ class SandboxRegistry:
         return [{"name": name, "description": name, "input_schema": {"type": "object", "properties": {}}}
                 for name in sorted(self.offered)]
 
-    def call(self, name, args, caller, *, step=None):
+    def call(self, name, args, caller, *, step=None, trace_step=None):
         self.calls.append({"name": name, "args": copy.deepcopy(args), "caller": caller, "step": step})
         if name in self.failures:
             result = self.failures[name]
@@ -63,7 +63,7 @@ class SandboxRegistry:
             except (TypeError, ValueError) as exc:
                 result = {"ok": False, "output": None, "is_error": True,
                           "error": {"kind": "protocol", "message": str(exc), "retry": False}}
-        trace_step = int(step) if str(step).isdigit() else step
+        trace_step = trace_step if trace_step is not None else (int(step) if str(step).isdigit() else step)
         runtime.trace().tool_call(trace_step, {"name": name, "input": args}, result,
                                   is_error=result["is_error"])
         self.after_call()

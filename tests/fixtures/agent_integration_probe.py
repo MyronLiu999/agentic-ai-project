@@ -125,6 +125,9 @@ class IntegrationProbe(ScratchTest):
                        'depends_on':['query'], 'expect':{'field':'path','op':'exists'}}
                       for sid, value in [('chart_a', 10), ('chart_b', 20)]]
             raw['steps'][1]['depends_on'] += ['chart_a', 'chart_b']
+            raw["steps"][1]["args"]["figures"] = {
+                "period": {"$fill": "query.period"}, "total_revenue": {"$fill": "query.total_revenue"},
+                "charts": [{"$fill": "chart_a.path"}, {"$fill": "chart_b.path"}]}
             raw['steps'][1:1] = charts
             self.script([{'type':'text', 'text':json.dumps(raw)}], 'end_turn')
             def factory(rid):

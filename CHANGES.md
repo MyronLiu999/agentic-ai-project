@@ -24,6 +24,20 @@ test task `standard_report_clean` with its check and tests.
 
 **Reused code:** none yet (name each assignment and whose repository).
 
+**Abraham — milestone audit fixes (2026-10-31, before the baseline):** accepted the
+official batch command and relative report follow-ups without widening request scope;
+comparison follow-ups read the saved difference. Reactive calls now use effect-based
+write keys and separate `trace_step` attribution, with exact-repeat events. Planning
+receives only IDs/counts and trusted instructions; code resolves scoped request fields,
+sanitizes checkpoint feedback, preserves completed prefixes and enforces listed order.
+Unused non-checkpoint outputs are rejected; the scripted batch consumes file counts
+and chart IDs in its saved figures. Corrected the four-gate economics, documented
+assumptions and added the step-size illustration and official-task scenario mapping.
+Verified 278 routine tests, four structural checks and ten manual integration probes;
+all model responses were free/scripted. Independent review found a one-new-request
+batch-qualifier fallback, corrected with a failing-then-passing regression. Live tuning,
+a live planner specimen and the official first-failure rows still require team run evidence.
+
 **Abraham — main integration (2026-10-31):** merged the agent core with the domain
 and tools already on main. Resolved the milestone write-up conflict by preserving
 each owner's completed sections. Production code merged unchanged. Verified 250

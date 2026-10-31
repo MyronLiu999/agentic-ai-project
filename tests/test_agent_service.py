@@ -5,7 +5,7 @@ from unittest import mock
 from agent import domain_workflows, loop, service, workflows
 from harness import runtime, turns
 from harness.turns import Reply
-from sandbox import inbox, pending
+from sandbox import inbox, pending, reports
 from tests.fixtures.agent_loop_fakes import SandboxRegistry, tool
 from tests.support import ScratchTest, fixed_run
 
@@ -15,6 +15,48 @@ MODEL = "tests.fixtures.agent_loop_fakes:SequenceModel"
 
 
 class AgentServiceTest(ScratchTest):
+    def test_official_comparison_follow_up_answers_saved_change_in_session_scope(self):
+        task = "tasks/compare_check_last_quarter.yaml"
+        rid = "REQ-SYN-thread-1201"
+        with fixed_run(task, "comparison-follow-up", backend=MODEL):
+            reports.save(rid, "comparison", {"period": "2026Q3", "total_revenue": 67246.55,
+                         "previous_total_revenue": 62799.60}, "Compared Q2 and Q3", "comparison")
+            runtime.trace().event("route", use_case="compare_check", path="agent", request_ids=[rid])
+            inbox.add("SYN-unrelated", "SYN-DIST-002", "other@example.test", "Other", period="2026Q2")
+        with fixed_run(task, "comparison-follow-up", backend=MODEL, fresh=False):
+            before = pending.all_pending()
+            reply = turns.operator_turn("operator", "What changed from Q2, and is anything still open?")
+            self.assertIn(rid, reply.text)
+            self.assertIn("62,799.60", reply.text)
+            self.assertIn("4,446.95", reply.text)
+            self.assertIn("still open", reply.text)
+            self.assertNotIn("REQ-SYN-unrelated", reply.text)
+            self.assertEqual(pending.all_pending(), before)
+            self.assertEqual(runtime.client().calls, 0)
+
+    def test_official_batch_follow_up_lists_only_the_last_selected_reports(self):
+        with fixed_run("tasks/batch_reports_two.yaml", "batch-follow-up", backend=MODEL):
+            ids = ["REQ-SYN-thread-1301", "REQ-SYN-thread-1302"]
+            for i, rid in enumerate(ids):
+                reports.save(rid, "batch", {"period": "2026Q3", "total_revenue": 100 + i}, "Saved", rid)
+            runtime.trace().event("route", use_case="batch_reports", path="agent", request_ids=ids)
+            other = inbox.add("SYN-unrelated", "SYN-DIST-003", "other@example.test", "Other")
+            reply = turns.operator_turn("operator", "Which reports did you save, and is anything still open?")
+            for rid in ids:
+                self.assertIn(rid, reply.text)
+            self.assertEqual(reply.text.count("Report v1"), 2)
+            self.assertNotIn(other, reply.text)
+            self.assertEqual(runtime.client().calls, 0)
+
+    def test_new_follow_ups_without_scope_do_not_select_unrelated_requests(self):
+        for n, message in enumerate(("What changed from Q2, and is anything still open?",
+                                     "Which reports did you save, and is anything still open?")):
+            with self.subTest(message=message), fixed_run(TASK, f"no-scope-{n}", backend=MODEL):
+                reply = turns.operator_turn("operator", message)
+                self.assertIn("No requests have been selected", reply.text)
+                self.assertNotIn(RID, reply.text)
+                self.assertEqual(runtime.client().calls, 0)
+
     def test_harness_reaches_the_real_loop_and_its_external_bound(self):
         with mock.patch("agent.loop.tools.build", side_effect=lambda rid: SandboxRegistry(rid, ["parse_file"])), \
                 mock.patch("agent.domain_workflows.status_question", return_value=Reply("Records inspected")):

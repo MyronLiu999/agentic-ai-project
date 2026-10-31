@@ -66,11 +66,18 @@ def route_operator_message(session_id: str, text: str) -> Route:
     batch = _batch_requested(text)
     _check_selection(text, selected)
     if not selected:
+        if not batch and re.search(
+                r"\b(?:all|every|each|both|multiple|several)\s+(?:of\s+)?(?:the\s+)?(?:new\s+)?requests?\b", text, re.I):
+            raise RoutingError("Batch selection is ambiguous. List request IDs or use an unqualified batch command.")
         selected = [r for r in records if r["status"] == "new"]
         if not selected:
             raise RoutingError("No new requests. Name a request or thread to work on it again.")
         if len(selected) > 1 and not batch:
             raise RoutingError("Multiple new requests. Name a request or thread, or ask for a batch.")
+    _check_selection(text, selected)
+    quarter = re.search(r"\bQ[1-4]\b", text, re.I) if batch else None
+    if quarter and any(not (r["period"] or "").upper().endswith(quarter[0].upper()) for r in selected):
+        raise RoutingError("The batch quarter does not match every selected request. Clarify the request IDs and period.")
 
     how = "model" if used_model else "record"
     questions = [text, *(r["question"] for r in selected)]
@@ -93,11 +100,24 @@ def _batch_requested(text: str) -> bool:
     Matching the whole command avoids widening scope for phrases such as 'all
     products' or 'all reports for Acme'. Intent classification never selects scope.
     """
+    if re.fullmatch(
+        r"(?:please\s+)?(?:make|prepare|generate|create)\s+(?:the\s+)?(?:standard\s+)?"
+        r"(?:Q[1-4]\s+)?reports?\s+for\s+(?:all|every|each)\s+(?:the\s+)?(?:new\s+)?requests?"
+        r"(?:\s+and\s+draft\s+(?:each|the|their)\s+emails?)?[.!]?", text, re.I):
+        return True
     return bool(re.fullmatch(
         r"(?:please\s+)?(?:handle|process|prepare|generate|create)\s+"
         r"(?:(?:reports?\s+for|a\s+batch\s+of)\s+)?"
         r"(?:all|every|each|both|multiple|several)\s+(?:of\s+)?(?:the\s+)?(?:new\s+)?"
         r"(?:requests?|reports?|distributors?)[.!]?", text, re.I))
+
+
+def report_follow_up(text: str):
+    """Only a complete relative question may inherit the session's report scope."""
+    return re.fullmatch(
+        r"(?:please )?(?:which reports did you save|what changed from (?P<quarter>Q[1-4]))"
+        r"(?:,? and is anything(?: still)? (?:open|pending))?[.!?]?",
+        " ".join(text.split()), re.I)
 
 
 def _references(text: str, records: list[dict]) -> list[dict]:
@@ -142,6 +162,8 @@ def _status_references(text: str, records: list[dict]) -> list[dict]:
     Multiple requests for the same period still need an explicit request ID.
     """
     text = " ".join(text.split())
+    if report_follow_up(text):
+        return []
     with db.connect() as conn:
         distributors = conn.execute("SELECT id, name FROM distributors").fetchall()
     named = [d["id"] for d in distributors
@@ -180,10 +202,12 @@ def _status_references(text: str, records: list[dict]) -> list[dict]:
 def _intent(session_id: str, text: str, records: list[dict]) -> tuple[str, bool]:
     # These patterns cover the console's ordinary commands. Ambiguous language gets
     # one classification call; it cannot grant authority or choose a tool or request.
+    if report_follow_up(text):
+        return "status_question", False
     if re.search(r"^(please\s+)?(what did you do\b|what have you done\b|is anything\b.*\b(open|pending)\b|"
                  r"(what('s| is)|show( me)?|give me|check) (the )?(status|progress)\b|status\b)", text, re.I):
         return "status_question", False
-    if re.search(r"^(please\s+)?(handle|process|prepare|generate|create|compare|analyse|analyze)\b", text, re.I):
+    if _batch_requested(text) or re.search(r"^(please\s+)?(handle|process|prepare|generate|create|compare|analyse|analyze)\b", text, re.I):
         return "new_task", False
 
     client = runtime.client(session_id)

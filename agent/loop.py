@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import asdict, dataclass
+import hashlib
 import json
 
 from agent import bounds, critique, events, tools
@@ -66,6 +67,7 @@ class _Loop:
         self.budget = bounds.Budget(limits, initial_tokens=self.client.total_tokens,
                                     session_ceiling=self.client.session_ceiling, clock=clock)
         self.actions = []
+        self.repeats = {}
         self.waiting_for = None
         self.messages = [{"role": "user", "content": json.dumps({
             "operator_instruction": text,
@@ -111,6 +113,12 @@ class _Loop:
                 results = []
                 for call in calls:
                     self.check()
+                    digest = hashlib.sha256(json.dumps([self.request["id"], call.name, call.input],
+                                                       sort_keys=True).encode()).hexdigest()
+                    count = self.repeats[digest] = self.repeats.get(digest, 0) + 1
+                    if count > 1:
+                        self.trace.event(events.REPEAT_CALL, request_id=self.request["id"], tool=call.name,
+                                         args_hash=digest, count=count, step=step)
                     if response.stop_reason != "tool_use":
                         result = self.reject(call, step, "The tool response was incomplete. Return a complete tool call to execute it.")
                         executed_input = None
@@ -151,7 +159,8 @@ class _Loop:
                 return self.reject(call, step, str(exc)), None
             args = gate.checked_email(draft)
         self.check()
-        result = self.registry.call(call.name, args, MODEL, step=str(step))
+        # A model round is trace attribution, never a stable logical write step.
+        result = self.registry.call(call.name, args, MODEL, trace_step=step)
         return result, args if result["ok"] and not result["is_error"] else None
 
 

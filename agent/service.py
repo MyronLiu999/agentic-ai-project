@@ -7,10 +7,12 @@ model calls labelled as theirs.
 
 from __future__ import annotations
 
+import math
+
 from agent import domain_workflows, events, loop, router, workflows
 from harness import runtime
 from harness.turns import Reply
-from sandbox import inbox, pending, reports
+from sandbox import inbox, pending, reports, sales
 
 
 def operator_turn(session_id: str, text: str) -> Reply:
@@ -27,7 +29,11 @@ def operator_turn(session_id: str, text: str) -> Reply:
             trace.end(events.DONE, detail="No requests selected in this session")
             return Reply("No requests have been selected in this session. Name a request or thread to check its status.")
         # The workflow's bare-status default is all records; provide only resolved IDs.
-        return domain_workflows.status_question(session_id, "Status for " + " ".join(ids))
+        reply = domain_workflows.status_question(session_id, "Status for " + " ".join(ids))
+        follow_up = router.report_follow_up(text)
+        if follow_up and follow_up["quarter"]:
+            reply.text += "\n" + _saved_comparisons(ids, follow_up["quarter"].upper())
+        return reply
     if route.path == "agent" and route.use_case == "batch_reports" and runtime.switch("plan.batch_reports") == "on":
         from agent import plan
         return plan.run(session_id, route.request_ids, text)
@@ -64,6 +70,29 @@ def _last_selection(trace) -> tuple[str, ...]:
         if line.get("type") == events.ROUTE and line.get("request_ids"):
             return tuple(rid for rid in line.get("request_ids", []) if inbox.get(rid) is not None)
     return ()
+
+
+def _saved_comparisons(ids, quarter):
+    """Explain recorded comparisons without starting another reporting task."""
+    lines = []
+    for rid in ids:
+        saved = reports.latest(rid)
+        figures = reports.figures(saved) if saved else {}
+        period = figures.get("period")
+        try:
+            previous = sales.previous_period(period)
+        except (TypeError, ValueError, IndexError):
+            previous = ""
+        current, before = figures.get("total_revenue"), figures.get("previous_total_revenue")
+        if (not previous.endswith(quarter) or
+                any(type(n) not in (int, float) or not math.isfinite(n) for n in (current, before))):
+            lines.append(f"{rid}: No saved comparison from {quarter} is available.")
+            continue
+        delta = current - before
+        direction = "increased" if delta >= 0 else "decreased"
+        lines.append(f"{rid}: Revenue {direction} by {abs(delta):,.2f}, from {before:,.2f} in "
+                     f"{previous} to {current:,.2f} in {period}.")
+    return "\n".join(lines)
 
 
 def _agent_reply(request_id: str, result: loop.LoopResult) -> Reply:
