@@ -27,7 +27,7 @@ dependencies, described below.
 
 | PLAN.md step | Delivered | Evidence / remaining dependency |
 |---|---|---|
-| B1 router | Record-based request selection, header fingerprint, use-case switches, one bounded intent-classification call, route events | `tests/test_agent_router.py`; real-model classification quality still B7 |
+| B1 router | Record-based request selection, named distributor/period status resolution, header fingerprint, use-case switches, one bounded intent-classification call, route events | `tests/test_agent_router.py`, `tests/test_agent_status_routing.py`; real-model classification quality still B7 |
 | B2 fixtures | Synthetic messy CSV task, scripted intent/loop responses, sandbox-writing fake registry | `tests/fixtures/agent_*`, `tests/test_agent_fixtures.py`; no official task-suite edits |
 | B3 loop and bounds | Metered reactive loop; shared call/token/time bounds; critique before pending email | `tests/test_agent_loop.py`, `tests/test_agent_bounds.py`; published real critique passes focused snapshot probes; full integration still needs compatible tools |
 | B4 service | Public turn dispatch, action replies, scoped status follow-ups, pending-question stop | `tests/test_agent_service.py`; domain workflows are substituted in tests |
@@ -36,7 +36,7 @@ dependencies, described below.
 | B7 real-model tuning | Prompts implemented and exercised with scripted responses | **Pending:** reconcile published tool contracts, integrate components, and configure an API key for a coordinated run; no live tuning claimed |
 | B8 failure report | Read-only Markdown/JSON report, first physical failure line, missing-evidence handling | `tests/test_agent_failures.py`; M1 first-failure table skeleton ready for official runs |
 | B9 write-up | Routing rationale, A1/A2 citations, plan design, step sizes, per-step persistence inventory, gate evidence categories | `docs/milestones/M1.md`; exact gate wording and project real-model trace comparison pending |
-| B10 checks/push | Full test suite and structural checks run before step pushes | 172 tests and four checks passed after the integration fixes on 2026-10-31; this is local synthetic verification, not T2/T3 completion |
+| B10 checks/push | Full test suite and structural checks run before step pushes | 184 tests and four checks passed after the integration fixes on 2026-10-31; this is local synthetic verification, not T2/T3 completion |
 
 ## How the pieces fit
 
@@ -60,8 +60,13 @@ prove that the write did not happen. Read checkpoints alone can trigger replanni
 
 Reports, pending rows, uploads, artifacts, and traces survive reopening a run. The
 conversation, active graph, output map, and repeat counters are in memory and are not
-automatically resumed after a process restart. Status follow-ups recover selected IDs
-from the trace and use records. A fresh execution is not a replay/resume protocol.
+automatically resumed after a process restart. Status questions resolve exact distributor
+names/IDs (case-insensitive) and optional quarter/year references to a unique request.
+A bare quarter must be unique across years; duplicate requests need explicit IDs.
+Recognized generic follow-ups recover the latest selected IDs from the trace, including
+status-only selections. Unrecognized named references must not reuse earlier scope;
+unresolved alternatives/conjunctions ask for explicit IDs. This intentionally requires
+clarification for unsupported phrasing. A fresh execution is not a replay/resume protocol.
 
 ## Integration contracts to preserve
 
@@ -86,14 +91,16 @@ tests nor the focused snapshot probes establish a fully integrated live-model sy
 Snapshot sources, inspected 2026-10-31:
 
 - Abraham code plus fixtures from this branch.
-- Claudea `ac8997ebb70bb5e330a37f82cb9c8482d89e421b`: sandbox, tasks/checks,
+- Claudea `aef4053167e38dab5b08881439702b09af0b132e`: sandbox, tasks/checks,
   workflows, critique, shared event constants.
 - Myron `4ab3d29b4a617bc68a88bffd4232f12014c46927`: registry and tool bodies.
 
 The manual probes in `tests/fixtures/agent_integration_probe.py` use scripted models.
-Six focused checks now pass: real critique accepts correct reactive and planned
+Eight focused checks now pass: real critique accepts correct reactive and planned
 emails, preserves the execution step limit on both paths, the real status workflow
-keeps explicit scope, and the real registry keeps two planned charts distinct.
+keeps explicit scope, the real registry keeps two planned charts distinct, the published
+named-status task passes its check with zero writes, and its follow-up retains scope
+after reopening the session.
 The critique/email probes still use sandbox-writing tool substitutes so they can
 isolate that integration boundary from the tool-contract failures.
 
@@ -122,7 +129,7 @@ and both callers. These findings are recorded here; no external message was sent
 To reproduce against the pinned implementations, run this from the repository root
 after committing the current fixtures. It creates only a temporary directory, keeps
 the configured model unchanged, and makes no API calls. Expected current outcome:
-eight tests run, six pass, two contract tests fail (seven failed assertions).
+ten tests run, eight pass, two contract tests fail (seven failed assertions).
 
 ```sh
 .venv/bin/python - <<'PY'
@@ -134,7 +141,7 @@ def overlay(ref, paths=()):
     with tarfile.open(fileobj=io.BytesIO(data)) as archive:
         archive.extractall(snapshot, filter="data")
 overlay("HEAD")
-overlay("ac8997ebb70bb5e330a37f82cb9c8482d89e421b", [
+overlay("aef4053167e38dab5b08881439702b09af0b132e", [
     "sandbox", "checks", "tasks", "agent/critique.py", "agent/domain_workflows.py",
     "agent/workflows.py", "agent/events.py"])
 overlay("4ab3d29b4a617bc68a88bffd4232f12014c46927", ["agent/registry.py", "agent/tools.py"])
@@ -171,8 +178,11 @@ including blank/corrupt lines, missing files, nested errors, and synthetic exclu
 The final independent code review found the uncertain-write, malformed-plan, and
 oversized-batch defects. Regressions failed before the fixes and passed afterward.
 The initial complete suite then passed 169 tests. The subsequent critique-limit and
-planned-write-identity fixes brought it to 172 passing tests; all four structural
-checks passed. These counts are local verification, not model-run success rates.
+planned-write-identity fixes brought it to 172 passing tests; the named-status and
+follow-up fixes brought it to 184. All four structural checks passed. A temporary
+full merge still has the pre-existing `tests.test_analysis` import error, seven tool
+contract assertion failures, and failing standard-report/decline task checks. The
+status task passes. These counts are local verification, not model-run success rates.
 
 To inspect official failure evidence after it exists:
 

@@ -61,7 +61,7 @@ def operator_turn(session_id: str, text: str) -> Reply:
 def _last_selection(trace) -> tuple[str, ...]:
     """Recover scope from the session's durable trace, including after a restart."""
     for line in reversed(trace.lines()):
-        if line.get("type") == events.ROUTE and line.get("use_case") != "status_question":
+        if line.get("type") == events.ROUTE and line.get("request_ids"):
             return tuple(rid for rid in line.get("request_ids", []) if inbox.get(rid) is not None)
     return ()
 

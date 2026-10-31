@@ -113,3 +113,13 @@ two contract probes still fail (six call-shape mismatches and one parser row-sha
 mismatch). The handoff now identifies the tool owner actions, absent local API key,
 and still-missing handout. No teammate code, shared model setting, or official run
 record was changed or merged.
+
+**Abraham — named status integration:** status questions now resolve exact distributor
+names/IDs and quarter/year references against trusted metadata before dispatching
+to the existing status workflow. Ambiguous years, duplicate requests, unmatched names,
+and unresolved alternative/conjoined references ask for explicit request IDs. Generic
+follow-ups reuse the latest resolved selection, including status-only sessions after
+restart. Added routing regressions and manual real-domain probes: the published
+status task now answers the seeded report revenue without writes, and a follow-up
+keeps its request scope. Teammate tool-contract and analysis-module conflicts remain
+separate integration dependencies.

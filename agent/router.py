@@ -14,7 +14,7 @@ import re
 
 from agent import events
 from harness import runtime
-from sandbox import files, inbox
+from sandbox import db, files, inbox, sales
 
 USE_CASES = ("standard_report", "messy_file", "compare_check", "status_question", "out_of_scope", "batch_reports")
 
@@ -48,7 +48,8 @@ def route_operator_message(session_id: str, text: str) -> Route:
 
     Request questions and uploads are untrusted data. They may establish a format or
     trigger a restrictive rule, but never supply executable instructions or select IDs.
-    A status route without explicit IDs is scoped by the later status workflow's session.
+    Status questions may resolve a distributor and period to one request. Bare
+    follow-ups leave scope to the service's persisted session selection.
     """
     if not isinstance(text, str) or not text.strip():
         raise RoutingError("The operator message is empty.")
@@ -57,13 +58,13 @@ def route_operator_message(session_id: str, text: str) -> Route:
     selected = _references(text, records)
     intent, used_model = _intent(session_id, text, records)
     if intent == "status_question":
+        selected = selected or _status_references(text, records)
+        _check_selection(text, selected)
+        _check_status_selection(text, selected)
         return _record(session_id, "status_question", selected, "model" if used_model else "record")
 
     batch = _batch_requested(text)
-    if selected and (re.search(r"\b(except|excluding|exclude|either|instead|rather|not|never|skip|ignore|without)\b|"
-                              r"\bother than\b|\bdon['’]t\b", text, re.I)
-                     or (len(selected) > 1 and re.search(r"\bor\b", text, re.I))):
-        raise RoutingError("Request selection is ambiguous. List only the request or thread IDs to process.")
+    _check_selection(text, selected)
     if not selected:
         selected = [r for r in records if r["status"] == "new"]
         if not selected:
@@ -109,6 +110,71 @@ def _references(text: str, records: list[dict]) -> list[dict]:
     return [r for r in records
             if any(re.search(r"(?<![\w-])" + re.escape(r[key]) + r"(?![\w-])", text)
                    for key in ("id", "thread_id"))]
+
+
+def _check_selection(text: str, selected: list[dict]) -> None:
+    if selected and (re.search(r"\b(except|excluding|exclude|either|instead|rather|not|never|skip|ignore|without)\b|"
+                              r"\bother than\b|\bdon['’]t\b", text, re.I)
+                     or (len(selected) > 1 and re.search(r"\bor\b", text, re.I))):
+        raise RoutingError("Request selection is ambiguous. List only the request or thread IDs to select.")
+
+
+def _check_status_selection(text: str, selected: list[dict]) -> None:
+    """Do not silently drop an alternative or an unresolved second reference."""
+    masked = " ".join(text.split())
+    for request in selected:
+        distributor = sales.distributor(request["distributor_id"]) or {}
+        for alias in (request["id"], request["thread_id"], request["distributor_id"], distributor.get("name")):
+            if alias:
+                pattern = r"(?<![\w-])" + re.escape(" ".join(alias.split())) + r"(?![\w-])"
+                masked = re.sub(pattern, "\0", masked, flags=re.I)
+    # A conjunction may join resolved IDs or another status clause, as in
+    # 'and is anything still open?'; an unknown name must not be ignored.
+    if (re.search(r"\bor\b", masked, re.I)
+            or re.search(r"\band\s+(?!\x00|(?:is|are|was|were|what|has|have|did|does|can|could)\b)", masked, re.I)):
+        raise RoutingError("Status selection is ambiguous. List the request/thread IDs without alternatives.")
+
+
+def _status_references(text: str, records: list[dict]) -> list[dict]:
+    """Resolve a named status request from trusted metadata, never model output.
+
+    A bare quarter is enough only when one request matches across all years.
+    Multiple requests for the same period still need an explicit request ID.
+    """
+    text = " ".join(text.split())
+    with db.connect() as conn:
+        distributors = conn.execute("SELECT id, name FROM distributors").fetchall()
+    named = [d["id"] for d in distributors
+             if any(re.search(r"(?<![\w-])" + re.escape(" ".join(d[key].split())) + r"(?![\w-])", text, re.I)
+                    for key in ("id", "name"))]
+    explicit = re.findall(r"(?<![\w-])SYN-DIST-[\w-]+(?![\w-])", text, re.I)
+    if any(value.casefold() not in {d["id"].casefold() for d in distributors} for value in explicit):
+        raise RoutingError("Unknown distributor. Name a request or thread ID to check its status.")
+    # Split 2026Q3 so both compact periods and 'Q3 of 2026' use the same filters.
+    period_text = re.sub(r"\b(\d{4})(Q\d+)\b", r"\1 \2", text, flags=re.I)
+    quarters = set(re.findall(r"\bQ\d+\b", period_text.upper()))
+    years = set(re.findall(r"\b\d{4}\b", period_text))
+    if not named and not quarters and not years:
+        # Only a whole generic follow-up can inherit old scope. A partial or
+        # unknown name must not silently answer for the previous distributor.
+        generic = (r"(?:please )?(?:"
+                   r"(?:what did you do|what have you done)(?: so far)?"
+                   r"(?:,? and is anything(?: still)? (?:open|pending))?|"
+                   r"is anything(?: still)? (?:open|pending)|"
+                   r"(?:(?:what(?:'s| is)|show(?: me)?|give me|check) (?:the )?)?(?:status|progress)|"
+                   r"any (?:news|updates)(?: for (?:me|us))?)[.!?]?")
+        if re.fullmatch(generic, text, re.I):
+            return []
+        raise RoutingError("Name a request/thread ID or an exact distributor name to check its status.")
+    if (len(named) != 1 or len(quarters) > 1 or len(years) > 1
+            or not quarters <= {"Q1", "Q2", "Q3", "Q4"}):
+        raise RoutingError("Status selection is ambiguous. Name a request/thread ID, or one distributor and period.")
+    matches = [r for r in records if r["distributor_id"] == named[0]
+               and (not quarters or (r["period"] or "").upper()[4:] in quarters)
+               and (not years or (r["period"] or "")[:4] in years)]
+    if len(matches) != 1:
+        raise RoutingError("No unique request matches that distributor and period. Name a request or thread ID.")
+    return matches
 
 
 def _intent(session_id: str, text: str, records: list[dict]) -> tuple[str, bool]:

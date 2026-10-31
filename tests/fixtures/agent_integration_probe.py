@@ -18,6 +18,25 @@ from tests.test_agent_plan import RID, TASK, sample_plan
 MODEL = 'tests.fixtures.agent_loop_fakes:SequenceModel'
 
 class IntegrationProbe(ScratchTest):
+    def test_published_named_status_task_passes_without_writes(self):
+        record = self.run_task("tasks/status_question_done_work.yaml", "named-status-task",
+                               backend="tests.fixtures.agent_intent_models:StatusIntent")
+        self.assertTrue(record["passed"], record["check"]["reason"])
+        self.assertEqual(record["measures"]["writes"], 0)
+
+    def test_named_status_follow_up_keeps_scope_after_restart(self):
+        task = "tasks/status_question_done_work.yaml"
+        with fixed_run(task, "named-status-follow-up"):
+            inbox.add("SYN-unrelated", "SYN-DIST-002", "other@example.test", "Other request", period="2026Q3")
+            before = pending.all_pending()
+            first = turns.operator_turn("operator", "Status for SYN Acme Trading in Q3.")
+            self.assertIn("51,264.85", first.text)
+        with fixed_run(task, "named-status-follow-up", fresh=False):
+            follow_up = turns.operator_turn("operator", "What did you do?")
+            self.assertIn("51,264.85", follow_up.text)
+            self.assertNotIn("REQ-SYN-unrelated", follow_up.text)
+            self.assertEqual(pending.all_pending(), before)
+
     def script(self, content, stop='tool_use'):
         runtime.client().backend.responses = [(content, stop, Usage(10, 5))]
 
