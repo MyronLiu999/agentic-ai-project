@@ -1,6 +1,6 @@
 """Check for tasks/status_question_done_work.yaml: an answer to the operator's question, scored against the
-sandbox. Some reply gives the revenue in the report saved for the request (the seed's), and says nothing is
-open only if nothing is; the run writes nothing (a status question changes no record)."""
+sandbox. Some reply gives the revenue in the report saved for the request (the seed's); the run writes
+nothing (a status question changes no record). The open-item count is reported in the reason, not scored."""
 
 from __future__ import annotations
 

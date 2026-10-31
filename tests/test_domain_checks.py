@@ -140,5 +140,44 @@ class BatchReportsCheckTest(ScratchTest):
         self.assertEqual(result["measures"]["duplicate_emails"], 2)
 
 
+class ReportFiguresCheckTest(ScratchTest):
+    """The shared report and email checks (checks/common.py) read the headline fields, not any number anywhere:
+    planted wrong effects that once passed now fail. The messy-file task, so only these effects differ."""
+    UNITS = {"file_total_units": 1240}
+
+    def _truth(self, item):
+        return sales.distributor_sales(item["distributor"], item["period"])["total_revenue"]
+
+    def test_the_right_revenue_in_another_field_does_not_pass(self):
+        result = self.run_check(MESSY, lambda run: report_and_email(
+            run, run.task["input"], revenue=1, email_body="Your revenue was 1.00.",
+            extra={**self.UNITS, "other": self._truth(run.task["input"])}))
+        self.assertFalse(result["passed"])
+        self.assertIn("total_revenue is 1.00", result["reason"])
+
+    def test_a_report_for_the_wrong_period_fails(self):
+        result = self.run_check(MESSY, lambda run: report_and_email(
+            run, run.task["input"], extra={**self.UNITS, "period": "2026Q1"}))
+        self.assertFalse(result["passed"])
+        self.assertIn("period", result["reason"])
+
+    def test_an_email_with_a_wrong_amount_fails(self):
+        result = self.run_check(MESSY, lambda run: report_and_email(
+            run, run.task["input"], extra=self.UNITS, email_body="Your Q3 revenue was 99.99."))
+        self.assertFalse(result["passed"])
+        self.assertIn("does not state the revenue", result["reason"])
+
+    def test_an_email_for_an_older_report_fails(self):
+        def plant(run):
+            item = run.task["input"]
+            report_and_email(run, item, extra=self.UNITS)
+            figures = {"period": item["period"], "total_revenue": self._truth(item), **self.UNITS}
+            reports.save(inbox.request_id(item["thread"]), "standard", figures, "Report v2.",
+                         key=f"{run.run_id}-v2", stamp=run.run_id)
+        result = self.run_check(MESSY, plant)
+        self.assertFalse(result["passed"])
+        self.assertIn("not the last one saved", result["reason"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -49,3 +49,11 @@ def for_request(request_id: str) -> list[dict]:
 def mark_sent(pid: int) -> None:
     with db.connect() as conn:
         conn.execute("UPDATE pending SET status = 'sent' WHERE id = ?", (pid,))
+
+
+def discard(pid: int) -> bool:
+    """The undo of a draft: a pending record the operator will not send. Only a record still pending;
+    a sent one cannot be undone. Returns whether it was discarded."""
+    with db.connect() as conn:
+        cur = conn.execute("UPDATE pending SET status = 'discarded' WHERE id = ? AND status = 'pending'", (pid,))
+        return cur.rowcount == 1

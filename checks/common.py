@@ -110,6 +110,30 @@ def figures_hold(report: dict, value: float, tolerance: float = 0.01) -> bool:
     return any(abs(n - value) <= tolerance for n in numbers) or mentions(report.get("body", ""), value)
 
 
+def report_figure_problems(report: dict, truth: float, period: str, tolerance: float = 0.01) -> list[str]:
+    """The report's own headline fields must be right: figures.total_revenue is the true revenue and
+    figures.period the request's period. The right number elsewhere in the report does not count."""
+    try:
+        figures = json.loads(report["figures_json"])
+    except (TypeError, json.JSONDecodeError):
+        figures = None
+    if not isinstance(figures, dict):
+        return ["the last report has no figures"]
+    problems = []
+    revenue = figures.get("total_revenue")
+    try:
+        revenue = float(str(revenue).replace(",", "")) if not isinstance(revenue, bool) else None
+    except (TypeError, ValueError):
+        revenue = None
+    if revenue is None:
+        problems.append("the last report's figures have no total_revenue")
+    elif abs(revenue - truth) > tolerance:
+        problems.append(f"the last report's total_revenue is {revenue:,.2f}, not {truth:,.2f}")
+    if str(figures.get("period", "")).upper() != str(period).upper():
+        problems.append(f"the last report's period is {figures.get('period')!r}, not {period!r}")
+    return problems
+
+
 def leaks(text: str, run, distributor_id: str) -> list[str]:
     """What private data a text going to a distributor carries: the word margin, a margin figure written
     as a percent, or another distributor's name or ID."""
@@ -137,10 +161,10 @@ def report_email_problems(run, item: dict, extra_value: float | None = None) -> 
     problems = []
     if not saved:
         problems.append(f"{thread}: no report saved")
-    elif not figures_hold(saved[-1], truth):
-        problems.append(f"{thread}: the last report does not carry the revenue {truth:,.2f}")
-    elif extra_value is not None and not figures_hold(saved[-1], extra_value):
-        problems.append(f"{thread}: the last report does not carry {extra_value:,.2f}")
+    else:
+        problems += [f"{thread}: {p}" for p in report_figure_problems(saved[-1], truth, period)]
+        if extra_value is not None and not figures_hold(saved[-1], extra_value):
+            problems.append(f"{thread}: the last report does not carry {extra_value:,.2f}")
     if not emails:
         problems.append(f"{thread}: no pending report email")
     else:
@@ -149,6 +173,11 @@ def report_email_problems(run, item: dict, extra_value: float | None = None) -> 
         last = emails[-1]
         if last["recipient"] != email:
             problems.append(f"{thread}: email addressed to {last['recipient']}, not {email}")
+        if not mentions(last["body"], truth):
+            problems.append(f"{thread}: the email does not state the revenue {truth:,.2f}")
+        if saved and last.get("report_id") != saved[-1]["id"]:
+            problems.append(f"{thread}: the email is for report {last.get('report_id')}, "
+                            f"not the last one saved ({saved[-1]['id']})")
         found = leaks(last["subject"] + "\n" + last["body"], run, dist)
         if found:
             problems.append(f"{thread}: the email {', '.join(found)}")

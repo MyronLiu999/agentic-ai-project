@@ -19,7 +19,8 @@
 {% for p in pending %}<div class="line"><span class="who">{{ p.kind }} &middot; to {{ p.recipient }} &middot; {{ p.status }} &middot; {{ p.stamp }}</span>
 <b>{{ p.subject }}</b>
 <pre>{{ p.body }}</pre>
-{% if p.status == 'pending' %}<form method="post" action="/pending/{{ p.id }}/send"><button>Send as the operator</button></form>{% endif %}
+{% if p.status == 'pending' %}<form method="post" action="/pending/{{ p.id }}/send"><button>Send as the operator</button></form>
+<form method="post" action="/pending/{{ p.id }}/discard"><button>Discard (never sent)</button></form>{% endif %}
 </div>{% else %}<p class="muted">None.</p>{% endfor %}
 <h2>Email a report by hand</h2>
 <form method="post" action="/requests/{{ req.id }}/email">

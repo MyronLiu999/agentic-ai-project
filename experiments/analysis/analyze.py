@@ -47,6 +47,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 UNFINISHED = ("quota", "rate_limited", "not_built")
+SWEEPS = 3   # the handout's f: passed in at least two of three sweeps
 BOUND_ENDS = ("step_limit", "wall_clock", "agent_budget")
 PLAN_LABELS = ("executed", "skipped", "out_of_order", "extra")
 # Older Registry traces retain error_type even when output is only a summary.
@@ -83,6 +84,14 @@ def _read_trace(path: Path) -> list[dict]:
         except json.JSONDecodeError:
             pass
     return lines
+
+
+def _first_turn(trace: list[dict]) -> list[dict]:
+    """The trace lines of the first operator turn: from the first `operator` line to the next one."""
+    starts = [i for i, x in enumerate(trace) if x.get("type") == "operator"]
+    if not starts:
+        return trace
+    return trace[starts[0]:starts[1] if len(starts) > 1 else len(trace)]
 
 
 def _of(record: dict, kind: str) -> list[dict]:
@@ -154,8 +163,8 @@ def analyze_arm(folder: Path) -> dict:
     repeat_runs, repeat_events = 0, 0
     plan = Counter()
     critique = {"rounds": 0, "runs_with_critique": 0, "held": 0, "misses": 0, "verdicts": Counter()}
-    routing = {"routes": 0, "misroutes": 0, "misrouted_runs": []}
-    bound = Counter()
+    routing = {"routes": 0, "misroutes": 0, "misrouted_runs": [], "unrouted": 0, "unrouted_runs": []}
+    bound, bound_runs = Counter(), 0
     boundary = {"tool_errors": 0, "boundary_rejections": 0}
     measures = Counter()
     false_finishes, per_run = [], []
@@ -175,6 +184,7 @@ def analyze_arm(folder: Path) -> dict:
         for reason in reasons:
             if reason in BOUND_ENDS:
                 bound[reason] += 1
+        bound_runs += any(reason in BOUND_ENDS for reason in reasons)   # a run, however many bounds
 
         for line in _of(r, "plan_diff"):
             plan[f"diff_{line.get('label')}"] += 1
@@ -194,12 +204,19 @@ def analyze_arm(folder: Path) -> dict:
         if any(c.get("verdict") == "pass" for c in crit) and not r.get("passed"):
             critique["misses"] += 1
 
+        # The task's use_case is what its first operator turn asks; later turns are follow-ups (a status
+        # question after the work, say) and route elsewhere by design, so only the first turn's route is
+        # scored. A first turn that ended with no route at all (the router declined) is unrouted, not misrouted.
         expected = task_use_case(r)
-        for route in _of(r, "route"):
-            routing["routes"] += 1
-            if expected and route.get("use_case") != expected:
-                routing["misroutes"] += 1
-                routing["misrouted_runs"].append(f"{r['run_id']}: {route.get('use_case')} for {expected}")
+        routing["routes"] += len(_of(r, "route"))
+        first_turn = _first_turn(r["_trace"])
+        first = next((x for x in first_turn if x.get("type") == "route"), None)
+        if expected and first is None:
+            routing["unrouted"] += 1
+            routing["unrouted_runs"].append(r["run_id"])
+        elif expected and first.get("use_case") != expected:
+            routing["misroutes"] += 1
+            routing["misrouted_runs"].append(f"{r['run_id']}: {first.get('use_case')} for {expected}")
 
         for c in calls:
             kind = _error_kind(c)
@@ -236,10 +253,12 @@ def analyze_arm(folder: Path) -> dict:
         "false_finishes": len(false_finishes), "false_finish_runs": false_finishes,
         "plan": dict(plan),
         "critique": {**{k: v for k, v in critique.items() if k != "verdicts"},
-                     "rounds_per_run": (critique["rounds"] / critique["runs_with_critique"])
+                     # every counted run is in the denominator, runs with no critique round included
+                     "rounds_per_run": (critique["rounds"] / len(counted)) if counted else 0.0,
+                     "rounds_per_critiqued_run": (critique["rounds"] / critique["runs_with_critique"])
                      if critique["runs_with_critique"] else 0.0,
                      "verdicts": dict(critique["verdicts"])},
-        "routing": routing, "bound_ends": dict(bound), "bound_runs": sum(bound.values()),
+        "routing": routing, "bound_ends": dict(bound), "bound_runs": bound_runs,
         "boundary": boundary, "measures": dict(measures), "per_run": per_run,
     }
 
@@ -253,10 +272,13 @@ def compare(agent: dict, workflow: dict) -> dict:
         xs = [x["cost_usd"] for x in arm["per_run"] if x["task"] in shared]
         return statistics.mean(xs) if xs else None
     a, w = mean_cost(agent), mean_cost(workflow)
-    gained = [t for t in shared if agent["per_task"][t][0] >= 2 and workflow["per_task"][t][0] <= 1]
+    # f is over three sweeps: a task counts only when both arms ran it in all of them
+    complete = [t for t in shared if agent["per_task"][t][1] >= SWEEPS and workflow["per_task"][t][1] >= SWEEPS]
+    gained = [t for t in complete if agent["per_task"][t][0] >= 2 and workflow["per_task"][t][0] <= 1]
     return {"tasks": shared, "agent_cost_per_run": a, "workflow_cost_per_run": w,
             "m": (a / w) if a is not None and w else None,
-            "f": len(gained) / len(shared), "f_tasks": gained}
+            "f": (len(gained) / len(complete)) if complete else None, "f_tasks": gained,
+            "f_incomplete": [t for t in shared if t not in complete]}
 
 
 def _fmt(x, digits=2, unit=""):
@@ -280,10 +302,13 @@ def report(arms: list[dict], cross: dict | None) -> str:
                 + (f"  {', '.join(a['false_finish_runs'])}" if a["false_finish_runs"] else ""),
                 "plan: " + (", ".join(f"{k} {v}" for k, v in sorted(a["plan"].items())) or "none"),
                 f"critique: rounds {a['critique']['rounds']} over {a['critique']['runs_with_critique']} runs "
-                f"({_fmt(a['critique']['rounds_per_run'])} per run), held {a['critique']['held']}, "
+                f"({_fmt(a['critique']['rounds_per_run'])} per run, "
+                f"{_fmt(a['critique']['rounds_per_critiqued_run'])} per run with a critique), held {a['critique']['held']}, "
                 f"misses {a['critique']['misses']}, verdicts {a['critique']['verdicts']}",
                 f"routing: {a['routing']['routes']} routes, {a['routing']['misroutes']} misrouted"
-                + (f"  ({'; '.join(a['routing']['misrouted_runs'])})" if a["routing"]["misrouted_runs"] else ""),
+                + (f"  ({'; '.join(a['routing']['misrouted_runs'])})" if a["routing"]["misrouted_runs"] else "")
+                + f"; first turn unrouted (router declined): {a['routing']['unrouted']}"
+                + (f"  ({', '.join(a['routing']['unrouted_runs'])})" if a["routing"]["unrouted_runs"] else ""),
                 f"ended at the bound: {a['bound_runs']} {a['bound_ends'] or ''}",
                 f"tool errors {a['boundary']['tool_errors']}, rejected at the boundary {a['boundary']['boundary_rejections']}",
                 "check measures: " + (", ".join(f"{k} {v}" for k, v in sorted(a["measures"].items())) or "none"),
@@ -298,7 +323,9 @@ def report(arms: list[dict], cross: dict | None) -> str:
                 f"agent cost per run ${_fmt(cross.get('agent_cost_per_run'), 4)}, workflow "
                 f"${_fmt(cross.get('workflow_cost_per_run'), 4)}",
                 f"m = {_fmt(cross['m'])}; f = {_fmt(cross['f'])}"
-                + (f" ({', '.join(cross.get('f_tasks') or [])})" if cross.get("f_tasks") else "")]
+                + (f" ({', '.join(cross.get('f_tasks') or [])})" if cross.get("f_tasks") else "")
+                + (f"; left out of f, fewer than {SWEEPS} sweeps: {', '.join(cross['f_incomplete'])}"
+                   if cross.get("f_incomplete") else "")]
     return "\n".join(out)
 
 

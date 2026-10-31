@@ -62,3 +62,33 @@ class ProductPageTest(ScratchTest):
         self.assertEqual(self.client.post(f"/pending/{record['id']}/send", follow_redirects=False).status_code, 303)
         self.assertEqual(pending.get(record["id"])["status"], "sent")
         self.assertEqual(self.client.post(f"/pending/{record['id']}/send").status_code, 404)
+
+    def test_a_pending_record_is_discarded_from_the_page_and_never_sent(self):
+        record, _ = pending.add("report_email", RID, "SYN-thread-2001", "contact@acme.example", "s", "b", key="p4")
+        before = len(channel.messages("SYN-thread-2001"))
+        self.assertIn(f"/pending/{record['id']}/discard", self.client.get(f"/requests/{RID}").text)
+        self.assertEqual(self.client.post(f"/pending/{record['id']}/discard", follow_redirects=False).status_code, 303)
+        self.assertEqual(pending.get(record["id"])["status"], "discarded")
+        self.assertNotIn(record["id"], [p["id"] for p in pending.all_pending("pending")])
+        self.assertEqual(self.client.post(f"/pending/{record['id']}/send").status_code, 404)      # never sent
+        self.assertEqual(self.client.post(f"/pending/{record['id']}/discard").status_code, 404)
+        self.assertEqual(len(channel.messages("SYN-thread-2001")), before)
+
+    def test_a_sent_record_cannot_be_discarded(self):
+        record, _ = pending.add("report_email", RID, "SYN-thread-2001", "contact@acme.example", "s", "b", key="p5")
+        self.client.post(f"/pending/{record['id']}/send")
+        self.assertEqual(self.client.post(f"/pending/{record['id']}/discard").status_code, 404)
+        self.assertEqual(pending.get(record["id"])["status"], "sent")
+
+    def test_sending_a_pending_report_email_closes_the_request(self):
+        record, _ = pending.add("report_email", RID, "SYN-thread-2001", "contact@acme.example", "s", "b", key="p2")
+        inbox.set_status(RID, "report_drafted")
+        self.client.post(f"/pending/{record['id']}/send")
+        self.assertEqual(inbox.get(RID)["status"], "done")
+
+    def test_sending_a_clarifying_question_leaves_the_request_open(self):
+        record, _ = pending.add("clarifying_question", RID, "SYN-thread-2001", "contact@acme.example", "q", "b",
+                                key="p3")
+        inbox.set_status(RID, "awaiting_answer")
+        self.client.post(f"/pending/{record['id']}/send")
+        self.assertEqual(inbox.get(RID)["status"], "awaiting_answer")

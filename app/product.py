@@ -85,6 +85,18 @@ def send_pending(pid: int):
         raise HTTPException(404, "no such pending record, or already sent")
     channel.send(record["thread_id"], record["body"], sender="operator")
     pending.mark_sent(pid)
+    if record["kind"] == "report_email":
+        # the report has gone out: the request is done, as the hand email form marks it
+        inbox.set_status(record["request_id"], "done")
+    return RedirectResponse(f"/requests/{record['request_id']}", status_code=303)
+
+
+@router.post("/pending/{pid}/discard")
+def discard_pending(pid: int):
+    """Undo a draft by hand: the operator discards a pending record, which is then never sent."""
+    record = pending.get(pid)
+    if not record or not pending.discard(pid):
+        raise HTTPException(404, "no such pending record, or already sent or discarded")
     return RedirectResponse(f"/requests/{record['request_id']}", status_code=303)
 
 

@@ -80,7 +80,8 @@ class AnalyzeTest(unittest.TestCase):
         self.assertEqual(a["bound_ends"], {"step_limit": 1})
         self.assertEqual(a["boundary"], {"tool_errors": 1, "boundary_rejections": 1})
         self.assertEqual((a["critique"]["rounds"], a["critique"]["held"], a["critique"]["misses"]), (3, 1, 1))
-        self.assertEqual(a["critique"]["rounds_per_run"], 1.5)
+        self.assertEqual(a["critique"]["rounds_per_run"], 0.5)                # 3 rounds over all 6 runs
+        self.assertEqual(a["critique"]["rounds_per_critiqued_run"], 1.5)       # over the 2 runs with a critique
         self.assertEqual((a["routing"]["routes"], a["routing"]["misroutes"]), (2, 1))
         self.assertEqual(a["measures"], {"duplicate_emails": 1})
 
@@ -104,6 +105,61 @@ class AnalyzeTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn("m = 6.00; f = 0.50", out.getvalue())
         self.assertIn("| a | 3 of 3 |", out.getvalue())
+
+
+class AnalyzeCountingTest(unittest.TestCase):
+    """The counting fixes of 2026-10-31: each would give another number on the old code."""
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self.agent, self.workflow = self.tmp / "agent", self.tmp / "workflow"
+        self.agent.mkdir(), self.workflow.mkdir()
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_a_run_ended_at_two_bounds_is_one_bounded_run(self):
+        write_run(self.agent, "r1", "a", 1, passed=False, cost=0.01, ends=("step_limit", "wall_clock"))
+        a = analyze.analyze_arm(self.agent)
+        self.assertEqual(a["bound_runs"], 1)
+        self.assertEqual(a["bound_ends"], {"step_limit": 1, "wall_clock": 1})
+
+    def test_f_leaves_out_a_task_without_three_sweeps(self):
+        for s in (1, 2, 3):
+            write_run(self.agent, f"a{s}", "a", s, passed=True, cost=0.02)
+            write_run(self.workflow, f"wa{s}", "a", s, passed=False, cost=0.01)
+        for s in (1, 2):   # task b: two sweeps only, in both arms
+            write_run(self.agent, f"b{s}", "b", s, passed=True, cost=0.02)
+            write_run(self.workflow, f"wb{s}", "b", s, passed=False, cost=0.01)
+        cross = analyze.compare(analyze.analyze_arm(self.agent), analyze.analyze_arm(self.workflow))
+        self.assertEqual((cross["f"], cross["f_tasks"], cross["f_incomplete"]), (1.0, ["a"], ["b"]))
+
+    def test_a_follow_up_turn_routed_elsewhere_is_not_a_misroute(self):
+        task_file = self.tmp / "t.yaml"
+        task_file.write_text("use_case: standard_report\n")
+        write_run(self.agent, "r1", "a", 1, passed=True, cost=0.01, task_file=str(task_file),
+                  trace=[{"type": "operator"}, {"type": "route", "use_case": "standard_report"},
+                         {"type": "operator"}, {"type": "route", "use_case": "status_question"}])
+        write_run(self.agent, "r2", "b", 1, passed=False, cost=0.01, task_file=str(task_file),
+                  trace=[{"type": "operator"}, {"type": "route", "use_case": "messy_file"},
+                         {"type": "operator"}, {"type": "route", "use_case": "standard_report"}])
+        # r3: the first turn was declined before any route; only the follow-up routed
+        write_run(self.agent, "r3", "c", 1, passed=False, cost=0.01, task_file=str(task_file),
+                  trace=[{"type": "operator"}, {"type": "end", "terminal_reason": "declined"},
+                         {"type": "operator"}, {"type": "route", "use_case": "status_question"}])
+        routing = analyze.analyze_arm(self.agent)["routing"]
+        self.assertEqual((routing["routes"], routing["misroutes"], routing["unrouted"]), (5, 1, 1))
+        self.assertEqual(routing["misrouted_runs"], ["r2: messy_file for standard_report"])
+        self.assertEqual(routing["unrouted_runs"], ["r3"])
+
+    def test_a_registry_rejection_from_its_trace_line_is_a_boundary_rejection(self):
+        # as agent/registry.py traces it: error_type, and an output with no error kind
+        record_call = ("query_sales", {"period": "Q3"}, True, {"message": "bad period", "repair": "use 2026Q3"})
+        write_run(self.agent, "r1", "a", 1, passed=False, cost=0.01, calls=(record_call,))
+        rec = json.loads((self.agent / "r1.json").read_text())
+        rec["tool_calls"][0]["error_type"] = "invalid_arguments"
+        (self.agent / "r1.json").write_text(json.dumps(rec))
+        self.assertEqual(analyze.analyze_arm(self.agent)["boundary"], {"tool_errors": 1, "boundary_rejections": 1})
 
 
 if __name__ == "__main__":

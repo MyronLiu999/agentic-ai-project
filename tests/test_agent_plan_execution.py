@@ -8,7 +8,7 @@ from agent import bounds, critique, plan
 from harness import runtime, turns
 from harness.client import Usage
 from harness.paths import state_dir
-from sandbox import db, inbox, pending, reports
+from sandbox import db, inbox, pending, reports, sales
 from tests.fixtures.agent_loop_fakes import SandboxRegistry, hold_revision_error, revise_recipient
 from tests.test_agent_plan import RID, TASK, sample_plan
 from tests.support import ScratchTest, check_run, fixed_run
@@ -89,7 +89,10 @@ class AgentPlanExecutionTest(ScratchTest):
 
     def test_planned_report_passes_the_independent_effects_check(self):
         with fixed_run(TASK, "planned-pass", backend=MODEL, overrides=["critique.report_email=off"]):
-            self.script(sample_plan())
+            raw = sample_plan()   # the email states the revenue, as the report checks require
+            raw["steps"][-1]["args"]["body"] = (
+                f"Your Q3 revenue was {sales.distributor_sales('SYN-DIST-002', '2026Q3')['total_revenue']:,.2f}.")
+            self.script(raw)
             reply = self.run_plan()
             self.assertEqual(self.reason(), "done")
             self.assertEqual(len(reply.actions), 3)

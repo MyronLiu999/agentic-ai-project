@@ -54,6 +54,21 @@ Stale switch descriptions were corrected without changing settings. Critique's
 A2 citation is filled; live plan/failure specimens and project measurements
 remain dependent on actual API runs.
 
+**claudea — audit fixes (2026-10-31, before the baseline):** the report checks (`checks/common.py`)
+read `figures.total_revenue` and `figures.period` themselves, where before the true revenue anywhere in the
+report passed (a report with `total_revenue: 1` passed); the pending email must state the true revenue and
+point at the last report saved. Sending a pending report email from the product page now marks the request
+done, as the hand email form does. `analyze.py`: critique rounds per run divide by every run (rounds per run
+with a critique is kept beside it), runs ended at a bound count once per run, and `f` counts only tasks both arms
+ran in all three sweeps. Each fix has a test that fails on the old code.
+A pending email or question can now be discarded from the request page (`POST /pending/<id>/discard`,
+`pending.discard`; a sent record cannot be), the undo path the action table names; the table's undo column
+now names only what the build does.
+`checks/standard_report.py` uses the same shared rules as the other report checks (it had its own, which passed
+an email with a wrong amount); a report task's email must state the true revenue (two of Abraham's tests'
+planted emails now do). `analyze.py` scores a misroute on a run's first route only: a follow-up turn routes to
+`status_question` by design; a first turn the router declined is counted as unrouted, apart from misroutes.
+
 **Abraham — milestone audit fixes (2026-10-31, before the baseline):** accepted the
 official batch command and relative report follow-ups without widening request scope;
 comparison follow-ups read the saved difference. Reactive calls now use effect-based

@@ -52,7 +52,7 @@ class AgentFixtureTest(ScratchTest):
             report, _ = reports.save(rid, "standard", figures, "Q3 report",
                                      key=f"{run.run_id}-report")
             pending.add("report_email", rid, THREAD, "contact@brightline.example",
-                        "Q3 report", "Your Q3 report is ready for review.",
+                        "Q3 report", f"Your Q3 revenue was {figures['total_revenue']:,.2f}.",
                         key=f"{run.run_id}-email", report_id=report["id"])
 
         result = self.run_check(MESSY_TASK, plant)
