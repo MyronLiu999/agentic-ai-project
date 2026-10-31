@@ -1,0 +1,24 @@
+id: dev_messy_file_tab
+title: "DEV (prompt tuning only): a tab-separated export with unlabelled unit columns"
+use_case: messy_file
+
+input:
+  thread: SYN-thread-1901
+  from: SYN-contact-delta
+  distributor: SYN-DIST-004
+  contact_email: contact@delta.example
+  period: 2026Q3
+  text: "SYNTHETIC. File attached, how was Q3 for us?"
+  file:
+    name: delta_q3.tsv
+    content: "Code\tQty Jul\tQty Aug\tQty Sep\nSYN-SKU-001\t40\t52\t38\nSYN-SKU-006\t9\t11\t7\n"
+
+operator:
+  - "Handle the new request on the outside channel."
+
+outside: []
+
+# The right answer for the check (the agent never reads the task file): the units the file holds.
+expect: {file_total_units: 157}
+
+check: checks/messy_file.py

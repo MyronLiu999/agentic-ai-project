@@ -21,15 +21,20 @@ his repositories. He shares his OpenAI key so all three can use the model while 
 ## 2. Rules
 
 1. **Work only on your own branch and your own files** (section 3). Nothing merges into `main` before Oct 30,
-   except myron's model setup on Day 0.
-2. **`make test` and `make check` pass before every push.** Neither spends tokens.
-3. **Never commit the API key.** myron shares it privately; set it with `export OPENAI_API_KEY=...`.
-4. **The model is set once, on `main`, by myron.** Never change it on a branch.
-5. **Real-model dev runs** use `--arm dev-<yourname>` and are **not committed**.
-6. **Anything that cites another person's work is a placeholder** (`[A1: m]`, `[A2: ...]`, `[task: ...]`,
+   except the Day 0 setup (section 4).
+2. **Follow the contracts in section 3.** Code against the fakes and stubs on `main` (`FakeRegistry`,
+   `ScriptedTools`, the critique and workflow stubs, `agent/events.py`) and the tool contract table, never
+   against another person's branch. Use the exact function names, tool names, arguments, output fields and
+   event names written there. **To change a contract, tell the other two first**, and update section 3 the
+   same day.
+3. **`make test` and `make check` pass before every push.** Neither spends tokens.
+4. **Never commit the API key.** myron shares it privately; set it with `export OPENAI_API_KEY=...`.
+5. **The model is set once, on `main`, by myron.** Never change it on a branch.
+6. **Real-model dev runs** use `--arm dev-<yourname>` and are **not committed**.
+7. **Anything that cites another person's work is a placeholder** (`[A1: m]`, `[A2: ...]`, `[task: ...]`,
    `[abraham: ...]`) and is filled in on Oct 30.
-7. **Every number** in the write-up has its source, read date and run count.
-8. **On Oct 30, while myron runs the baseline and the arms, nobody else uses the key.** After the code
+8. **Every number** in the write-up has its source, read date and run count.
+9. **On Oct 30, while myron runs the baseline and the arms, nobody else uses the key.** After the code
    freeze, only bug and prompt fixes (logged in `CHANGES.md`); while the arms run, commit only `results/`,
    `traces/`, `experiments/`, `docs/`, `README.md` and `CHANGES.md`.
 

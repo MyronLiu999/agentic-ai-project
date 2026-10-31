@@ -1,0 +1,26 @@
+id: compare_check_last_quarter
+title: "The operator asks to check the distributor's table against last quarter's before the report goes"
+use_case: compare_check
+
+input:
+  thread: SYN-thread-1201
+  from: SYN-contact-cedar
+  distributor: SYN-DIST-003
+  contact_email: contact@cedar.example
+  period: 2026Q3
+  text: "SYNTHETIC. Our Q3 numbers are attached. Are we up on last quarter?"
+  file:
+    name: cedar_q3.csv
+    content: |
+      sku,units_sold
+      SYN-SKU-001,240
+      SYN-SKU-004,130
+      SYN-SKU-006,61
+
+operator:
+  - "Check that table against last quarter's before it goes: prepare the Q3 report for the Cedar request with the change from Q2, and draft the email."
+  - "What changed from Q2, and is anything still open?"
+
+outside: []
+
+check: checks/compare_check.py

@@ -1,0 +1,25 @@
+id: status_question_done_work
+title: "A question about work already done: what was sent to Acme, and is anything open"
+use_case: status_question
+
+input:
+  thread: SYN-thread-1401
+  from: SYN-contact-acme
+  distributor: SYN-DIST-001
+  contact_email: contact@acme.example
+  period: 2026Q3
+  text: "SYNTHETIC. Attached is our Q3 sell-out. How did our region do this quarter?"
+  file:
+    name: acme_q3.csv
+    content: |
+      sku,units_sold
+      SYN-SKU-001,310
+      SYN-SKU-002,205
+  history: {report: true, email_sent: true}
+
+operator:
+  - "What revenue did we report to SYN Acme Trading for Q3, and is anything still open on that request?"
+
+outside: []
+
+check: checks/status_question.py

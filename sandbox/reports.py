@@ -27,3 +27,18 @@ def save(request_id: str, kind: str, figures: dict, body: str, key: str, stamp: 
 def for_request(request_id: str) -> list[dict]:
     with db.connect() as conn:
         return [dict(r) for r in conn.execute("SELECT * FROM reports WHERE request_id = ? ORDER BY id", (request_id,))]
+
+
+def latest(request_id: str, kind: str | None = None) -> dict | None:
+    with db.connect() as conn:
+        if kind:
+            row = conn.execute("SELECT * FROM reports WHERE request_id = ? AND kind = ? ORDER BY id DESC LIMIT 1",
+                               (request_id, kind)).fetchone()
+        else:
+            row = conn.execute("SELECT * FROM reports WHERE request_id = ? ORDER BY id DESC LIMIT 1",
+                               (request_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def figures(report: dict) -> dict:
+    return json.loads(report["figures_json"])
