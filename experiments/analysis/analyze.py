@@ -49,6 +49,14 @@ sys.path.insert(0, str(ROOT))
 UNFINISHED = ("quota", "rate_limited", "not_built")
 BOUND_ENDS = ("step_limit", "wall_clock", "agent_budget")
 PLAN_LABELS = ("executed", "skipped", "out_of_order", "extra")
+# Older Registry traces retain error_type even when output is only a summary.
+# Match Registry's public kind mapping without importing executable agent code.
+LEGACY_ERROR_KINDS = {
+    "unknown_tool": "protocol", "invalid_caller": "protocol", "caller_denied": "protocol",
+    "invalid_arguments": "protocol", "hook_denied": "protocol", "invalid_result": "protocol",
+    "transient_failure": "transient", "permanent_failure": "permanent",
+    "ambiguous_write": "permanent", "execution_failure": "permanent",
+}
 
 
 def load_arm(folder: Path) -> list[dict]:
@@ -56,7 +64,7 @@ def load_arm(folder: Path) -> list[dict]:
     out = []
     for path in sorted(Path(folder).glob("*.json")):
         try:
-            record = json.loads(path.read_text())
+            record = json.loads(path.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             continue
         if not isinstance(record, dict) or "run_id" not in record or record.get("outcome") in UNFINISHED:
@@ -69,7 +77,7 @@ def load_arm(folder: Path) -> list[dict]:
 
 def _read_trace(path: Path) -> list[dict]:
     lines = []
-    for text in path.read_text().splitlines():
+    for text in path.read_text(encoding="utf-8").splitlines():
         try:
             lines.append(json.loads(text))
         except json.JSONDecodeError:
@@ -87,6 +95,11 @@ def call_hash(call: dict) -> str:
 
 
 def _error_kind(call: dict) -> str | None:
+    """Prefer structured error data; recover legacy summaries from metadata.
+
+    Error prose is never classification evidence. Unknown failures still count
+    as tool errors, but cannot establish a protocol/boundary rejection.
+    """
     if not call.get("is_error"):
         return None
     out = call.get("output")
@@ -94,11 +107,14 @@ def _error_kind(call: dict) -> str | None:
         try:
             out = json.loads(out)
         except json.JSONDecodeError:
-            return "protocol" if "protocol" in out else "error"
+            out = None
+    err = {}
     if isinstance(out, dict):
         err = out.get("error") if isinstance(out.get("error"), dict) else out
-        return str(err.get("kind") or "error")
-    return "error"
+        if err.get("kind"):
+            return str(err["kind"])
+    error_type = err.get("type") or call.get("error_type")
+    return LEGACY_ERROR_KINDS.get(error_type, "error") if isinstance(error_type, str) else "error"
 
 
 _use_cases: dict[str, str | None] = {}
