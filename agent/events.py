@@ -22,3 +22,5 @@ REPLAN_BOUND = "replan_bound"
 CRITIQUE_HELD = "critique_held"
 DECLINED = "declined"
 NEEDS_ANSWER = "needs_answer"    # a case that needs a stranger's answer, ended with a pending question
+TOOL_ERROR = "tool_error"        # a workflow step's tool failed after the registry's retries (claudea, Oct 31)
+UNKNOWN_LAYOUT = "unknown_layout"  # the standard_report workflow met a file that is not the known layout (claudea, Oct 31)

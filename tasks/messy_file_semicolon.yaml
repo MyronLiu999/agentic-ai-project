@@ -1,0 +1,29 @@
+id: messy_file_semicolon
+title: "A German-layout export (semicolons, decimal commas, German headers) with the same plain question"
+use_case: messy_file      # MISROUTABLE: the text reads exactly like a standard report; only the file says otherwise
+
+input:
+  thread: SYN-thread-1101
+  from: SYN-contact-brightline
+  distributor: SYN-DIST-002
+  contact_email: contact@brightline.example
+  period: 2026Q3
+  text: "SYNTHETIC. Attached is our Q3 sell-out by product. How did our region do this quarter?"
+  file:
+    name: brightline_q3_export.csv
+    content: |
+      Artikel;Bezeichnung;Menge;Umsatz_EUR
+      SYN-SKU-003;Widget L;412;12.360,00
+      SYN-SKU-004;Gadget;388;17.460,00
+      SYN-SKU-005;Gizmo;440;33.000,00
+
+operator:
+  - "Handle the new request on the outside channel."
+  - "What did you do, and is anything still open?"
+
+outside: []
+
+# The right answer for the check (the agent never reads the task file): the units the file holds.
+expect: {file_total_units: 1240}
+
+check: checks/messy_file.py

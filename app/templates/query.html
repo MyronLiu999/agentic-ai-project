@@ -1,13 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Query</h1>
-<form method="get"><input type="text" name="distributor" value="{{ distributor }}" style="width:14em">
+<form method="get">
+<select name="distributor">{% for d in distributors %}<option value="{{ d.id }}" {{ 'selected' if d.id == distributor }}>{{ d.id }} &middot; {{ d.name }}</option>{% endfor %}</select>
 <input type="text" name="period" value="{{ period }}" style="width:8em"> <button>Show</button></form>
 {% if error %}<p class="error">{{ error }}</p>{% endif %}
 {% if data %}
-<p>{{ data.total_units }} units, revenue {{ data.total_revenue }}</p>
-<div class="scroll"><table><tr><th>Product</th><th>Units</th><th>Revenue</th><th></th></tr>
-{% for r in data.by_product %}<tr><td>{{ r.name }}</td><td>{{ r.units }}</td><td>{{ r.revenue }}</td>
-<td><div style="background:var(--accent);height:12px;width:{{ (r.revenue / top * 100)|round|int if top else 0 }}%"></div></td></tr>{% endfor %}
+<p>{{ data.total_units }} units, revenue {{ "{:,.2f}".format(data.total_revenue) }}
+{% if before %}&middot; previous quarter ({{ before.period }}) {{ "{:,.2f}".format(before.total_revenue) }}
+{% if before.total_revenue %}({{ "{:+.1f}".format((data.total_revenue - before.total_revenue) / before.total_revenue * 100) }}%){% endif %}{% endif %}</p>
+<div>{{ chart|safe }}</div>
+<div class="scroll"><table><tr><th>SKU</th><th>Product</th><th>Units</th><th>Revenue</th><th>Previous quarter</th></tr>
+{% for r in rows %}<tr><td>{{ r.sku }}</td><td>{{ r.name }}</td><td>{{ r.units }}</td><td>{{ "{:,.2f}".format(r.revenue) }}</td>
+<td>{{ "{:,.2f}".format(r.prev_revenue) if r.prev_revenue is not none else "none" }}</td></tr>{% endfor %}
 </table></div>{% endif %}
 {% endblock %}

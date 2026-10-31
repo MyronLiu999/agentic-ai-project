@@ -12,6 +12,8 @@ A test task's input (or each item of inputs:) looks like:
     period: 2026Q3                     the quarter the question is about
     text: "SYNTHETIC. How did our region do this quarter?"
     file: {name: acme_q3.csv, content: "..."}
+    history: {report: true, email_sent: true}   optional: work already done on this request before the run
+                                                (a saved standard report and its sent email, stamped "seed")
 """
 
 from __future__ import annotations
@@ -20,7 +22,7 @@ import random
 
 import channel
 from harness.paths import state_dir  # noqa: F401
-from sandbox import db, files, inbox
+from sandbox import db, files, inbox, pending, reports, sales
 
 # True when reset() and seed() touch only files under state_dir().
 PARALLEL_SAFE = True
@@ -66,6 +68,19 @@ def _ingest(item: dict) -> None:
     if item.get("file"):
         files.save_upload(rid, item["file"]["name"], item["file"]["content"])
     channel.receive(str(item["thread"]), str(item["text"]), sender=str(item.get("from") or "outside"))
+    history = item.get("history") or {}
+    if history.get("report"):
+        data = sales.distributor_sales(str(item["distributor"]), str(item["period"]))
+        figures = {"period": data["period"], "total_revenue": data["total_revenue"], "total_units": data["total_units"]}
+        body = (f"Standard report for {item['distributor']}, {data['period']}: revenue {data['total_revenue']:,.2f} "
+                f"on {data['total_units']} units.")
+        report, _ = reports.save(rid, "standard", figures, body, key=f"seed-{rid}-report", stamp="seed")
+        if history.get("email_sent"):
+            record, _ = pending.add("report_email", rid, str(item["thread"]), str(item["contact_email"]),
+                                    f"Your {data['period']} report", body, key=f"seed-{rid}-email",
+                                    report_id=report["id"], stamp="seed")
+            pending.mark_sent(record["id"])
+        inbox.set_status(rid, "done")
 
 
 DEMO = [
