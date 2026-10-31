@@ -64,3 +64,10 @@ allowed per request. Planned email uses the same critique gate as the reactive l
 approved email amendments are recorded in the plan before execution. Tests include
 actual report/email effects, two-request isolation, bounded bad planners, parse repair,
 no duplicate writes across replan, false tool success, and held/revised email drafts.
+
+**Abraham — B8, failure analysis:** added `experiments/analysis/failures.py` to list
+failed/unfinished records, all terminal reasons, and the first explicit failure's
+physical trace line. Missing/corrupt evidence is reported without inventing a cause.
+Synthetic and discarded runs are excluded by default; explicit inclusion labels
+synthetic rows. JSON and Markdown output are read-only and tested against handwritten
+records, including nested tool errors, held critiques, and malformed trace lines.
