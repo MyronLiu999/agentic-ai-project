@@ -9,6 +9,7 @@ then subtract prompt-token usage.  It uses the same settings, backend,
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import json
 import sys
 from pathlib import Path
@@ -67,6 +68,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--show-definitions", action="store_true",
                         help="print both surfaces without making an API call")
+    parser.add_argument("--output", type=Path,
+                        help="save the real measurement as UTF-8 JSON as well as printing it")
     args = parser.parse_args(argv)
     if args.show_definitions:
         print(json.dumps(surfaces(), indent=2, sort_keys=True))
@@ -86,9 +89,15 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as exc:
         print(f"definition-cost measurement failed: {type(exc).__name__}: {str(exc)[:500]}", file=sys.stderr)
         return 1
-    print(json.dumps({"provider": settings.provider, "requested_model": settings.model,
-                      "method": "with prompt tokens minus without prompt tokens", "surfaces": rows},
-                     indent=2, sort_keys=True))
+    report = {"measured_at": datetime.now(timezone.utc).isoformat(),
+              "provider": settings.provider, "requested_model": settings.model,
+              "method": "with prompt tokens minus without prompt tokens", "surfaces": rows,
+              "definitions": surfaces()}
+    rendered = json.dumps(report, indent=2, sort_keys=True)
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(rendered + "\n", encoding="utf-8")
+    print(rendered)
     return 0
 
 

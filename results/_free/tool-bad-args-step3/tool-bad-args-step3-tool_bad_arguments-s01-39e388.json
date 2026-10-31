@@ -1,0 +1,314 @@
+{
+  "run_id": "tool-bad-args-step3-tool_bad_arguments-s01-39e388",
+  "arm": "tool-bad-args-step3",
+  "task": "tool_bad_arguments",
+  "task_file": "tests\\fixtures\\tool_bad_arguments.yaml",
+  "sweep": 1,
+  "started": "2026-10-31T20:34:39.690+00:00",
+  "switches": {
+    "control.standard_report": "workflow",
+    "control.messy_file": "agent",
+    "control.compare_check": "agent",
+    "control.status_question": "workflow",
+    "control.out_of_scope": "workflow",
+    "control.batch_reports": "agent",
+    "plan.batch_reports": "on",
+    "notes": "off",
+    "critique.report_email": "external",
+    "examples.parse_file": "on",
+    "examples.query_sales": "on",
+    "examples.render_chart": "off",
+    "examples.save_report": "off",
+    "examples.draft_report_email": "off",
+    "examples.draft_clarifying_question": "off",
+    "strict.parse_file": "off",
+    "strict.query_sales": "on",
+    "strict.render_chart": "off",
+    "strict.save_report": "off",
+    "strict.draft_report_email": "off",
+    "strict.draft_clarifying_question": "off"
+  },
+  "overrides": [],
+  "backend": "tests.fixtures.tool_bad_args_model:BadArgs",
+  "model": "bad-args-probe",
+  "free": true,
+  "settings": "2a5d0a5cd26d",
+  "price_sheet": "2026-06-24",
+  "commit": "432acc25e848b09735e992774faead35252848fa",
+  "dirty": true,
+  "finished": "2026-10-31T20:34:41.473+00:00",
+  "tokens": {
+    "input": 200,
+    "output": 120,
+    "cache_read": 0,
+    "cache_write": 0,
+    "total": 320
+  },
+  "cost_usd": 0.0,
+  "unpriced_calls": 2,
+  "model_calls": 2,
+  "latency_s": 0.239,
+  "wait_s": 0.0,
+  "throttled_s": 0.0,
+  "latency_without_wait_s": 0.239,
+  "turn_latency_s": [
+    0.154
+  ],
+  "outcome": "completed",
+  "end_reasons": [
+    "done"
+  ],
+  "end_reason": "done",
+  "error": null,
+  "outside": [],
+  "approvals": {
+    "asked": 0,
+    "answered": 0,
+    "unanswered": 0
+  },
+  "notes": [],
+  "check": {
+    "function": "checks/tool_bad_arguments.py",
+    "passed": true,
+    "reason": "Six model-requested bad calls rejected; model received errors; no effects written."
+  },
+  "passed": true,
+  "measures": {
+    "rejected_tool_calls": 6,
+    "writes": 0,
+    "email_gate_rejections": 1
+  },
+  "trace": "results\\_free\\tool-bad-args-step3\\tool-bad-args-step3-tool_bad_arguments-s01-39e388.trace.jsonl",
+  "tool_calls": [
+    {
+      "step": 1,
+      "plan_step": null,
+      "id": "call_b08091e5d407",
+      "name": "parse_file",
+      "input": {
+        "delimiter": "??"
+      },
+      "output": {
+        "ok": false,
+        "output": {
+          "message": "Tool arguments failed validation.",
+          "repair": "delimiter: '??' is not one of [',', ';', '\\t', '|']"
+        },
+        "is_error": true,
+        "error": {
+          "type": "invalid_arguments",
+          "kind": "protocol",
+          "message": "Tool arguments failed validation.",
+          "repair": "delimiter: '??' is not one of [',', ';', '\\t', '|']",
+          "retry": false,
+          "transient": false,
+          "ambiguous": false,
+          "problems": [
+            "delimiter: '??' is not one of [',', ';', '\\t', '|']"
+          ]
+        }
+      },
+      "is_error": true,
+      "latency_s": 0.0,
+      "caller": "model",
+      "key": null,
+      "attempts": 0,
+      "outcome": "rejected",
+      "error_type": "invalid_arguments",
+      "result_summary": "{\"message\": \"Tool arguments failed validation.\", \"repair\": \"delimiter: '??' is not one of [',', ';', '\\\\t', '|']\"}",
+      "cost_usd": 0.0
+    },
+    {
+      "step": 1,
+      "plan_step": null,
+      "id": "call_88b497e7cfa1",
+      "name": "query_sales",
+      "input": {
+        "period": "third quarter"
+      },
+      "output": {
+        "ok": false,
+        "output": {
+          "message": "Tool arguments failed validation.",
+          "repair": "period 'third quarter' must look like 2026Q3 (year, then Q1 to Q4)"
+        },
+        "is_error": true,
+        "error": {
+          "type": "invalid_arguments",
+          "kind": "protocol",
+          "message": "Tool arguments failed validation.",
+          "repair": "period 'third quarter' must look like 2026Q3 (year, then Q1 to Q4)",
+          "retry": false,
+          "transient": false,
+          "ambiguous": false,
+          "problems": [
+            "period 'third quarter' must look like 2026Q3 (year, then Q1 to Q4)"
+          ]
+        }
+      },
+      "is_error": true,
+      "latency_s": 0.0,
+      "caller": "model",
+      "key": null,
+      "attempts": 0,
+      "outcome": "rejected",
+      "error_type": "invalid_arguments",
+      "result_summary": "{\"message\": \"Tool arguments failed validation.\", \"repair\": \"period 'third quarter' must look like 2026Q3 (year, then Q1 to Q4)\"}",
+      "cost_usd": 0.0
+    },
+    {
+      "step": 1,
+      "plan_step": null,
+      "id": "call_d7a9c6279b4b",
+      "name": "render_chart",
+      "input": {
+        "title": "Bad series",
+        "labels": [
+          "Widget"
+        ],
+        "values": [
+          "not a number"
+        ]
+      },
+      "output": {
+        "ok": false,
+        "output": {
+          "message": "Tool arguments failed validation.",
+          "repair": "values[0]: string, where the schema wants number"
+        },
+        "is_error": true,
+        "error": {
+          "type": "invalid_arguments",
+          "kind": "protocol",
+          "message": "Tool arguments failed validation.",
+          "repair": "values[0]: string, where the schema wants number",
+          "retry": false,
+          "transient": false,
+          "ambiguous": false,
+          "problems": [
+            "values[0]: string, where the schema wants number"
+          ]
+        }
+      },
+      "is_error": true,
+      "latency_s": 0.0,
+      "caller": "model",
+      "key": null,
+      "attempts": 0,
+      "outcome": "rejected",
+      "error_type": "invalid_arguments",
+      "result_summary": "{\"message\": \"Tool arguments failed validation.\", \"repair\": \"values[0]: string, where the schema wants number\"}",
+      "cost_usd": 0.0
+    },
+    {
+      "step": 1,
+      "plan_step": null,
+      "id": "call_96b04e41e3f3",
+      "name": "save_report",
+      "input": {
+        "kind": "standard",
+        "figures": {},
+        "body": "Invalid synthetic report."
+      },
+      "output": {
+        "ok": false,
+        "output": {
+          "message": "Tool arguments failed validation.",
+          "repair": "figures.period is required; figures.total_revenue is required"
+        },
+        "is_error": true,
+        "error": {
+          "type": "invalid_arguments",
+          "kind": "protocol",
+          "message": "Tool arguments failed validation.",
+          "repair": "figures.period is required; figures.total_revenue is required",
+          "retry": false,
+          "transient": false,
+          "ambiguous": false,
+          "problems": [
+            "figures.period is required",
+            "figures.total_revenue is required"
+          ]
+        }
+      },
+      "is_error": true,
+      "latency_s": 0.0,
+      "caller": "model",
+      "key": null,
+      "attempts": 0,
+      "outcome": "rejected",
+      "error_type": "invalid_arguments",
+      "result_summary": "{\"message\": \"Tool arguments failed validation.\", \"repair\": \"figures.period is required; figures.total_revenue is required\"}",
+      "cost_usd": 0.0
+    },
+    {
+      "step": 1,
+      "plan_step": null,
+      "id": "badargs-draft_report_email",
+      "name": "draft_report_email",
+      "input": {
+        "subject": "Missing recipient and report"
+      },
+      "output": {
+        "ok": false,
+        "output": null,
+        "is_error": true,
+        "error": {
+          "kind": "protocol",
+          "message": "Email requires only recipient, subject, body, and report_id.",
+          "retry": false
+        }
+      },
+      "is_error": true,
+      "latency_s": 0.0,
+      "executed": false,
+      "rejected_by": "loop"
+    },
+    {
+      "step": 1,
+      "plan_step": null,
+      "id": "call_ad23741e6d6b",
+      "name": "draft_clarifying_question",
+      "input": {
+        "question": 42
+      },
+      "output": {
+        "ok": false,
+        "output": {
+          "message": "Tool arguments failed validation.",
+          "repair": "question: integer, where the schema wants string"
+        },
+        "is_error": true,
+        "error": {
+          "type": "invalid_arguments",
+          "kind": "protocol",
+          "message": "Tool arguments failed validation.",
+          "repair": "question: integer, where the schema wants string",
+          "retry": false,
+          "transient": false,
+          "ambiguous": false,
+          "problems": [
+            "question: integer, where the schema wants string"
+          ]
+        }
+      },
+      "is_error": true,
+      "latency_s": 0.0,
+      "caller": "model",
+      "key": null,
+      "attempts": 0,
+      "outcome": "rejected",
+      "error_type": "invalid_arguments",
+      "result_summary": "{\"message\": \"Tool arguments failed validation.\", \"repair\": \"question: integer, where the schema wants string\"}",
+      "cost_usd": 0.0
+    }
+  ],
+  "replies": [
+    {
+      "function": "operator_turn",
+      "text": "REQ-SYN-thread-tool-probe: The agent stopped. A saved report with an email draft was not confirmed.",
+      "actions": [],
+      "waiting_for": null
+    }
+  ]
+}

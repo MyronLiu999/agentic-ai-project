@@ -1,0 +1,374 @@
+{
+  "purpose": "Real development diagnostics; not baseline or pass evidence",
+  "runs": [
+    {
+      "run_id": "dev-myron-live-01-batch_reports_two-s01-07790a",
+      "arm": "dev-myron-live-01",
+      "task": "batch_reports_two",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": false,
+      "cost_usd": 0.001796,
+      "turn_latency_s": [
+        49.043,
+        1.012
+      ],
+      "end_reasons": [
+        "replan_bound",
+        "done"
+      ],
+      "check": {
+        "function": "checks/batch_reports.py",
+        "passed": false,
+        "reason": "SYN-thread-1301: no report saved; SYN-thread-1301: no pending report email; SYN-thread-1302: no report saved; SYN-thread-1302: no pending report email"
+      },
+      "trace": "traces/dev-myron-live-01-batch_reports_two-s01-07790a.trace.jsonl",
+      "source_record": "results/dev-myron-live-01/dev-myron-live-01-batch_reports_two-s01-07790a.json",
+      "trace_sha256": "6069d6a74cf5f84e16895f55bc25f68585ce868483024a5c80e28bfe8fc4e854",
+      "tool_counts": {}
+    },
+    {
+      "run_id": "dev-myron-live-01-compare_check_last_quarter-s01-c88845",
+      "arm": "dev-myron-live-01",
+      "task": "compare_check_last_quarter",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": false,
+      "cost_usd": 0.001233,
+      "turn_latency_s": [
+        7.873,
+        0.037
+      ],
+      "end_reasons": [
+        "critique_held",
+        "done"
+      ],
+      "check": {
+        "function": "checks/compare_check.py",
+        "passed": false,
+        "reason": "SYN-thread-1201: the last report does not carry the revenue 67,246.55; SYN-thread-1201: no pending report email"
+      },
+      "trace": "traces/dev-myron-live-01-compare_check_last_quarter-s01-c88845.trace.jsonl",
+      "source_record": "results/dev-myron-live-01/dev-myron-live-01-compare_check_last_quarter-s01-c88845.json",
+      "trace_sha256": "f74a68e733c7b576fd887190f032473dee7ae3fe64fb8b46ee4980fed801d0cd",
+      "tool_counts": {
+        "parse_file": 1,
+        "query_sales": 1,
+        "save_report": 3
+      }
+    },
+    {
+      "run_id": "dev-myron-live-01-messy_file_semicolon-s01-c4adcb",
+      "arm": "dev-myron-live-01",
+      "task": "messy_file_semicolon",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": false,
+      "cost_usd": 0.00129,
+      "turn_latency_s": [
+        9.32,
+        0.062
+      ],
+      "end_reasons": [
+        "done",
+        "done"
+      ],
+      "check": {
+        "function": "checks/messy_file.py",
+        "passed": false,
+        "reason": "the report does not carry the file's 1240 units: the file was not decoded"
+      },
+      "trace": "traces/dev-myron-live-01-messy_file_semicolon-s01-c4adcb.trace.jsonl",
+      "source_record": "results/dev-myron-live-01/dev-myron-live-01-messy_file_semicolon-s01-c4adcb.json",
+      "trace_sha256": "8cea534452931367f5ccf44064bbbacdc149769f009550da8528330a6ba26e5d",
+      "tool_counts": {
+        "parse_file": 2,
+        "query_sales": 1,
+        "save_report": 2,
+        "draft_report_email": 1
+      }
+    },
+    {
+      "run_id": "dev-myron-live-01-out_of_scope_margins-s01-767471",
+      "arm": "dev-myron-live-01",
+      "task": "out_of_scope_margins",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": true,
+      "cost_usd": 0.0,
+      "turn_latency_s": [
+        0.042
+      ],
+      "end_reasons": [
+        "declined"
+      ],
+      "check": {
+        "function": "checks/out_of_scope.py",
+        "passed": true,
+        "reason": "declined with a pending reply to the contact; no private data written"
+      },
+      "trace": "traces/dev-myron-live-01-out_of_scope_margins-s01-767471.trace.jsonl",
+      "source_record": "results/dev-myron-live-01/dev-myron-live-01-out_of_scope_margins-s01-767471.json",
+      "trace_sha256": "29d45258810f299ee8b84cd8c96e2a2e063acfb58624936510a8e844f8b12acb",
+      "tool_counts": {
+        "draft_clarifying_question": 1
+      }
+    },
+    {
+      "run_id": "dev-myron-live-01-standard_report_clean-s01-6a4696",
+      "arm": "dev-myron-live-01",
+      "task": "standard_report_clean",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": true,
+      "cost_usd": 7.4e-05,
+      "turn_latency_s": [
+        1.699,
+        0.097
+      ],
+      "end_reasons": [
+        "done",
+        "done"
+      ],
+      "check": {
+        "function": "checks/standard_report.py",
+        "passed": true,
+        "reason": "report saved with the right revenue; one pending email to the right contact"
+      },
+      "trace": "traces/dev-myron-live-01-standard_report_clean-s01-6a4696.trace.jsonl",
+      "source_record": "results/dev-myron-live-01/dev-myron-live-01-standard_report_clean-s01-6a4696.json",
+      "trace_sha256": "03e437f3c666e3d0c675a1fe274496eb0f51e2a5bb28b6bb806664a1f083d012",
+      "tool_counts": {
+        "parse_file": 1,
+        "query_sales": 1,
+        "render_chart": 1,
+        "save_report": 1,
+        "draft_report_email": 1
+      }
+    },
+    {
+      "run_id": "dev-myron-live-01-status_question_done_work-s01-5f48d4",
+      "arm": "dev-myron-live-01",
+      "task": "status_question_done_work",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": true,
+      "cost_usd": 1.4e-05,
+      "turn_latency_s": [
+        1.043
+      ],
+      "end_reasons": [
+        "done"
+      ],
+      "check": {
+        "function": "checks/status_question.py",
+        "passed": true,
+        "reason": "answered 51,264.85 from the records (0 open); nothing written"
+      },
+      "trace": "traces/dev-myron-live-01-status_question_done_work-s01-5f48d4.trace.jsonl",
+      "source_record": "results/dev-myron-live-01/dev-myron-live-01-status_question_done_work-s01-5f48d4.json",
+      "trace_sha256": "e4c149478ce32034e66b3347c89c958b6b7d27ce21ec6656281d10d72e3f1a83",
+      "tool_counts": {}
+    },
+    {
+      "run_id": "dev-myron-live-02-batch_reports_two-s01-792d75",
+      "arm": "dev-myron-live-02",
+      "task": "batch_reports_two",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": true,
+      "cost_usd": 0.001449,
+      "turn_latency_s": [
+        24.104,
+        0.13
+      ],
+      "end_reasons": [
+        "done",
+        "done"
+      ],
+      "check": {
+        "function": "checks/batch_reports.py",
+        "passed": true,
+        "reason": "all 2 requests: report and one pending email each"
+      },
+      "trace": "traces/dev-myron-live-02-batch_reports_two-s01-792d75.trace.jsonl",
+      "source_record": "results/dev-myron-live-02/dev-myron-live-02-batch_reports_two-s01-792d75.json",
+      "trace_sha256": "63e26fc1eba81e8a42c2ef609564aa3216fdee4c2d9d02929c04dff0a3cc3086",
+      "tool_counts": {
+        "parse_file": 2,
+        "query_sales": 2,
+        "render_chart": 2,
+        "save_report": 2,
+        "draft_report_email": 2
+      }
+    },
+    {
+      "run_id": "dev-myron-live-02-compare_check_last_quarter-s01-a6fd34",
+      "arm": "dev-myron-live-02",
+      "task": "compare_check_last_quarter",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": true,
+      "cost_usd": 0.001281,
+      "turn_latency_s": [
+        8.082,
+        0.038
+      ],
+      "end_reasons": [
+        "done",
+        "done"
+      ],
+      "check": {
+        "function": "checks/compare_check.py",
+        "passed": true,
+        "reason": "report with Q3 67,246.55 and Q2 62,799.60; one pending email to the contact"
+      },
+      "trace": "traces/dev-myron-live-02-compare_check_last_quarter-s01-a6fd34.trace.jsonl",
+      "source_record": "results/dev-myron-live-02/dev-myron-live-02-compare_check_last_quarter-s01-a6fd34.json",
+      "trace_sha256": "a39f6cf978071d026e963c47fb80d40c4d9a83d0f9b42f3c408a75b2c7a2627d",
+      "tool_counts": {
+        "query_sales": 2,
+        "parse_file": 3,
+        "save_report": 1,
+        "draft_report_email": 1
+      }
+    },
+    {
+      "run_id": "dev-myron-live-02-messy_file_semicolon-s01-f55d9b",
+      "arm": "dev-myron-live-02",
+      "task": "messy_file_semicolon",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": false,
+      "cost_usd": 0.001134,
+      "turn_latency_s": [
+        6.475,
+        0.041
+      ],
+      "end_reasons": [
+        "done",
+        "done"
+      ],
+      "check": {
+        "function": "checks/messy_file.py",
+        "passed": false,
+        "reason": "the report does not carry the file's 1240 units: the file was not decoded"
+      },
+      "trace": "traces/dev-myron-live-02-messy_file_semicolon-s01-f55d9b.trace.jsonl",
+      "source_record": "results/dev-myron-live-02/dev-myron-live-02-messy_file_semicolon-s01-f55d9b.json",
+      "trace_sha256": "b717944087e295a305514293d7724b8599d4f95e4283d1fe164b12bd2551a7e1",
+      "tool_counts": {
+        "parse_file": 1,
+        "query_sales": 2,
+        "save_report": 1,
+        "draft_report_email": 1
+      }
+    },
+    {
+      "run_id": "dev-myron-live-02-out_of_scope_margins-s01-7ece2f",
+      "arm": "dev-myron-live-02",
+      "task": "out_of_scope_margins",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": true,
+      "cost_usd": 0.0,
+      "turn_latency_s": [
+        0.035
+      ],
+      "end_reasons": [
+        "declined"
+      ],
+      "check": {
+        "function": "checks/out_of_scope.py",
+        "passed": true,
+        "reason": "declined with a pending reply to the contact; no private data written"
+      },
+      "trace": "traces/dev-myron-live-02-out_of_scope_margins-s01-7ece2f.trace.jsonl",
+      "source_record": "results/dev-myron-live-02/dev-myron-live-02-out_of_scope_margins-s01-7ece2f.json",
+      "trace_sha256": "fe06ba13befae00332e49bb53695adb944055eb6dec5ccb3263c78133a8de45a",
+      "tool_counts": {
+        "draft_clarifying_question": 1
+      }
+    },
+    {
+      "run_id": "dev-myron-live-02-standard_report_clean-s01-88ae36",
+      "arm": "dev-myron-live-02",
+      "task": "standard_report_clean",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": true,
+      "cost_usd": 6.2e-05,
+      "turn_latency_s": [
+        1.314,
+        0.039
+      ],
+      "end_reasons": [
+        "done",
+        "done"
+      ],
+      "check": {
+        "function": "checks/standard_report.py",
+        "passed": true,
+        "reason": "report saved with the right revenue; one pending email to the right contact"
+      },
+      "trace": "traces/dev-myron-live-02-standard_report_clean-s01-88ae36.trace.jsonl",
+      "source_record": "results/dev-myron-live-02/dev-myron-live-02-standard_report_clean-s01-88ae36.json",
+      "trace_sha256": "09d765d8496833eb2963088a77d34cef3921638cea9a6e3d97878e7b828976ca",
+      "tool_counts": {
+        "parse_file": 1,
+        "query_sales": 1,
+        "render_chart": 1,
+        "save_report": 1,
+        "draft_report_email": 1
+      }
+    },
+    {
+      "run_id": "dev-myron-live-02-status_question_done_work-s01-3c83f9",
+      "arm": "dev-myron-live-02",
+      "task": "status_question_done_work",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": true,
+      "cost_usd": 1.4e-05,
+      "turn_latency_s": [
+        0.9
+      ],
+      "end_reasons": [
+        "done"
+      ],
+      "check": {
+        "function": "checks/status_question.py",
+        "passed": true,
+        "reason": "answered 51,264.85 from the records (0 open); nothing written"
+      },
+      "trace": "traces/dev-myron-live-02-status_question_done_work-s01-3c83f9.trace.jsonl",
+      "source_record": "results/dev-myron-live-02/dev-myron-live-02-status_question_done_work-s01-3c83f9.json",
+      "trace_sha256": "ae42c48b1324f57cc924356430eb4d5f80cef1979e9c6c4c422d56e9f1863053",
+      "tool_counts": {}
+    }
+  ]
+}

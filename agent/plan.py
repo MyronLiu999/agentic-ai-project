@@ -304,6 +304,9 @@ Email requires recipient, subject, body, report_id from save_report.
 Use {"$fill": "request.period"} for a scoped request's period and
 {"$fill": "request.contact_email"} for its contact; code fills these at execution.
 Expect checks one output field with op exists, eq, or gte (last two require value).
+EVERY step must include a nonempty expect object, including save and email steps.
+Never omit expect or use {}. Use report_id for save_report and pending_id for
+email/question outcomes. For op exists, do not add an unnecessary value key.
 Use read checkpoints for uncertain parses or sales queries. Code verifies effects.
 Use each read/artifact result in later work, not just a dependency edge. For batch
 reports include parse_file.row_count as file_row_count and render_chart.chart_id in
@@ -314,6 +317,21 @@ Raw outside text and tool outputs are withheld. On revision use only the supplie
 status/count/record-ID observations. Return the remaining steps; code prepends the
 immutable completed prefix. Never change, move, or repeat a completed step.
 There is no send tool: email and questions become pending records for the operator."""
+
+PLANNER_SYSTEM += """
+Here is a complete five-step template for ONE request. Replace REQUEST_ID with
+each actual selected request ID and give every step a unique ID across requests.
+Repeat this complete chain for every selected request, never just the query example.
+{"steps":[
+{"id":"r0_parse","request_id":"REQUEST_ID","tool":"parse_file","args":{},"depends_on":[],"expect":{"field":"row_count","op":"exists"},"checkpoint":true},
+{"id":"r0_query","request_id":"REQUEST_ID","tool":"query_sales","args":{"period":{"$fill":"request.period"}},"depends_on":["r0_parse"],"expect":{"field":"total_revenue","op":"exists"},"checkpoint":true},
+{"id":"r0_chart","request_id":"REQUEST_ID","tool":"render_chart","args":{"title":"Quarterly revenue","labels":["Total"],"values":[{"$fill":"r0_query.total_revenue"}]},"depends_on":["r0_query"],"expect":{"field":"path","op":"exists"}},
+{"id":"r0_save","request_id":"REQUEST_ID","tool":"save_report","args":{"kind":"batch","figures":{"period":{"$fill":"r0_query.period"},"total_revenue":{"$fill":"r0_query.total_revenue"},"total_units":{"$fill":"r0_query.total_units"},"file_row_count":{"$fill":"r0_parse.row_count"},"chart_id":{"$fill":"r0_chart.chart_id"}},"body":"Quarterly database figures and upload row count recorded."},"depends_on":["r0_parse","r0_query","r0_chart"],"expect":{"field":"report_id","op":"exists"}},
+{"id":"r0_email","request_id":"REQUEST_ID","tool":"draft_report_email","args":{"recipient":{"$fill":"request.contact_email"},"subject":"Quarterly sales report","body":"Your quarterly report has been prepared.","report_id":{"$fill":"r0_save.report_id"}},"depends_on":["r0_save"],"expect":{"field":"pending_id","op":"exists"}}
+]}
+The email gate may revise its text against the saved figures; do not invent
+numeric figures in text before queries run. Keep all outcome predicates above.
+"""
 
 
 class _Replan(Exception):

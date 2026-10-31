@@ -2,6 +2,23 @@
 
 ## Milestone 1
 
+**Myron — live development corrections (2026-10-31, before baseline):** the first
+real sweep passed 3/6 tasks. Batch proposals repeatedly omitted write outcomes;
+the planner now explicitly requires expect on every step and includes a complete
+scoped five-step example. Comparison/messy-file runs omitted figure fields,
+mixed file units with database facts and supplied an incorrect delimiter. The
+reactive prompt and parser/report descriptions now spell out autodetection,
+separate file totals, scalar authoritative current totals and previous-quarter
+fields. These ordinary pre-baseline corrections are not the measured pass.
+
+**Myron — Part 3 bad-argument probe (2026-10-31):** added a free `BadArgs` model,
+a fixture outside the official task set, and an independent check of six rejected
+calls and zero sandbox writes. The real service/loop returns the errors to the
+fake model; the existing email gate rejects the malformed email before Registry.
+`M1.md` cites each saved `tool_call` trace line under `results/_free/`. These
+records demonstrate error plumbing only, not live-model quality or baseline
+performance. Regression tests run in scratch state.
+
 **Added:** (scaffold) SQLite sandbox for a sales database, uploads, requests, reports and pending
 records (`sandbox/`); seed and demo data; product pages (requests, request, query); agent stubs
 (`agent/router.py`, `bounds.py`, `registry.py`, `tools.py`, `workflows.py`, `loop.py`); switch groups;
@@ -22,7 +39,20 @@ test task `standard_report_clean` with its check and tests.
 
 **Fixes after the baseline:** none yet.
 
-**Reused code:** none yet (name each assignment and whose repository).
+**Reused code/design:** no assignment source was copied. Stable canonical
+write keys and short protocol errors adapt the design from Myron Liu's
+`MyronLiu999/agentic-ai-assignment3`, commit
+`eb6b35703b212474b561099ec265c427174c7a4b`; A1/A2 provide cited measurements.
+
+**Myron — pre-baseline records and documentation (2026-10-31):** Registry now
+preserves complete result/error envelopes in traces while keeping a short
+summary. Analysis reads structured error kinds and legacy error-type metadata,
+rather than guessing classes from prose; UTF-8 record loading is explicit.
+Part 3 now contains the unified action/tool table, per-tool examples/strict
+decisions, key/read-back inventory and clearly labeled scripted error evidence.
+Stale switch descriptions were corrected without changing settings. Critique's
+A2 citation is filled; live plan/failure specimens and project measurements
+remain dependent on actual API runs.
 
 **Abraham — milestone audit fixes (2026-10-31, before the baseline):** accepted the
 official batch command and relative report follow-ups without widening request scope;
