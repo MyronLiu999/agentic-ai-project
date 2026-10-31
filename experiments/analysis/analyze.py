@@ -12,7 +12,7 @@ Per arm:
   turn latency       median and slowest of every turn_latency_s (one operator_turn each)
   tokens, cost       mean per run, and mean cost per task
   sequences          distinct tool-call sequences (tool names in order), per task and in all
-  repeats            runs with an exact repeated call (tool + arguments hashed from the record's tool_calls),
+  repeats            runs with an exact repeated call (request scope + tool + arguments hashed from tool_calls),
                      and the repeat_call events the detector wrote
   false finishes     runs that ended `done` whose check failed
   plan               plan_diff labels (executed, skipped, out_of_order, extra), plans written, revisions
@@ -20,7 +20,8 @@ Per arm:
                      checkpoints failed
   critique           rounds (critique events), rounds per run, drafts held (critique_held ends), misses
                      (a run whose critique passed a draft and whose check then failed)
-  routing            route events, and misroutes: a route whose use_case differs from the task file's use_case
+  routing            all route events, and initial-case misroutes against the task file's use_case;
+                     later status follow-ups are not compared with the initial task label
   bound              runs ended at step_limit, wall_clock or agent_budget
   boundary           tool calls returned as errors, and those rejected at the registry's boundary
                      (error kind "protocol")
@@ -90,7 +91,18 @@ def _of(record: dict, kind: str) -> list[dict]:
 
 
 def call_hash(call: dict) -> str:
-    return hashlib.sha256(json.dumps([call.get("name"), call.get("input") or {}], sort_keys=True,
+    output = call.get("output")
+    if isinstance(output, str):
+        try:
+            output = json.loads(output)
+        except json.JSONDecodeError:
+            output = None
+    # Identical arguments in two request-scoped registries are not a repeat.
+    scope = call.get("request_id")
+    if isinstance(output, dict):
+        payload = output.get("output") if isinstance(output.get("output"), dict) else output
+        scope = scope or payload.get("request_id")
+    return hashlib.sha256(json.dumps([scope, call.get("name"), call.get("input") or {}], sort_keys=True,
                                      default=str).encode()).hexdigest()[:16]
 
 
@@ -127,9 +139,10 @@ def task_use_case(record: dict) -> str | None:
         return None
     if file not in _use_cases:
         import yaml
-        path = Path(file) if Path(file).is_absolute() else ROOT / file
+        portable = Path(str(file).replace("\\", "/"))
+        path = portable if portable.is_absolute() else ROOT / portable
         try:
-            _use_cases[file] = (yaml.safe_load(path.read_text()) or {}).get("use_case")
+            _use_cases[file] = (yaml.safe_load(path.read_text(encoding="utf-8")) or {}).get("use_case")
         except (OSError, yaml.YAMLError):
             _use_cases[file] = None
     return _use_cases[file]
@@ -154,7 +167,7 @@ def analyze_arm(folder: Path) -> dict:
     repeat_runs, repeat_events = 0, 0
     plan = Counter()
     critique = {"rounds": 0, "runs_with_critique": 0, "held": 0, "misses": 0, "verdicts": Counter()}
-    routing = {"routes": 0, "misroutes": 0, "misrouted_runs": []}
+    routing = {"routes": 0, "scored_routes": 0, "misroutes": 0, "misrouted_runs": []}
     bound = Counter()
     boundary = {"tool_errors": 0, "boundary_rejections": 0}
     measures = Counter()
@@ -195,11 +208,14 @@ def analyze_arm(folder: Path) -> dict:
             critique["misses"] += 1
 
         expected = task_use_case(r)
-        for route in _of(r, "route"):
+        for index, route in enumerate(_of(r, "route")):
             routing["routes"] += 1
-            if expected and route.get("use_case") != expected:
-                routing["misroutes"] += 1
-                routing["misrouted_runs"].append(f"{r['run_id']}: {route.get('use_case')} for {expected}")
+            # task.use_case labels the initial work, not a later status follow-up.
+            if expected and index == 0:
+                routing["scored_routes"] += 1
+                if route.get("use_case") != expected:
+                    routing["misroutes"] += 1
+                    routing["misrouted_runs"].append(f"{r['run_id']}: {route.get('use_case')} for {expected}")
 
         for c in calls:
             kind = _error_kind(c)
@@ -308,6 +324,7 @@ def main(argv=None) -> int:
     p.add_argument("--agent", help="the arm (folder name) on the agent path, for m and f")
     p.add_argument("--workflow", help="the arm (folder name) on the workflow path, for m and f")
     p.add_argument("--json", action="store_true")
+    p.add_argument("--output", type=Path, help="also save the computed summary as UTF-8 JSON")
     a = p.parse_args(argv)
     arms = []
     for folder in a.arms:
@@ -322,8 +339,12 @@ def main(argv=None) -> int:
             print("--agent and --workflow must each name one of the arms given", file=sys.stderr)
             return 2
         cross = compare(named[a.agent], named[a.workflow])
+    payload = json.dumps({"arms": arms, "m_f": cross}, indent=2, default=str)
+    if a.output:
+        a.output.parent.mkdir(parents=True, exist_ok=True)
+        a.output.write_text(payload + "\n", encoding="utf-8")
     if a.json:
-        print(json.dumps({"arms": arms, "m_f": cross}, indent=2, default=str))
+        print(payload)
     else:
         print(report(arms, cross))
     return 0

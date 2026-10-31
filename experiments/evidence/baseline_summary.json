@@ -1,0 +1,404 @@
+{
+  "arms": [
+    {
+      "arm": "baseline",
+      "runs": 18,
+      "passes": 17,
+      "tasks": [
+        "batch_reports_two",
+        "compare_check_last_quarter",
+        "messy_file_semicolon",
+        "out_of_scope_margins",
+        "standard_report_clean",
+        "status_question_done_work"
+      ],
+      "sweeps": [
+        1,
+        2,
+        3
+      ],
+      "per_task": {
+        "batch_reports_two": [
+          3,
+          3
+        ],
+        "compare_check_last_quarter": [
+          3,
+          3
+        ],
+        "messy_file_semicolon": [
+          2,
+          3
+        ],
+        "out_of_scope_margins": [
+          3,
+          3
+        ],
+        "standard_report_clean": [
+          3,
+          3
+        ],
+        "status_question_done_work": [
+          3,
+          3
+        ]
+      },
+      "per_sweep": {
+        "1": [
+          5,
+          6
+        ],
+        "2": [
+          6,
+          6
+        ],
+        "3": [
+          6,
+          6
+        ]
+      },
+      "turns": 30,
+      "turn_median_s": 0.8065,
+      "turn_slowest_s": 26.046,
+      "slow_turns_over_10s": 3,
+      "tokens_per_run": 3763.222222222222,
+      "cost_per_run": 0.0005337777777777778,
+      "cost_per_task": {
+        "batch_reports_two": 0.0011710000000000002,
+        "compare_check_last_quarter": 0.0009993333333333334,
+        "messy_file_semicolon": 0.0009476666666666666,
+        "out_of_scope_margins": 0.0,
+        "standard_report_clean": 7.066666666666667e-05,
+        "status_question_done_work": 1.4e-05
+      },
+      "sequences_per_task": {
+        "batch_reports_two": 1,
+        "compare_check_last_quarter": 3,
+        "messy_file_semicolon": 2,
+        "out_of_scope_margins": 1,
+        "standard_report_clean": 1,
+        "status_question_done_work": 1
+      },
+      "sequences_total": 9,
+      "runs_with_repeat": 0,
+      "repeat_events": 0,
+      "false_finishes": 1,
+      "false_finish_runs": [
+        "baseline-messy_file_semicolon-s01-1799cc"
+      ],
+      "plan": {
+        "diff_executed": 30,
+        "plans": 3,
+        "revisions": 8,
+        "plan_rejected": 0,
+        "replan_bound": 0,
+        "off_plan_refused": 0,
+        "checkpoints_failed": 0
+      },
+      "critique": {
+        "rounds": 21,
+        "runs_with_critique": 12,
+        "held": 0,
+        "misses": 1,
+        "rounds_per_run": 1.75,
+        "verdicts": {
+          "revise": 6,
+          "pass": 15
+        }
+      },
+      "routing": {
+        "routes": 30,
+        "scored_routes": 18,
+        "misroutes": 0,
+        "misrouted_runs": []
+      },
+      "bound_ends": {},
+      "bound_runs": 0,
+      "boundary": {
+        "tool_errors": 0,
+        "boundary_rejections": 0
+      },
+      "measures": {
+        "reports": 12,
+        "emails": 12,
+        "duplicate_emails": 0,
+        "requests_done": 6,
+        "leaks": 0,
+        "wrong_direction_claimed": 0,
+        "file_units_reported": 2,
+        "pending_to_contact": 3,
+        "pending_to_others": 0,
+        "duplicate_reports": 0,
+        "writes": 0,
+        "answered_revenue": 3
+      },
+      "per_run": [
+        {
+          "run_id": "baseline-batch_reports_two-s01-b7256b",
+          "task": "batch_reports_two",
+          "sweep": 1,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 10,
+          "repeats": 0,
+          "critique_rounds": 4,
+          "cost_usd": 0.000733,
+          "tokens": 2682
+        },
+        {
+          "run_id": "baseline-compare_check_last_quarter-s01-2a59dd",
+          "task": "compare_check_last_quarter",
+          "sweep": 1,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 7,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.001415,
+          "tokens": 13130
+        },
+        {
+          "run_id": "baseline-messy_file_semicolon-s01-1799cc",
+          "task": "messy_file_semicolon",
+          "sweep": 1,
+          "passed": false,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.001013,
+          "tokens": 9121
+        },
+        {
+          "run_id": "baseline-out_of_scope_margins-s01-5a190f",
+          "task": "out_of_scope_margins",
+          "sweep": 1,
+          "passed": true,
+          "end_reasons": [
+            "declined"
+          ],
+          "tool_calls": 1,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 0.0,
+          "tokens": 0
+        },
+        {
+          "run_id": "baseline-standard_report_clean-s01-a33d9a",
+          "task": "standard_report_clean",
+          "sweep": 1,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 7.2e-05,
+          "tokens": 270
+        },
+        {
+          "run_id": "baseline-status_question_done_work-s01-af8c22",
+          "task": "status_question_done_work",
+          "sweep": 1,
+          "passed": true,
+          "end_reasons": [
+            "done"
+          ],
+          "tool_calls": 0,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 1.4e-05,
+          "tokens": 89
+        },
+        {
+          "run_id": "baseline-batch_reports_two-s02-afc9fd",
+          "task": "batch_reports_two",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 10,
+          "repeats": 0,
+          "critique_rounds": 4,
+          "cost_usd": 0.00144,
+          "tokens": 5648
+        },
+        {
+          "run_id": "baseline-compare_check_last_quarter-s02-5b316c",
+          "task": "compare_check_last_quarter",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.000665,
+          "tokens": 5787
+        },
+        {
+          "run_id": "baseline-messy_file_semicolon-s02-3aaee1",
+          "task": "messy_file_semicolon",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 4,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.00102,
+          "tokens": 8307
+        },
+        {
+          "run_id": "baseline-out_of_scope_margins-s02-6c9ac1",
+          "task": "out_of_scope_margins",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "declined"
+          ],
+          "tool_calls": 1,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 0.0,
+          "tokens": 0
+        },
+        {
+          "run_id": "baseline-standard_report_clean-s02-071141",
+          "task": "standard_report_clean",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 7.2e-05,
+          "tokens": 270
+        },
+        {
+          "run_id": "baseline-status_question_done_work-s02-a1cd8f",
+          "task": "status_question_done_work",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "done"
+          ],
+          "tool_calls": 0,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 1.4e-05,
+          "tokens": 89
+        },
+        {
+          "run_id": "baseline-batch_reports_two-s03-d8c842",
+          "task": "batch_reports_two",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 10,
+          "repeats": 0,
+          "critique_rounds": 4,
+          "cost_usd": 0.00134,
+          "tokens": 5627
+        },
+        {
+          "run_id": "baseline-compare_check_last_quarter-s03-05dd3e",
+          "task": "compare_check_last_quarter",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 6,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.000918,
+          "tokens": 8438
+        },
+        {
+          "run_id": "baseline-messy_file_semicolon-s03-3a0d53",
+          "task": "messy_file_semicolon",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 4,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.00081,
+          "tokens": 7928
+        },
+        {
+          "run_id": "baseline-out_of_scope_margins-s03-8c0d46",
+          "task": "out_of_scope_margins",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "declined"
+          ],
+          "tool_calls": 1,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 0.0,
+          "tokens": 0
+        },
+        {
+          "run_id": "baseline-standard_report_clean-s03-cbec72",
+          "task": "standard_report_clean",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 6.8e-05,
+          "tokens": 263
+        },
+        {
+          "run_id": "baseline-status_question_done_work-s03-f5eabd",
+          "task": "status_question_done_work",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "done"
+          ],
+          "tool_calls": 0,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 1.4e-05,
+          "tokens": 89
+        }
+      ]
+    }
+  ],
+  "m_f": null
+}

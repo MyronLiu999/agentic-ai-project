@@ -39,6 +39,24 @@ test task `standard_report_clean` with its check and tests.
 
 **Fixes after the baseline:** none yet.
 
+**Post-baseline analysis corrections (ordinary fixes, not Pass 1):** repeated-call
+hashes now include request scope from recorded outputs, so two distributors'
+identical quarter queries are not falsely treated as repeats. Routing scores
+only the initial work against a task's use_case; normal later status turns are
+not misroutes. The original analyzer reported 3 repeat-containing runs and 12
+misroutes on baseline; corrected counts are recomputed from the unchanged
+records. UTF-8/portable task paths and optional JSON summary output support
+recomputation on another machine. Both pass arms use this same analyzer.
+
+**Pass 1 implementation:** `examples.save_report` now controls one illustrative
+argument example that separates file_total_units from database total_units and
+total_revenue. Example numbers are synthetic and do not contain a task answer.
+With the switch off the model-visible definitions match the baseline. The fix
+changes only this description; Registry schemas, prompts, checks and budgets
+are held constant between the two measured arms. Per Myron's instruction, the
+post-baseline work and both pass arms stay on clean `myron`; no further merge
+to main is part of this experiment.
+
 **Reused code/design:** no assignment source was copied. Stable canonical
 write keys and short protocol errors adapt the design from Myron Liu's
 `MyronLiu999/agentic-ai-assignment3`, commit
