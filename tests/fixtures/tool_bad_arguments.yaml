@@ -1,0 +1,19 @@
+id: tool_bad_arguments
+title: "Part 3 negative probe: each model-visible tool rejects malformed arguments"
+use_case: messy_file
+input:
+  thread: SYN-thread-tool-probe
+  from: SYN-contact-brightline
+  distributor: SYN-DIST-002
+  contact_email: contact@brightline.example
+  period: 2026Q3
+  text: "SYNTHETIC. Please prepare our quarterly report from the attached export."
+  file:
+    name: synthetic_probe.csv
+    content: |
+      Artikel;Menge
+      SYN-SKU-003;98
+operator:
+  - "Handle REQ-SYN-thread-tool-probe."
+outside: []
+check: checks/tool_bad_arguments.py

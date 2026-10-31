@@ -46,6 +46,45 @@ class RegistryTest(ScratchTest):
         self.assertEqual((line["type"], line["name"], line["outcome"]),
                          ("tool_call", "secret_tool", "rejected"))
 
+    def test_trace_preserves_full_long_result_and_keeps_a_short_summary(self):
+        trace = SessionTrace(self.tmp / "long-result.jsonl", "SYN-session")
+        output = {"rows": [{"sku": f"SYN-{index}", "note": "sales data " * 30}
+                           for index in range(20)], "last_value": "end of complete result"}
+        registry = Registry([
+            ToolSpec("read", "Read synthetic rows.", EMPTY, lambda: output, callers=(MODEL,))
+        ], trace=trace)
+
+        result = registry.call("read", {}, MODEL)
+        line = trace.lines()[-1]
+
+        self.assertTrue(result["ok"])
+        self.assertEqual(line["output"], result)
+        self.assertEqual(line["output"]["output"]["last_value"], "end of complete result")
+        self.assertEqual(len(line["output"]["output"]["rows"]), 20)
+        self.assertTrue(line["result_summary"].endswith("…[truncated]"))
+        self.assertLess(len(line["result_summary"]), 1250)
+        self.assertFalse(line["is_error"])
+
+    def test_trace_preserves_full_error_envelope(self):
+        trace = SessionTrace(self.tmp / "full-error.jsonl", "SYN-session")
+        problems = [f"Field {index}: " + "invalid synthetic value " * 20 for index in range(8)]
+        registry = Registry([
+            ToolSpec("read", "Read synthetic rows.", EMPTY, lambda: {}, callers=(MODEL,),
+                     validate_args=lambda _: problems)
+        ], trace=trace)
+
+        result = registry.call("read", {}, MODEL)
+        line = trace.lines()[-1]
+
+        self.assertFalse(result["ok"])
+        self.assertTrue(line["is_error"])
+        self.assertEqual(line["output"], result)
+        self.assertEqual(line["output"]["error"]["kind"], "protocol")
+        self.assertEqual(line["output"]["error"]["problems"], problems)
+        self.assertEqual(line["output"]["error"]["repair"], result["error"]["repair"])
+        self.assertFalse(line["output"]["error"]["retry"])
+        self.assertTrue(line["result_summary"].endswith("…[truncated]"))
+
     def test_transient_failure_retries_to_the_cap(self):
         attempts = []
 
