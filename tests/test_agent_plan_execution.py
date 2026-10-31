@@ -125,6 +125,50 @@ class AgentPlanExecutionTest(ScratchTest):
             self.assertEqual(pending.all_pending(), [])
             self.assertEqual(runtime.client().calls, 1)
 
+    def test_write_error_after_persistence_stops_without_replanning_or_duplicate_effects(self):
+        with fixed_run(TASK, "uncertain-write", backend=MODEL, overrides=["critique.report_email=off"]):
+            revised = sample_plan()
+            revised["steps"][1]["args"]["body"] = "A different report body"
+            self.script(sample_plan(), revised)
+            registry = SandboxRegistry(RID)
+            save = registry.handlers["save_report"]
+            def uncertain_save(**args):
+                save(**args)
+                raise ValueError("Response lost after persistence")
+            registry.handlers["save_report"] = uncertain_save
+            reply = self.run_plan(factory=lambda rid: registry)
+            self.assertEqual(self.reason(), "plan_rejected")
+            self.assertIn("uncertain", reply.text)
+            self.assertEqual(runtime.client().calls, 1)
+            self.assertEqual(len(reports.for_request(RID)), 1)
+            self.assertEqual(pending.all_pending(), [])
+
+    def test_excessive_json_nesting_is_rejected_within_the_revision_bound(self):
+        with fixed_run(TASK, "deep-plan", backend=MODEL):
+            raw = sample_plan()
+            nested = {}
+            for _ in range(600):
+                nested = {"x": nested}
+            raw["steps"][1]["args"]["figures"] = {
+                "period": "2026Q3", "total_revenue": 0, "nested": nested}
+            self.script(raw, raw, raw)
+            self.run_plan()
+            self.assertEqual(self.reason(), "replan_bound")
+            self.assertEqual(runtime.client().calls, 3)
+            self.assertEqual(reports.for_request(RID), [])
+
+    def test_oversized_public_batch_is_rejected_before_model_or_tool_calls(self):
+        with fixed_run(TASK, "oversized-batch", backend=MODEL):
+            for number in range(8):
+                inbox.add(f"SYN-extra-{number}", "SYN-DIST-001", "contact@acme.example", "Prepare a report")
+            with mock.patch("agent.plan.tools.build") as build:
+                reply = turns.operator_turn("operator", "Handle all new requests.")
+            self.assertEqual(self.reason(), "plan_rejected")
+            self.assertIn("8", reply.text)
+            self.assertEqual(runtime.client().calls, 0)
+            build.assert_not_called()
+            self.assertEqual(pending.all_pending(), [])
+
     def test_held_critique_blocks_planned_email(self):
         with fixed_run(TASK, "planned-held", backend=MODEL):
             self.script(sample_plan())

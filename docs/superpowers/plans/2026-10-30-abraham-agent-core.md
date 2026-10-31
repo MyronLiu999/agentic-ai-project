@@ -285,3 +285,18 @@ still need reconciliation at team integration.
 Verification on 2026-10-31: 155 tests and all four structural checks pass. The planned
 single-request test passes the existing independent SQL effects check. Two-request
 tests verify separate report and pending records. This is synthetic evidence only.
+
+## Task 7: Failure evidence and final code review (B8)
+
+Implemented a read-only failing-run report with run IDs, terminal reasons, source
+paths, and physical trace lines. Missing/corrupt evidence is explicit. Synthetic and
+discarded runs are excluded by default. Ten handwritten-record tests cover nested
+tool errors, critique, bounds, malformed/missing evidence, JSON output, and Markdown
+table layout. The full suite passed 165 tests before final review.
+
+A separate read-only review reproduced three issues: uncertain write errors could
+replan and duplicate effects, malformed numeric/nested data escaped validation, and
+selecting more than eight requests raised an exception. Four regression tests failed
+before the fixes and now pass. Writes with uncertain outcomes stop; only read
+checkpoints may replan. Plan data has a depth bound before recursive processing;
+numeric checks reject overflow; invalid batch selection returns a traced rejection.

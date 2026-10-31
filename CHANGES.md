@@ -71,3 +71,10 @@ physical trace line. Missing/corrupt evidence is reported without inventing a ca
 Synthetic and discarded runs are excluded by default; explicit inclusion labels
 synthetic rows. JSON and Markdown output are read-only and tested against handwritten
 records, including nested tool errors, held critiques, and malformed trace lines.
+
+**Abraham — final review fixes:** a registry error after a write now stops the batch
+because the effect may already exist; only designated read checkpoints can replan.
+Added regressions for a report persisted before an error, oversized public batches,
+unrepresentable numeric values, and deeply nested plan data. Plan nesting is capped
+before recursive processing; invalid input returns traced bounded rejection rather
+than an uncaught exception. No baseline or live-model run was used for these fixes.

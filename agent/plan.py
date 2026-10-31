@@ -20,6 +20,7 @@ from sandbox import inbox, pending, reports, sales
 MAX_STEPS = 48  # Up to eight requests with six ordinary tools each.
 MAX_REQUESTS = 8
 MAX_REPLANS = 2
+MAX_JSON_DEPTH = 32
 TERMINAL = {"draft_report_email", "draft_clarifying_question"}
 READS = {"parse_file", "query_sales"}
 FIELDS = {
@@ -38,10 +39,27 @@ class PlanError(ValueError):
 
 
 def _encoded(value):
+    # Bound nesting before deepcopy, fill traversal, or other recursive processing.
+    stack = [(value, 0)]
+    while stack:
+        child, depth = stack.pop()
+        if depth > MAX_JSON_DEPTH:
+            raise PlanError(f"Plan data exceeds {MAX_JSON_DEPTH} nesting levels")
+        if isinstance(child, dict):
+            stack.extend((item, depth + 1) for item in child.values())
+        elif isinstance(child, list):
+            stack.extend((item, depth + 1) for item in child)
     try:
         return json.dumps(value, sort_keys=True, allow_nan=False)
     except (TypeError, ValueError, RecursionError) as exc:
         raise PlanError("Plan values must be finite JSON data") from exc
+
+
+def _finite_number(value):
+    try:
+        return type(value) in (int, float) and math.isfinite(value)
+    except OverflowError:
+        return False
 
 
 def _fills(value):
@@ -83,7 +101,7 @@ def validate_args(tool: str, args: dict, *, allow_fills=True):
             raise PlanError("Report figures require period and total_revenue")
     if tool == "render_chart" and not bindings:
         if (len(args["labels"]) != len(args["values"]) or not args["labels"]
-                or any(type(v) not in (int, float) or not math.isfinite(v) for v in args["values"])
+                or any(not _finite_number(v) for v in args["values"])
                 or any(not isinstance(v, str) for v in args["labels"])):
             raise PlanError("Chart labels and finite numeric values must have matching nonzero lengths")
 
@@ -125,8 +143,8 @@ def validate(raw: dict, request_ids, *, completed=None) -> list[dict]:
             raise PlanError(f"{sid}: expect must check a documented output field")
         if predicate["op"] != "exists" and "value" not in predicate:
             raise PlanError("Comparison predicates require value")
-        if predicate["op"] == "gte" and type(predicate["value"]) not in (int, float):
-            raise PlanError("gte requires a numeric value")
+        if predicate["op"] == "gte" and not _finite_number(predicate["value"]):
+            raise PlanError("gte requires a finite numeric value")
         if list(_fills(predicate)):
             raise PlanError("Expected outcomes must be concrete")
         step.setdefault("checkpoint", False)
@@ -197,7 +215,7 @@ def matches(predicate, output):
         return value is not None
     if predicate["op"] == "eq":
         return type(value) is type(predicate["value"]) and value == predicate["value"]
-    return type(value) in (int, float) and math.isfinite(value) and value >= predicate["value"]
+    return _finite_number(value) and value >= predicate["value"]
 
 
 class Guard:
@@ -270,17 +288,23 @@ class _Replan(Exception):
 
 def run(session_id: str, request_ids, text: str, *, registry_factory=None, limits=None, clock=None) -> Reply:
     """Plan once, schedule dependencies in code, and revise only at bounded checkpoints."""
-    return _Batch(session_id, tuple(request_ids), text, registry_factory or tools.build,
-                  limits or bounds.Limits(), clock).execute()
+    try:
+        batch = _Batch(session_id, tuple(request_ids), text, registry_factory or tools.build,
+                       limits or bounds.Limits(), clock)
+    except PlanError as exc:
+        detail = f"Batch rejected: {exc}"
+        runtime.trace(session_id).end(events.PLAN_REJECTED, detail=detail)
+        return Reply(detail)
+    return batch.execute()
 
 
 class _Batch:
     def __init__(self, session_id, ids, text, factory, limits, clock):
         if not ids or len(ids) > MAX_REQUESTS or len(set(ids)) != len(ids):
-            raise ValueError(f"A batch requires 1 through {MAX_REQUESTS} distinct request IDs")
+            raise PlanError(f"A batch requires 1 through {MAX_REQUESTS} distinct request IDs")
         self.requests = {rid: inbox.get(rid) for rid in ids}
         if any(r is None for r in self.requests.values()):
-            raise ValueError("Unknown batch request")
+            raise PlanError("Unknown batch request")
         self.registries = {rid: factory(rid) for rid in ids}
         self.client, self.trace = runtime.client(session_id), runtime.trace(session_id)
         self.budget = bounds.Budget(limits, initial_tokens=self.client.total_tokens,
@@ -334,7 +358,7 @@ class _Batch:
                     raise PlanError("Planner must return complete JSON without calling tools")
                 try:
                     raw = json.loads(response.text)
-                except ValueError as exc:
+                except (ValueError, RecursionError) as exc:
                     raise PlanError("Planner response was not valid JSON") from exc
                 steps = validate(raw, self.requests, completed=completed)
                 for step in steps:
@@ -415,7 +439,9 @@ class _Batch:
             self.check()
             self.trace.event(events.CHECKPOINT, step_id=sid, passed=False, reason=str(result["error"]),
                              resolved_args=args, version=self.version)
-            raise _Replan(f"{sid}: registry rejected the call: {result['error']}")
+            if step["checkpoint"] and name in READS:
+                raise _Replan(f"{sid}: registry rejected the call: {result['error']}")
+            raise PlanError(f"{sid}: call failed with an uncertain outcome; no further writes authorized")
         output = result["output"]
         passed = matches(step["expect"], output) and observe(step, args, output)
         self.trace.event(events.CHECKPOINT, step_id=sid, passed=passed, reason="Observed result" if passed else "Observation failed",

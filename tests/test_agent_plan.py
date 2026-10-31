@@ -140,6 +140,16 @@ class AgentPlanTest(ScratchTest):
             with self.subTest(key=key), self.assertRaises(plan.PlanError):
                 plan.validate(raw, [RID])
 
+    def test_unrepresentable_numeric_values_are_rejected_without_overflow(self):
+        with self.assertRaises(plan.PlanError):
+            plan.validate_args("render_chart", {"title": "Totals", "labels": ["A"], "values": [10**400]})
+        raw = sample_plan()
+        raw["steps"][0]["expect"]["value"] = 10**400
+        with self.assertRaises(plan.PlanError):
+            plan.validate(raw, [RID])
+        self.assertFalse(plan.matches({"field": "total_revenue", "op": "gte", "value": 0},
+                                      {"total_revenue": 10**400}))
+
     def test_a_request_cannot_plan_duplicate_terminal_or_report_writes(self):
         for source in (1, 2):
             raw = sample_plan()
