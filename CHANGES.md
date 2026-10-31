@@ -96,3 +96,9 @@ preserves the original execution-limit reason. Regressions cover both reactive a
 planned execution; five focused probes using the real critic/status workflow pass
 with scripted models and sandbox-writing tool substitutes. The published tool
 branch still differs from PLAN.md's six-tool contract; full integration remains pending.
+
+**Abraham — planned write identity:** a probe using the published real registry
+showed that distinct chart steps reused one write key when the planner supplied the
+model-call number as `step`. Planned calls now pass their stable plan-step ID. A
+regression verifies two intended charts leave two different artifacts; the same
+probe passes with the published registry after the fix.

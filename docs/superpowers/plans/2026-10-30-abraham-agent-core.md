@@ -337,3 +337,8 @@ reproduced incorrect `critique_held` endings when the revision exceeded `max_ste
 EmailGate now records and rethrows the execution limit after the critic returns.
 Both regressions and five focused probes with the real critic/status workflow pass.
 These probes use scripted model responses, not paid or official evaluation runs.
+
+A further probe with the published real registry reproduced two planned charts
+collapsing to one artifact: both calls used the planner model-call number as their
+write identity. Planned calls now pass their plan-step ID. A failing-then-passing
+regression checks separate artifact contents, and the real-registry probe passes.

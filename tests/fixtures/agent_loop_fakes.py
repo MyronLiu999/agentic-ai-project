@@ -63,7 +63,8 @@ class SandboxRegistry:
             except (TypeError, ValueError) as exc:
                 result = {"ok": False, "output": None, "is_error": True,
                           "error": {"kind": "protocol", "message": str(exc), "retry": False}}
-        runtime.trace().tool_call(int(step), {"name": name, "input": args}, result,
+        trace_step = int(step) if str(step).isdigit() else step
+        runtime.trace().tool_call(trace_step, {"name": name, "input": args}, result,
                                   is_error=result["is_error"])
         self.after_call()
         return result

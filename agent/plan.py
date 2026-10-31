@@ -434,7 +434,7 @@ class _Batch:
                     raise PlanError("Critique amendment was not authorized")
         self.check()
         self.guard.track(rid, name, args)
-        result = self.registries[rid].call(name, deepcopy(args), MODEL, step=str(self.budget.steps))
+        result = self.registries[rid].call(name, deepcopy(args), MODEL, step=sid)
         if not result["ok"] or result["is_error"]:
             self.check()
             self.trace.event(events.CHECKPOINT, step_id=sid, passed=False, reason=str(result["error"]),

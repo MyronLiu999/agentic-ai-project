@@ -7,6 +7,7 @@ from unittest import mock
 from agent import bounds, critique, plan
 from harness import runtime, turns
 from harness.client import Usage
+from harness.paths import state_dir
 from sandbox import inbox, pending, reports
 from tests.fixtures.agent_loop_fakes import SandboxRegistry, hold_revision_error, revise_recipient
 from tests.test_agent_plan import RID, TASK, sample_plan
@@ -59,6 +60,34 @@ class AgentPlanExecutionTest(ScratchTest):
             self.assertEqual(len(reports.for_request(other)), 1)
             self.assertEqual({(p["request_id"], p["recipient"]) for p in pending.all_pending()},
                              {(RID, "contact@brightline.example"), (other, "contact@acme.example")})
+
+    def test_two_planned_charts_keep_distinct_step_based_write_identities(self):
+        with fixed_run(TASK, "chart-keys", backend=MODEL, overrides=["critique.report_email=off"]):
+            raw = sample_plan()
+            charts = [{"id": sid, "request_id": RID, "tool": "render_chart",
+                       "args": {"title": sid, "labels": ["A"], "values": [value]},
+                       "depends_on": ["query"], "expect": {"field": "path", "op": "exists"}}
+                      for sid, value in (("chart_a", 10), ("chart_b", 20))]
+            raw["steps"][1]["depends_on"] += ["chart_a", "chart_b"]
+            raw["steps"][1:1] = charts
+            self.script(raw)
+            def factory(rid):
+                registry = SandboxRegistry(rid)
+                def chart(title, labels, values):
+                    # Published registry write identity uses the supplied logical step.
+                    key = registry.calls[-1]["step"]
+                    path = state_dir() / f"chart-{key}.svg"
+                    if not path.exists():
+                        path.write_text(json.dumps(values))
+                    return {"chart_id": key, "path": str(path)}
+                registry.handlers["render_chart"] = chart
+                registry.offered.append("render_chart")
+                return registry
+            self.run_plan(factory=factory)
+            self.assertEqual(self.reason(), "done")
+            artifacts = list(state_dir().glob("chart-*.svg"))
+            self.assertEqual(len(artifacts), 2)
+            self.assertEqual({p.read_text() for p in artifacts}, {"[10]", "[20]"})
 
     def test_invalid_plans_exhaust_the_replan_bound_before_any_effect(self):
         with fixed_run(TASK, "bad-planner", backend=MODEL):
