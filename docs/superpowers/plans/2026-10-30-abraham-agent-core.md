@@ -342,3 +342,21 @@ A further probe with the published real registry reproduced two planned charts
 collapsing to one artifact: both calls used the planner model-call number as their
 write identity. Planned calls now pass their plan-step ID. A failing-then-passing
 regression checks separate artifact contents, and the real-registry probe passes.
+
+## Task 10: Verified assignment citations and reproducible compatibility report
+
+Verified Myron's A1 report/format definitions/model at commit `65125727` and A2
+report/model at `df425cc`, following his published reference file at `4ab3d29`.
+Filled Abraham's M1 economics and planning evidence from those sources, including
+the actual issue-level definition of f and explicitly derived cost calculations.
+These earlier `gpt-4.1-mini` experiments do not measure this project's `gpt-4o-mini`.
+The exact four gates and five required plan tests still need the absent handout.
+
+Saved `tests/fixtures/agent_integration_probe.py` and pinned snapshot instructions
+in the handoff. It runs only on an explicit integration snapshot, with free scripted
+models: six cases pass; two contract tests retain seven failing assertions for the
+published tool mismatch. Routine discovery keeps using the agreed stubs/contracts.
+Full real-component integration and B7 are not complete. The local API-key environment
+variable was checked for presence only and is absent. Ruling: preserve the agreed
+contract and report discrepancies to the team through the handoff, rather than
+silently changing another owner's tool schema or the workflow's callers.

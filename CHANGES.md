@@ -102,3 +102,14 @@ showed that distinct chart steps reused one write key when the planner supplied 
 model-call number as `step`. Planned calls now pass their stable plan-step ID. A
 regression verifies two intended charts leave two different artifacts; the same
 probe passes with the published registry after the fix.
+
+**Abraham — citations and compatibility evidence:** located Myron's completed A1/A2
+references on `origin/myron` and verified the immutable report JSON, A1 metric
+definitions, and model settings directly in his repositories. Filled Abraham's M1
+cost/success/latency and planning-result citations, with dates, run counts, and
+explicit separation from project measurements. Added a manual, free-model integration
+probe and reproducible snapshot instructions. Six probes pass after the two fixes;
+two contract probes still fail (six call-shape mismatches and one parser row-shape
+mismatch). The handoff now identifies the tool owner actions, absent local API key,
+and still-missing handout. No teammate code, shared model setting, or official run
+record was changed or merged.
