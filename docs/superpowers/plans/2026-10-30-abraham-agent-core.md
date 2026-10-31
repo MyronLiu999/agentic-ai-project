@@ -245,3 +245,30 @@ Evidence: 12 new service tests; the never-stops harness test reaches `step_limit
 after 12 model calls and fails the effects check, as intended. Standard/status/decline
 workflow dispatch uses substitutes for the team-owned stubs. Published standard
 workflow signature verified read-only; no teammate source was merged or modified.
+
+## Task 5: Batch plan validation and enforcement (B6a)
+
+A plan is JSON with `steps`: each step has an ID, a code-selected request ID, tool,
+arguments, dependencies, and an observable `expect` predicate. `checkpoint: true`
+marks a read whose failed observation may trigger bounded revision. `$fill` bindings
+have the form `{"$fill": "step_id.output_field"}` and resolve only from successful
+same-request ancestors. Tool names/arguments follow PLAN.md section 3.
+
+Validate bounded size, unique IDs, known tools/scopes, argument shapes, acyclic
+dependencies, binding reachability, and a terminal email/question per request. The
+orphan rule requires every nonterminal step to contribute to a terminal in that
+request. Cross-request data dependencies are rejected. Completed steps are immutable
+across revisions. A gate refuses extra/out-of-order/argument-mismatched calls and
+records plan differences and request-scoped repeated-call hashes.
+
+## Task 6: Batch planner, checkpoints, and integration (B6b)
+
+The model chooses the complete plan; code schedules its validated dependencies.
+Planning, replanning, and email revisions share external time/token/model-call bounds.
+Allow an initial plan and at most two revisions total. Persist every plan attempt and
+fill binding. Validate observed registry results against the sandbox at checkpoints;
+verify writes against their saved effects. Read-checkpoint failures may revise the
+remaining plan; unverified writes stop. Never repeat completed writes after revision.
+The existing email critique gate applies before each planned email. The batch switch
+selects this executor or independent unplanned loops. Fakes exercise both through
+`operator_turn`; live-model prompt tuning remains contingent on real tool integration.

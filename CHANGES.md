@@ -49,3 +49,9 @@ scope from the session trace after restart; ambiguous selection asks for clarifi
 Replies preserve action lines and pending questions. Request states come from recorded
 effects, not a model's completion claim. Harness-level tests exercise never-stops,
 each dispatch path, session follow-ups, and isolated unplanned batch requests.
+
+**Abraham — B6a, plan contract:** added bounded plan validation, same-request dependency
+and `$fill` bindings, cycle/orphan checks, immutable completed steps, observable-result
+predicates, off-plan call refusal, plan-difference records, and request-scoped repeat
+detection. Twelve tests cover valid bindings and malformed, unauthorized, or incomplete
+plans. Batch planning/execution is connected in the following step.
