@@ -37,7 +37,48 @@ test task `standard_report_clean` with its check and tests.
 - (claudea) The hand email form always sends to the request's own contact (no free recipient). The
   `standard_report` workflow refuses a file that is not the known layout (`unknown_layout`) rather than guess.
 
-**Fixes after the baseline:** none yet.
+**Fixes after the baseline:** analysis corrections and the switchable Pass 1
+example below; no additional model-facing fix was mixed into the measured arms.
+
+**Post-baseline analysis corrections (ordinary fixes, not Pass 1):** repeated-call
+hashes now include request scope from recorded outputs, so two distributors'
+identical quarter queries are not falsely treated as repeats. Routing scores
+only the initial work against a task's use_case; normal later status turns are
+not misroutes. The original analyzer reported 3 repeat-containing runs and 12
+misroutes on baseline; corrected counts are recomputed from the unchanged
+records. UTF-8/portable task paths and optional JSON summary output support
+recomputation on another machine. Both pass arms use this same analyzer.
+
+**Pass 1 implementation:** `examples.save_report` now controls one illustrative
+argument example that separates file_total_units from database total_units and
+total_revenue. Example numbers are synthetic and do not contain a task answer.
+With the switch off the model-visible definitions match the baseline. The fix
+changes only this description; Registry schemas, prompts, checks and budgets
+were held constant between the two measured arms. Per Myron's instruction at
+measurement time, both pass arms ran on clean `myron` while main was held.
+
+**Pass 1 result (2026-10-31):** prediction was pushed as `2e18da0` before both
+fresh arms ran on that identical clean commit. Off passed 15/18; on 14/18;
+the target messy-file task passed 3/3 in both. The predeclared retention rule
+therefore rejects activation: `examples.save_report` stays off. Mean tokens/run
+were 3,668.33 off and 3,589.72 on, but fewer batch steps completed on, so this
+is not a successful-work efficiency benefit. All 36 records/traces, recomputed
+summary, integrity audit and seven failed-run diagnoses are retained. Batch
+placeholder recipients and comparison figure omissions remain limitations.
+Analyzer endpoint false-finish counts include completed status follow-ups after
+held work; the report distinguishes these from initial task-turn false finishes.
+The experiment and its result were initially kept on `myron`; later integration
+into main does not alter those historical runs or the prospective prediction.
+
+**Main integration (2026-10-31):** merged Myron's completed Pass 1 into main
+after Claudea's `54a159c`. The analyzer keeps request-scoped repeat identities,
+explicit scored-route counts, first-turn unrouted detection, per-run and
+per-critiqued-run denominators, unique bounded-run counts and complete-sweep f.
+Regenerated baseline/pass summaries with this combined analyzer; raw records,
+traces, prediction and treatment setting are unchanged. Claudea's stricter
+report checks and pending-record discard/send updates remain in the merged
+code. Historical verdicts describe the checks at their recorded commits and
+were not re-scored using these later checks.
 
 **Reused code/design:** no assignment source was copied. Stable canonical
 write keys and short protocol errors adapt the design from Myron Liu's

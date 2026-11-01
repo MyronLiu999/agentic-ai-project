@@ -1,0 +1,818 @@
+{
+  "arms": [
+    {
+      "arm": "pass1-examples-off",
+      "runs": 18,
+      "passes": 15,
+      "tasks": [
+        "batch_reports_two",
+        "compare_check_last_quarter",
+        "messy_file_semicolon",
+        "out_of_scope_margins",
+        "standard_report_clean",
+        "status_question_done_work"
+      ],
+      "sweeps": [
+        1,
+        2,
+        3
+      ],
+      "per_task": {
+        "batch_reports_two": [
+          1,
+          3
+        ],
+        "compare_check_last_quarter": [
+          2,
+          3
+        ],
+        "messy_file_semicolon": [
+          3,
+          3
+        ],
+        "out_of_scope_margins": [
+          3,
+          3
+        ],
+        "standard_report_clean": [
+          3,
+          3
+        ],
+        "status_question_done_work": [
+          3,
+          3
+        ]
+      },
+      "per_sweep": {
+        "1": [
+          4,
+          6
+        ],
+        "2": [
+          5,
+          6
+        ],
+        "3": [
+          6,
+          6
+        ]
+      },
+      "turns": 30,
+      "turn_median_s": 0.481,
+      "turn_slowest_s": 16.489,
+      "slow_turns_over_10s": 3,
+      "tokens_per_run": 3668.3333333333335,
+      "cost_per_run": 0.0005577222222222223,
+      "cost_per_task": {
+        "batch_reports_two": 0.0013096666666666667,
+        "compare_check_last_quarter": 0.000975,
+        "messy_file_semicolon": 0.000978,
+        "out_of_scope_margins": 0.0,
+        "standard_report_clean": 6.966666666666666e-05,
+        "status_question_done_work": 1.4e-05
+      },
+      "sequences_per_task": {
+        "batch_reports_two": 2,
+        "compare_check_last_quarter": 3,
+        "messy_file_semicolon": 1,
+        "out_of_scope_margins": 1,
+        "standard_report_clean": 1,
+        "status_question_done_work": 1
+      },
+      "sequences_total": 9,
+      "runs_with_repeat": 0,
+      "repeat_events": 0,
+      "false_finishes": 3,
+      "false_finish_runs": [
+        "pass1-examples-off-batch_reports_two-s01-b4d71f",
+        "pass1-examples-off-compare_check_last_quarter-s01-8c0d0a",
+        "pass1-examples-off-batch_reports_two-s02-b6501f"
+      ],
+      "plan": {
+        "diff_executed": 18,
+        "diff_skipped": 12,
+        "plans": 3,
+        "revisions": 5,
+        "plan_rejected": 0,
+        "replan_bound": 0,
+        "off_plan_refused": 0,
+        "checkpoints_failed": 0
+      },
+      "critique": {
+        "rounds": 18,
+        "runs_with_critique": 12,
+        "held": 3,
+        "misses": 0,
+        "rounds_per_run": 1.0,
+        "rounds_per_critiqued_run": 1.5,
+        "verdicts": {
+          "revise": 5,
+          "held": 3,
+          "pass": 10
+        }
+      },
+      "routing": {
+        "routes": 30,
+        "scored_routes": 18,
+        "misroutes": 0,
+        "misrouted_runs": [],
+        "unrouted": 0,
+        "unrouted_runs": []
+      },
+      "bound_ends": {},
+      "bound_runs": 0,
+      "boundary": {
+        "tool_errors": 0,
+        "boundary_rejections": 0
+      },
+      "measures": {
+        "reports": 10,
+        "emails": 7,
+        "duplicate_emails": 0,
+        "requests_done": 2,
+        "wrong_direction_claimed": 1,
+        "leaks": 0,
+        "file_units_reported": 3,
+        "pending_to_contact": 3,
+        "pending_to_others": 0,
+        "duplicate_reports": 0,
+        "writes": 0,
+        "answered_revenue": 3
+      },
+      "per_run": [
+        {
+          "run_id": "pass1-examples-off-batch_reports_two-s01-b4d71f",
+          "task": "batch_reports_two",
+          "sweep": 1,
+          "passed": false,
+          "end_reasons": [
+            "critique_held",
+            "done"
+          ],
+          "tool_calls": 4,
+          "repeats": 0,
+          "critique_rounds": 2,
+          "cost_usd": 0.001293,
+          "tokens": 5383
+        },
+        {
+          "run_id": "pass1-examples-off-compare_check_last_quarter-s01-8c0d0a",
+          "task": "compare_check_last_quarter",
+          "sweep": 1,
+          "passed": false,
+          "end_reasons": [
+            "critique_held",
+            "done"
+          ],
+          "tool_calls": 4,
+          "repeats": 0,
+          "critique_rounds": 2,
+          "cost_usd": 0.000675,
+          "tokens": 5416
+        },
+        {
+          "run_id": "pass1-examples-off-messy_file_semicolon-s01-9c7c17",
+          "task": "messy_file_semicolon",
+          "sweep": 1,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 4,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.001039,
+          "tokens": 8132
+        },
+        {
+          "run_id": "pass1-examples-off-out_of_scope_margins-s01-26f496",
+          "task": "out_of_scope_margins",
+          "sweep": 1,
+          "passed": true,
+          "end_reasons": [
+            "declined"
+          ],
+          "tool_calls": 1,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 0.0,
+          "tokens": 0
+        },
+        {
+          "run_id": "pass1-examples-off-standard_report_clean-s01-472a40",
+          "task": "standard_report_clean",
+          "sweep": 1,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 6.9e-05,
+          "tokens": 264
+        },
+        {
+          "run_id": "pass1-examples-off-status_question_done_work-s01-653aff",
+          "task": "status_question_done_work",
+          "sweep": 1,
+          "passed": true,
+          "end_reasons": [
+            "done"
+          ],
+          "tool_calls": 0,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 1.4e-05,
+          "tokens": 89
+        },
+        {
+          "run_id": "pass1-examples-off-batch_reports_two-s02-b6501f",
+          "task": "batch_reports_two",
+          "sweep": 2,
+          "passed": false,
+          "end_reasons": [
+            "critique_held",
+            "done"
+          ],
+          "tool_calls": 4,
+          "repeats": 0,
+          "critique_rounds": 2,
+          "cost_usd": 0.001274,
+          "tokens": 5383
+        },
+        {
+          "run_id": "pass1-examples-off-compare_check_last_quarter-s02-88336e",
+          "task": "compare_check_last_quarter",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.001022,
+          "tokens": 8080
+        },
+        {
+          "run_id": "pass1-examples-off-messy_file_semicolon-s02-885308",
+          "task": "messy_file_semicolon",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 4,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.000929,
+          "tokens": 8219
+        },
+        {
+          "run_id": "pass1-examples-off-out_of_scope_margins-s02-e08653",
+          "task": "out_of_scope_margins",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "declined"
+          ],
+          "tool_calls": 1,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 0.0,
+          "tokens": 0
+        },
+        {
+          "run_id": "pass1-examples-off-standard_report_clean-s02-e744ad",
+          "task": "standard_report_clean",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 7.1e-05,
+          "tokens": 267
+        },
+        {
+          "run_id": "pass1-examples-off-status_question_done_work-s02-1800ff",
+          "task": "status_question_done_work",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "done"
+          ],
+          "tool_calls": 0,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 1.4e-05,
+          "tokens": 89
+        },
+        {
+          "run_id": "pass1-examples-off-batch_reports_two-s03-e6fb94",
+          "task": "batch_reports_two",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 10,
+          "repeats": 0,
+          "critique_rounds": 4,
+          "cost_usd": 0.001362,
+          "tokens": 5640
+        },
+        {
+          "run_id": "pass1-examples-off-compare_check_last_quarter-s03-df171b",
+          "task": "compare_check_last_quarter",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 7,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.001228,
+          "tokens": 10796
+        },
+        {
+          "run_id": "pass1-examples-off-messy_file_semicolon-s03-d706a1",
+          "task": "messy_file_semicolon",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 4,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.000966,
+          "tokens": 7918
+        },
+        {
+          "run_id": "pass1-examples-off-out_of_scope_margins-s03-e26d3f",
+          "task": "out_of_scope_margins",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "declined"
+          ],
+          "tool_calls": 1,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 0.0,
+          "tokens": 0
+        },
+        {
+          "run_id": "pass1-examples-off-standard_report_clean-s03-64a05f",
+          "task": "standard_report_clean",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 6.9e-05,
+          "tokens": 265
+        },
+        {
+          "run_id": "pass1-examples-off-status_question_done_work-s03-1e028a",
+          "task": "status_question_done_work",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "done"
+          ],
+          "tool_calls": 0,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 1.4e-05,
+          "tokens": 89
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-on",
+      "runs": 18,
+      "passes": 14,
+      "tasks": [
+        "batch_reports_two",
+        "compare_check_last_quarter",
+        "messy_file_semicolon",
+        "out_of_scope_margins",
+        "standard_report_clean",
+        "status_question_done_work"
+      ],
+      "sweeps": [
+        1,
+        2,
+        3
+      ],
+      "per_task": {
+        "batch_reports_two": [
+          0,
+          3
+        ],
+        "compare_check_last_quarter": [
+          2,
+          3
+        ],
+        "messy_file_semicolon": [
+          3,
+          3
+        ],
+        "out_of_scope_margins": [
+          3,
+          3
+        ],
+        "standard_report_clean": [
+          3,
+          3
+        ],
+        "status_question_done_work": [
+          3,
+          3
+        ]
+      },
+      "per_sweep": {
+        "1": [
+          5,
+          6
+        ],
+        "2": [
+          5,
+          6
+        ],
+        "3": [
+          4,
+          6
+        ]
+      },
+      "turns": 30,
+      "turn_median_s": 0.513,
+      "turn_slowest_s": 14.509,
+      "slow_turns_over_10s": 1,
+      "tokens_per_run": 3589.722222222222,
+      "cost_per_run": 0.0005079444444444444,
+      "cost_per_task": {
+        "batch_reports_two": 0.0008723333333333333,
+        "compare_check_last_quarter": 0.0009856666666666666,
+        "messy_file_semicolon": 0.0011066666666666666,
+        "out_of_scope_margins": 0.0,
+        "standard_report_clean": 6.9e-05,
+        "status_question_done_work": 1.4e-05
+      },
+      "sequences_per_task": {
+        "batch_reports_two": 1,
+        "compare_check_last_quarter": 3,
+        "messy_file_semicolon": 1,
+        "out_of_scope_margins": 1,
+        "standard_report_clean": 1,
+        "status_question_done_work": 1
+      },
+      "sequences_total": 8,
+      "runs_with_repeat": 0,
+      "repeat_events": 0,
+      "false_finishes": 4,
+      "false_finish_runs": [
+        "pass1-examples-on-batch_reports_two-s01-e6bbc7",
+        "pass1-examples-on-batch_reports_two-s02-32f1cf",
+        "pass1-examples-on-batch_reports_two-s03-5ed0c7",
+        "pass1-examples-on-compare_check_last_quarter-s03-83ec59"
+      ],
+      "plan": {
+        "diff_executed": 12,
+        "diff_skipped": 18,
+        "plans": 3,
+        "revisions": 1,
+        "plan_rejected": 0,
+        "replan_bound": 0,
+        "off_plan_refused": 0,
+        "checkpoints_failed": 0
+      },
+      "critique": {
+        "rounds": 15,
+        "runs_with_critique": 12,
+        "held": 3,
+        "misses": 1,
+        "rounds_per_run": 0.8333333333333334,
+        "rounds_per_critiqued_run": 1.25,
+        "verdicts": {
+          "revise": 3,
+          "held": 3,
+          "pass": 9
+        }
+      },
+      "routing": {
+        "routes": 30,
+        "scored_routes": 18,
+        "misroutes": 0,
+        "misrouted_runs": [],
+        "unrouted": 0,
+        "unrouted_runs": []
+      },
+      "bound_ends": {},
+      "bound_runs": 0,
+      "boundary": {
+        "tool_errors": 1,
+        "boundary_rejections": 1
+      },
+      "measures": {
+        "reports": 9,
+        "emails": 6,
+        "duplicate_emails": 0,
+        "requests_done": 0,
+        "leaks": 0,
+        "wrong_direction_claimed": 0,
+        "file_units_reported": 3,
+        "pending_to_contact": 3,
+        "pending_to_others": 0,
+        "duplicate_reports": 0,
+        "writes": 0,
+        "answered_revenue": 3
+      },
+      "per_run": [
+        {
+          "run_id": "pass1-examples-on-batch_reports_two-s01-e6bbc7",
+          "task": "batch_reports_two",
+          "sweep": 1,
+          "passed": false,
+          "end_reasons": [
+            "critique_held",
+            "done"
+          ],
+          "tool_calls": 4,
+          "repeats": 0,
+          "critique_rounds": 2,
+          "cost_usd": 0.000668,
+          "tokens": 2433
+        },
+        {
+          "run_id": "pass1-examples-on-compare_check_last_quarter-s01-0e1be2",
+          "task": "compare_check_last_quarter",
+          "sweep": 1,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.000892,
+          "tokens": 6224
+        },
+        {
+          "run_id": "pass1-examples-on-messy_file_semicolon-s01-75daf4",
+          "task": "messy_file_semicolon",
+          "sweep": 1,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.00114,
+          "tokens": 9786
+        },
+        {
+          "run_id": "pass1-examples-on-out_of_scope_margins-s01-97f8d6",
+          "task": "out_of_scope_margins",
+          "sweep": 1,
+          "passed": true,
+          "end_reasons": [
+            "declined"
+          ],
+          "tool_calls": 1,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 0.0,
+          "tokens": 0
+        },
+        {
+          "run_id": "pass1-examples-on-standard_report_clean-s01-883e22",
+          "task": "standard_report_clean",
+          "sweep": 1,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 7.7e-05,
+          "tokens": 277
+        },
+        {
+          "run_id": "pass1-examples-on-status_question_done_work-s01-a1f22c",
+          "task": "status_question_done_work",
+          "sweep": 1,
+          "passed": true,
+          "end_reasons": [
+            "done"
+          ],
+          "tool_calls": 0,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 1.4e-05,
+          "tokens": 89
+        },
+        {
+          "run_id": "pass1-examples-on-batch_reports_two-s02-32f1cf",
+          "task": "batch_reports_two",
+          "sweep": 2,
+          "passed": false,
+          "end_reasons": [
+            "critique_held",
+            "done"
+          ],
+          "tool_calls": 4,
+          "repeats": 0,
+          "critique_rounds": 2,
+          "cost_usd": 0.001282,
+          "tokens": 5358
+        },
+        {
+          "run_id": "pass1-examples-on-compare_check_last_quarter-s02-712c70",
+          "task": "compare_check_last_quarter",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 6,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.001025,
+          "tokens": 8687
+        },
+        {
+          "run_id": "pass1-examples-on-messy_file_semicolon-s02-5af5e8",
+          "task": "messy_file_semicolon",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.001031,
+          "tokens": 9807
+        },
+        {
+          "run_id": "pass1-examples-on-out_of_scope_margins-s02-800405",
+          "task": "out_of_scope_margins",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "declined"
+          ],
+          "tool_calls": 1,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 0.0,
+          "tokens": 0
+        },
+        {
+          "run_id": "pass1-examples-on-standard_report_clean-s02-573a18",
+          "task": "standard_report_clean",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 6.5e-05,
+          "tokens": 258
+        },
+        {
+          "run_id": "pass1-examples-on-status_question_done_work-s02-98f033",
+          "task": "status_question_done_work",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "done"
+          ],
+          "tool_calls": 0,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 1.4e-05,
+          "tokens": 89
+        },
+        {
+          "run_id": "pass1-examples-on-batch_reports_two-s03-5ed0c7",
+          "task": "batch_reports_two",
+          "sweep": 3,
+          "passed": false,
+          "end_reasons": [
+            "critique_held",
+            "done"
+          ],
+          "tool_calls": 4,
+          "repeats": 0,
+          "critique_rounds": 2,
+          "cost_usd": 0.000667,
+          "tokens": 2431
+        },
+        {
+          "run_id": "pass1-examples-on-compare_check_last_quarter-s03-83ec59",
+          "task": "compare_check_last_quarter",
+          "sweep": 3,
+          "passed": false,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 6,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.00104,
+          "tokens": 8881
+        },
+        {
+          "run_id": "pass1-examples-on-messy_file_semicolon-s03-fb81b7",
+          "task": "messy_file_semicolon",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.001149,
+          "tokens": 9949
+        },
+        {
+          "run_id": "pass1-examples-on-out_of_scope_margins-s03-e2644c",
+          "task": "out_of_scope_margins",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "declined"
+          ],
+          "tool_calls": 1,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 0.0,
+          "tokens": 0
+        },
+        {
+          "run_id": "pass1-examples-on-standard_report_clean-s03-1c66ab",
+          "task": "standard_report_clean",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 6.5e-05,
+          "tokens": 257
+        },
+        {
+          "run_id": "pass1-examples-on-status_question_done_work-s03-ffeb96",
+          "task": "status_question_done_work",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "done"
+          ],
+          "tool_calls": 0,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 1.4e-05,
+          "tokens": 89
+        }
+      ]
+    }
+  ],
+  "m_f": null
+}

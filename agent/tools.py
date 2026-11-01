@@ -301,6 +301,15 @@ def build(request_id: str | None = None) -> Registry:
         " Example calls: {\"period\":\"2026Q3\"} or {\"period\":\"2026Q2\"}."
         if _switch("examples.query_sales") == "on" else ""
     )
+    report_examples = (
+        ' Example (illustrative numbers only): if parsed file rows contain 9 and 8 units, '
+        'while query_sales returns total_units=12 and total_revenue=120.50, save '
+        '{"kind":"standard","figures":{"period":"2025Q1","total_revenue":120.50,'
+        '"total_units":12,"file_total_units":17},"body":"Upload and database totals differ."}. '
+        'Replace the example period/numbers with the current request/query/parsed file facts; '
+        'never copy them. For comparisons also include previous_period and previous_total_revenue.'
+        if _switch("examples.save_report") == "on" else ""
+    )
     simple_result = _object_schema({
         "id": {"type": "integer"},
         "pending_id": {"type": "integer"},
@@ -384,7 +393,8 @@ def build(request_id: str | None = None) -> Registry:
             "total_units from that query and file_total_units from the parsed upload separate. For comparisons "
             "also store previous_period and numeric previous_total_revenue. Returns report_id/version/created. "
             "Body is capped at 12000 characters. "
-            "The registry supplies the idempotency key; callers must never invent one.",
+            "The registry supplies the idempotency key; callers must never invent one."
+            + report_examples,
             _object_schema({
                 "kind": {"type": "string", "enum": ["standard", "comparison", "batch"]},
                 "figures": {"type": "object"}, "body": {"type": "string"},

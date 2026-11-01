@@ -148,7 +148,8 @@ class AnalyzeCountingTest(unittest.TestCase):
                   trace=[{"type": "operator"}, {"type": "end", "terminal_reason": "declined"},
                          {"type": "operator"}, {"type": "route", "use_case": "status_question"}])
         routing = analyze.analyze_arm(self.agent)["routing"]
-        self.assertEqual((routing["routes"], routing["misroutes"], routing["unrouted"]), (5, 1, 1))
+        self.assertEqual((routing["routes"], routing["scored_routes"], routing["misroutes"], routing["unrouted"]),
+                         (5, 2, 1, 1))
         self.assertEqual(routing["misrouted_runs"], ["r2: messy_file for standard_report"])
         self.assertEqual(routing["unrouted_runs"], ["r3"])
 
