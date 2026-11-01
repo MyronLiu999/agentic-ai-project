@@ -1,0 +1,156 @@
+{
+  "arms": [
+    {
+      "records": 18,
+      "failures": [
+        {
+          "run_id": "pass1-examples-off-batch_reports_two-s01-b4d71f",
+          "arm": "pass1-examples-off",
+          "task": "batch_reports_two",
+          "outcome": "completed",
+          "end_reasons": [
+            "critique_held",
+            "done"
+          ],
+          "check_reason": "SYN-thread-1301: no pending report email; SYN-thread-1302: no report saved; SYN-thread-1302: no pending report email",
+          "record": "D:\\Uchicago Courses\\2026 Fall\\AgenticEngineering\\prj1\\Project Ideas_ MPCS 57220 1 (Autumn 2026) Agentic AI Engineering_files\\agentic-ai-project\\results\\pass1-examples-off\\pass1-examples-off-batch_reports_two-s01-b4d71f.json",
+          "trace": "D:\\Uchicago Courses\\2026 Fall\\AgenticEngineering\\prj1\\Project Ideas_ MPCS 57220 1 (Autumn 2026) Agentic AI Engineering_files\\agentic-ai-project\\results\\pass1-examples-off\\pass1-examples-off-batch_reports_two-s01-b4d71f.trace.jsonl",
+          "first_failure": {
+            "line": 7,
+            "kind": "plan_rejected",
+            "message": "Orphan step 'r1_chart': output is not consumed by later work"
+          },
+          "evidence_issues": [],
+          "synthetic": false
+        },
+        {
+          "run_id": "pass1-examples-off-batch_reports_two-s02-b6501f",
+          "arm": "pass1-examples-off",
+          "task": "batch_reports_two",
+          "outcome": "completed",
+          "end_reasons": [
+            "critique_held",
+            "done"
+          ],
+          "check_reason": "SYN-thread-1301: no pending report email; SYN-thread-1302: no report saved; SYN-thread-1302: no pending report email",
+          "record": "D:\\Uchicago Courses\\2026 Fall\\AgenticEngineering\\prj1\\Project Ideas_ MPCS 57220 1 (Autumn 2026) Agentic AI Engineering_files\\agentic-ai-project\\results\\pass1-examples-off\\pass1-examples-off-batch_reports_two-s02-b6501f.json",
+          "trace": "D:\\Uchicago Courses\\2026 Fall\\AgenticEngineering\\prj1\\Project Ideas_ MPCS 57220 1 (Autumn 2026) Agentic AI Engineering_files\\agentic-ai-project\\results\\pass1-examples-off\\pass1-examples-off-batch_reports_two-s02-b6501f.trace.jsonl",
+          "first_failure": {
+            "line": 7,
+            "kind": "plan_rejected",
+            "message": "Orphan step 'r0_chart': output is not consumed by later work"
+          },
+          "evidence_issues": [],
+          "synthetic": false
+        },
+        {
+          "run_id": "pass1-examples-off-compare_check_last_quarter-s01-8c0d0a",
+          "arm": "pass1-examples-off",
+          "task": "compare_check_last_quarter",
+          "outcome": "completed",
+          "end_reasons": [
+            "critique_held",
+            "done"
+          ],
+          "check_reason": "SYN-thread-1201: the last report does not carry the revenue 67,246.55; SYN-thread-1201: no pending report email; a reply says revenue went down, but the database says up (62,799.60 to 67,246.55)",
+          "record": "D:\\Uchicago Courses\\2026 Fall\\AgenticEngineering\\prj1\\Project Ideas_ MPCS 57220 1 (Autumn 2026) Agentic AI Engineering_files\\agentic-ai-project\\results\\pass1-examples-off\\pass1-examples-off-compare_check_last_quarter-s01-8c0d0a.json",
+          "trace": "D:\\Uchicago Courses\\2026 Fall\\AgenticEngineering\\prj1\\Project Ideas_ MPCS 57220 1 (Autumn 2026) Agentic AI Engineering_files\\agentic-ai-project\\results\\pass1-examples-off\\pass1-examples-off-compare_check_last_quarter-s01-8c0d0a.trace.jsonl",
+          "first_failure": {
+            "line": 18,
+            "kind": "critique_revise",
+            "message": "total_revenue is 0, but the database says 67,246.55 for 2026Q3"
+          },
+          "evidence_issues": [],
+          "synthetic": false
+        }
+      ],
+      "issues": []
+    },
+    {
+      "records": 18,
+      "failures": [
+        {
+          "run_id": "pass1-examples-on-batch_reports_two-s01-e6bbc7",
+          "arm": "pass1-examples-on",
+          "task": "batch_reports_two",
+          "outcome": "completed",
+          "end_reasons": [
+            "critique_held",
+            "done"
+          ],
+          "check_reason": "SYN-thread-1301: no pending report email; SYN-thread-1302: no report saved; SYN-thread-1302: no pending report email",
+          "record": "D:\\Uchicago Courses\\2026 Fall\\AgenticEngineering\\prj1\\Project Ideas_ MPCS 57220 1 (Autumn 2026) Agentic AI Engineering_files\\agentic-ai-project\\results\\pass1-examples-on\\pass1-examples-on-batch_reports_two-s01-e6bbc7.json",
+          "trace": "D:\\Uchicago Courses\\2026 Fall\\AgenticEngineering\\prj1\\Project Ideas_ MPCS 57220 1 (Autumn 2026) Agentic AI Engineering_files\\agentic-ai-project\\results\\pass1-examples-on\\pass1-examples-on-batch_reports_two-s01-e6bbc7.trace.jsonl",
+          "first_failure": {
+            "line": 24,
+            "kind": "critique_revise",
+            "message": "recipient is recipient@example.com, but the request's contact is contact@delta.example; the body does not state the total revenue 60,771.05"
+          },
+          "evidence_issues": [],
+          "synthetic": false
+        },
+        {
+          "run_id": "pass1-examples-on-batch_reports_two-s02-32f1cf",
+          "arm": "pass1-examples-on",
+          "task": "batch_reports_two",
+          "outcome": "completed",
+          "end_reasons": [
+            "critique_held",
+            "done"
+          ],
+          "check_reason": "SYN-thread-1301: no pending report email; SYN-thread-1302: no report saved; SYN-thread-1302: no pending report email",
+          "record": "D:\\Uchicago Courses\\2026 Fall\\AgenticEngineering\\prj1\\Project Ideas_ MPCS 57220 1 (Autumn 2026) Agentic AI Engineering_files\\agentic-ai-project\\results\\pass1-examples-on\\pass1-examples-on-batch_reports_two-s02-32f1cf.json",
+          "trace": "D:\\Uchicago Courses\\2026 Fall\\AgenticEngineering\\prj1\\Project Ideas_ MPCS 57220 1 (Autumn 2026) Agentic AI Engineering_files\\agentic-ai-project\\results\\pass1-examples-on\\pass1-examples-on-batch_reports_two-s02-32f1cf.trace.jsonl",
+          "first_failure": {
+            "line": 7,
+            "kind": "plan_rejected",
+            "message": "Orphan step 'r0_chart': output is not consumed by later work"
+          },
+          "evidence_issues": [],
+          "synthetic": false
+        },
+        {
+          "run_id": "pass1-examples-on-batch_reports_two-s03-5ed0c7",
+          "arm": "pass1-examples-on",
+          "task": "batch_reports_two",
+          "outcome": "completed",
+          "end_reasons": [
+            "critique_held",
+            "done"
+          ],
+          "check_reason": "SYN-thread-1301: no pending report email; SYN-thread-1302: no report saved; SYN-thread-1302: no pending report email",
+          "record": "D:\\Uchicago Courses\\2026 Fall\\AgenticEngineering\\prj1\\Project Ideas_ MPCS 57220 1 (Autumn 2026) Agentic AI Engineering_files\\agentic-ai-project\\results\\pass1-examples-on\\pass1-examples-on-batch_reports_two-s03-5ed0c7.json",
+          "trace": "D:\\Uchicago Courses\\2026 Fall\\AgenticEngineering\\prj1\\Project Ideas_ MPCS 57220 1 (Autumn 2026) Agentic AI Engineering_files\\agentic-ai-project\\results\\pass1-examples-on\\pass1-examples-on-batch_reports_two-s03-5ed0c7.trace.jsonl",
+          "first_failure": {
+            "line": 24,
+            "kind": "critique_revise",
+            "message": "recipient is recipient@example.com, but the request's contact is contact@delta.example; the body does not state the total revenue 60,771.05"
+          },
+          "evidence_issues": [],
+          "synthetic": false
+        },
+        {
+          "run_id": "pass1-examples-on-compare_check_last_quarter-s03-83ec59",
+          "arm": "pass1-examples-on",
+          "task": "compare_check_last_quarter",
+          "outcome": "completed",
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "check_reason": "SYN-thread-1201: the last report does not carry 62,799.60",
+          "record": "D:\\Uchicago Courses\\2026 Fall\\AgenticEngineering\\prj1\\Project Ideas_ MPCS 57220 1 (Autumn 2026) Agentic AI Engineering_files\\agentic-ai-project\\results\\pass1-examples-on\\pass1-examples-on-compare_check_last_quarter-s03-83ec59.json",
+          "trace": "D:\\Uchicago Courses\\2026 Fall\\AgenticEngineering\\prj1\\Project Ideas_ MPCS 57220 1 (Autumn 2026) Agentic AI Engineering_files\\agentic-ai-project\\results\\pass1-examples-on\\pass1-examples-on-compare_check_last_quarter-s03-83ec59.trace.jsonl",
+          "first_failure": {
+            "line": 30,
+            "kind": "check_failed",
+            "message": "SYN-thread-1201: the last report does not carry 62,799.60"
+          },
+          "evidence_issues": [],
+          "synthetic": false
+        }
+      ],
+      "issues": []
+    }
+  ]
+}
