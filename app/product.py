@@ -166,14 +166,26 @@ def discard_pending(pid: int):
     return RedirectResponse(f"/requests/{record['request_id']}", status_code=303)
 
 
+class _NotAsked(Exception):
+    """The page was opened without a query: show the form alone."""
+
+
 @router.get("/query")
-def query_page(request: Request, distributor: str = "SYN-DIST-001", period: str = "2026Q3"):
+def query_page(request: Request, distributor: str | None = None, period: str | None = None):
+    """Shows data only once asked: opening the page shows the form, Show (or a link with a
+    distributor or period) runs the query."""
+    asked = distributor is not None or period is not None
+    distributor, period = distributor or "SYN-DIST-001", period if period is not None else "2026Q3"
     data, before, error, chart = None, None, None, ""
     try:
+        if not asked:
+            raise _NotAsked
         data = sales.distributor_sales(distributor, period)
         before = sales.distributor_sales(distributor, sales.previous_period(period))
         chart = charts.svg(f"{distributor} {period} revenue by product", [r["name"] for r in data["by_product"]],
                            [r["revenue"] for r in data["by_product"]])
+    except _NotAsked:
+        pass  # the form alone, until Show
     except (ValueError, IndexError) as exc:
         error = str(exc)
     prev = {r["sku"]: r for r in (before or {}).get("by_product", [])}
@@ -190,7 +202,7 @@ def query_page(request: Request, distributor: str = "SYN-DIST-001", period: str 
         "page": "query", "data": data, "before": before, "rows": rows, "error": error, "distributor": distributor,
         "period": period, "chart": chart, "distributors": [d for d in _distributors()], "change": change, "pct": pct,
         "earlier": _step_period(period, -1), "later": _step_period(period, 1),
-        "name": next((d["name"] for d in _distributors() if d["id"] == distributor), distributor)})
+        "name": next((d["name"] for d in _distributors() if d["id"] == distributor), distributor), "asked": asked})
 
 
 def _step_period(period: str, step: int) -> str | None:

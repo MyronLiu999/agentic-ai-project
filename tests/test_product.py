@@ -122,3 +122,9 @@ class ProductPageTest(ScratchTest):
         self.assertEqual(r.status_code, 303)
         self.assertIn("?q=Handle+REQ-SYN-thread-2001.", r.headers["location"])
         turn.assert_not_called()                                     # nothing reaches the agent until sent
+
+    def test_query_page_shows_no_data_until_show(self):
+        page = self.client.get("/query").text
+        self.assertIn("then press <b>Show</b>", page)
+        self.assertNotIn("<svg", page)
+        self.assertIn("<svg", self.client.get("/query?distributor=SYN-DIST-001&period=2026Q3").text)

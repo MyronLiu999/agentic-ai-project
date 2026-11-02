@@ -36,18 +36,19 @@
 
 <form method="get" class="filters">
   <label>Distributor
-    <select name="distributor" onchange="this.form.submit()">{% for d in distributors %}<option value="{{ d.id }}" {{ 'selected' if d.id == distributor }}>{{ d.name }} ({{ d.id }})</option>{% endfor %}</select>
+    <select name="distributor">{% for d in distributors %}<option value="{{ d.id }}" {{ 'selected' if d.id == distributor }}>{{ d.name }} ({{ d.id }})</option>{% endfor %}</select>
   </label>
   <label>Quarter
     <input type="text" name="period" value="{{ period }}" placeholder="2026Q3">
   </label>
   <button class="primary">Show</button>
-  {% if earlier %}<div class="arrows">
+  {% if earlier and asked %}<div class="arrows">
     <a href="?distributor={{ distributor }}&period={{ earlier }}">← {{ earlier }}</a>
     <a href="?distributor={{ distributor }}&period={{ later }}">{{ later }} →</a>
   </div>{% endif %}
 </form>
 
+{% if not asked %}<div class="notice">Choose a distributor and a quarter, then press <b>Show</b>.</div>{% endif %}
 {% if error %}<div class="notice error">{{ error }}</div>{% endif %}
 
 {% if data %}
