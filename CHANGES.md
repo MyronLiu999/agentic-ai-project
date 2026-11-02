@@ -190,7 +190,9 @@ chat sessions by their first message; a run's page shows its check result and a 
 line per trace line (numbered as in the `.trace.jsonl` file) with the full line under it.
 M1.md Part 1 again names the core task's six use cases and the console, and states the approval line as a
 ranking with the line drawn and the trifecta; the build table's console row names the chat page; the AI line
-names `app/templates/`.
+names `app/templates/`. Part 1 (user and success check, test tasks, sandbox, console and product page) and the
+critique section were restored to fuller prose from `e121df6`, updated to the current code: Parts 1 to 3 and the team
+come to about 2,185 words, against the handout's "about 2,000".
 
 **Abraham — milestone audit fixes (2026-10-31, before the baseline):** accepted the
 official batch command and relative report follow-ups without widening request scope;
