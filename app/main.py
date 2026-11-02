@@ -82,13 +82,31 @@ def _sessions() -> list[dict]:
 
 
 def _history(session_id: str) -> list[dict]:
+    """The session's lines; each agent reply carries cards for the requests it names (product.py)."""
     path = traces_dir() / f"{runtime.safe_name(session_id)}.jsonl"
-    return [x for x in read_trace(path) if x.get("type") in CONSOLE_LINES] if path.exists() else []
+    lines = [x for x in read_trace(path) if x.get("type") in CONSOLE_LINES] if path.exists() else []
+    for line in lines:
+        if line.get("type") == "reply":
+            try:
+                rids = product.request_ids(line.get("text", ""), *line.get("actions") or [])
+                line["cards"] = product.request_cards(rids)
+            except Exception:  # a card is a convenience; the reply still shows without it
+                line["cards"] = []
+    return lines
+
+
+def _console(request: Request, session_id: str | None):
+    try:
+        open_requests = product.open_requests()
+    except Exception:
+        open_requests = []
+    return page(request, "console.html", sessions=_sessions(), session_id=session_id,
+                history=_history(session_id) if session_id else [], open_requests=open_requests)
 
 
 @app.get("/console", response_class=HTMLResponse)
 def console_list(request: Request):
-    return page(request, "console.html", sessions=_sessions(), session_id=None, history=[])
+    return _console(request, None)
 
 
 @app.post("/console/new")
@@ -102,7 +120,7 @@ def console_new():
 @app.get("/console/{session_id}", response_class=HTMLResponse)
 def console_session(request: Request, session_id: str):
     _safe(session_id)
-    return page(request, "console.html", sessions=_sessions(), session_id=session_id, history=_history(session_id))
+    return _console(request, session_id)
 
 
 @app.get("/console/{session_id}/history", response_class=HTMLResponse)

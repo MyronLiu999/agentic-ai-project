@@ -6,6 +6,7 @@ out as the operator's."""
 
 from __future__ import annotations
 
+import re
 import secrets
 import base64
 
@@ -171,10 +172,59 @@ def query_page(request: Request, distributor: str = "SYN-DIST-001", period: str 
     prev = {r["sku"]: r for r in (before or {}).get("by_product", [])}
     rows = [r | {"prev_revenue": prev.get(r["sku"], {}).get("revenue")} for r in (data or {}).get("by_product", [])]
     return templates.TemplateResponse(request, "query.html", {
-        "page": "home", "data": data, "before": before, "rows": rows, "error": error, "distributor": distributor,
+        "page": "query", "data": data, "before": before, "rows": rows, "error": error, "distributor": distributor,
         "period": period, "chart": chart, "distributors": [d for d in _distributors()]})
 
 
 def _distributors() -> list[dict]:
     with db.connect() as conn:
         return [dict(r) for r in conn.execute("SELECT id, name FROM distributors ORDER BY id")]
+
+
+# -- what the console shows under an agent reply ----------------------------------------------
+
+REQUEST_ID = re.compile(r"\bREQ-[A-Za-z0-9][A-Za-z0-9_-]*[A-Za-z0-9]")
+FIGURE_LABELS = (("period", "Period"), ("total_revenue", "Revenue"), ("total_units", "Units (database)"),
+                 ("file_total_units", "Units (file)"), ("previous_period", "Previous period"),
+                 ("previous_total_revenue", "Previous revenue"), ("revenue_change", "Change"))
+
+
+def request_ids(*texts: str) -> list[str]:
+    """The requests a reply is about, in the order it names them."""
+    seen = []
+    for text in texts:
+        for rid in REQUEST_ID.findall(text or ""):
+            if rid not in seen:
+                seen.append(rid)
+    return seen
+
+
+def request_cards(rids: list[str]) -> list[dict]:
+    """Each named request as it stands now: its latest report's figures, its charts and its drafts.
+    Read from sandbox/ only, so the card shows what is really saved, not what the reply says."""
+    cards = []
+    for rid in rids:
+        req = inbox.get(rid)
+        if not req:
+            continue
+        latest = reports.latest(rid)
+        figures = reports.figures(latest) if latest else {}
+        cards.append({
+            "req": req,
+            "figures": [(label, _show(key, figures[key])) for key, label in FIGURE_LABELS if key in figures],
+            "report": latest,
+            "charts": [c | {"svg": charts.read_svg(c)} for c in charts.for_request(rid)][-1:],
+            "pending": pending.for_request(rid)[-2:],
+        })
+    return cards
+
+
+def _show(key: str, value) -> str:
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        text = f"{value:,.2f}" if "revenue" in key else f"{value:,}"
+        return f"+{text}" if key == "revenue_change" and value > 0 else text
+    return str(value)
+
+
+def open_requests() -> list[dict]:
+    return [r for r in inbox.all_requests() if r["status"] != "done"]

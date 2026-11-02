@@ -1,19 +1,56 @@
 {% for line in history %}
   {% if line.type == 'operator' %}
-    <div class="line operator"><div class="who">Operator</div>{{ line.text }}</div>
+    <div class="msg user"><div class="bubble">{{ line.text }}</div></div>
   {% elif line.type == 'reply' %}
-    <div class="line reply"><div class="who">Agent{% if line.function != 'operator_turn' %} (after {{ line.function }}){% endif %}</div>{{ line.text }}{% for action in line.actions %}
-<span class="muted">· {{ action }}</span>{% endfor %}{% if line.waiting_for %}
-<span class="muted">Waiting for a reply on {{ line.waiting_for }}.</span>{% endif %}</div>
+    <div class="msg reply"><div class="avatar">AI</div><div class="content">
+      <div class="who">Analyst{% if line.function != 'operator_turn' %} <span class="muted">(after {{ line.function }})</span>{% endif %}</div>
+      <div class="text">{{ line.text }}</div>
+      {% if line.actions %}
+        <details class="steps"><summary>✓ {{ line.actions|length }} step{{ 's' if line.actions|length != 1 }}</summary>
+          <ol>{% for action in line.actions %}<li>{{ action }}</li>{% endfor %}</ol></details>
+      {% endif %}
+      {% if line.waiting_for %}<p class="muted">Waiting for a reply on {{ line.waiting_for }}.</p>{% endif %}
+      {% for card in line.cards %}{% set req = card.req %}
+        <div class="card">
+          <header><b><a href="/requests/{{ req.id }}">{{ req.id }}</a></b>
+            <span class="muted" style="font-size:13px">{{ req.distributor_id }} · {{ req.period }} · {{ req.status|replace('_', ' ') }}</span></header>
+          {% if card.figures %}
+            <div class="section"><div class="label">Report{% if card.report %} v{{ card.report.version }} · {{ card.report.kind|replace('_', ' ') }}{% endif %}</div>
+              <div class="stats">{% for label, value in card.figures %}
+                <div class="stat"><small>{{ label }}</small><b class="{{ 'down' if label == 'Change' and value.startswith('-') else 'up' if label == 'Change' }}">{{ value }}</b></div>
+              {% endfor %}</div></div>
+          {% endif %}
+          {% for c in card.charts %}
+            <div class="section"><div class="label">Chart · <a href="/charts/{{ c.id }}.svg" target="_blank">open</a></div>
+              <div class="chart">{{ c.svg|safe }}</div></div>
+          {% endfor %}
+          {% for p in card.pending %}
+            <div class="section draft"><div class="label">{{ 'Email draft' if p.kind == 'report_email' else 'Question draft' }}
+                · to {{ p.recipient }} <span class="pill {{ p.status }}">{{ p.status }}</span></div>
+              <b>{{ p.subject }}</b><pre>{{ p.body }}</pre>
+              <div class="actions">
+                {% if p.status == 'pending' %}
+                  <form class="card-action" method="post" action="/pending/{{ p.id }}/send"
+                        data-confirm="Send this email to {{ p.recipient }} as the operator? It cannot be recalled."><button class="primary">Send</button></form>
+                  <form class="card-action" method="post" action="/pending/{{ p.id }}/discard"><button>Discard</button></form>
+                {% endif %}
+                <a href="/pending/{{ p.id }}/email.eml">Download .eml</a> · <a href="/requests/{{ req.id }}">Open request</a>
+              </div></div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div></div>
   {% elif line.type == 'progress' %}
-    <div class="line progress muted">{{ line.text }}</div>
+    <div class="msg note"><div class="avatar">…</div><div class="content">{{ line.text }}</div></div>
   {% elif line.type == 'outside' %}
-    <div class="line outside"><div class="who">{{ line.sender }}, on thread {{ line.thread_id }}</div>{{ line.text }}</div>
+    <div class="msg outside"><div class="avatar">✉</div><div class="content">
+      <div class="who">{{ line.sender }} <span class="muted">on thread {{ line.thread_id }}</span></div>
+      <div class="text">{{ line.text }}</div></div></div>
   {% elif line.type == 'approval' %}
-    <div class="line"><div class="who">Approval {{ line.approval_id }}</div>{{ 'Approved' if line.approved else 'Denied' }}{% if line.note %}: {{ line.note }}{% endif %}</div>
+    <div class="msg note"><div class="avatar">✓</div><div class="content">Approval {{ line.approval_id }}:
+      {{ 'Approved' if line.approved else 'Denied' }}{% if line.note %}: {{ line.note }}{% endif %}</div></div>
   {% elif line.type == 'error' %}
-    <div class="line error"><div class="who">Error in {{ line.function }}</div>{{ line.message }}</div>
+    <div class="msg error"><div class="avatar">!</div><div class="content">
+      <div class="who">Error in {{ line.function }}</div><div class="text">{{ line.message }}</div></div></div>
   {% endif %}
-{% else %}
-  <p class="muted">No messages yet.</p>
 {% endfor %}

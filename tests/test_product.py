@@ -1,10 +1,14 @@
 """The product page without the agent (claudea): requests, one request with file, thread, charts and pending
 records, the query page with a chart, and the core task done by hand. No model."""
 
+from unittest import mock
+
 import channel
 from fastapi.testclient import TestClient
 
+from agent import service
 from app.main import app
+from harness.turns import Reply
 from sandbox import charts, inbox, pending, seed
 from tests.support import ScratchTest
 
@@ -92,3 +96,19 @@ class ProductPageTest(ScratchTest):
         inbox.set_status(RID, "awaiting_answer")
         self.client.post(f"/pending/{record['id']}/send")
         self.assertEqual(inbox.get(RID)["status"], "awaiting_answer")
+
+    def test_a_console_reply_shows_the_named_requests_chart_and_draft_with_send(self):
+        charts.render(RID, "2026Q3 revenue by product", ["Widget S"], [12.5], key="card-chart")
+        record, _ = pending.add("report_email", RID, "SYN-thread-2001", "contact@acme.example",
+                                "Your 2026Q3 report", "Revenue was 51,264.85.", key="card-draft")
+        reply = Reply("Done.", [f"{RID}: Rendered chart.", f"{RID}: Drafted email."])
+        with mock.patch.object(service, "operator_turn", return_value=reply):
+            self.client.post("/console/s-card/turn", data={"text": f"Handle {RID}."})
+        page = self.client.get("/console/s-card/history").text
+        for text in ("2026Q3 revenue by product", "<svg", "Your 2026Q3 report", f"/pending/{record['id']}/send",
+                     f"/pending/{record['id']}/discard", "2 steps"):
+            self.assertIn(text, page)
+        self.client.post(f"/pending/{record['id']}/send")
+        page = self.client.get("/console/s-card/history").text
+        self.assertNotIn(f"/pending/{record['id']}/send", page)        # sent: no second Send button
+        self.assertIn("sent", page)
