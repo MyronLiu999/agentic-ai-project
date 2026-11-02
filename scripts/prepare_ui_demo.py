@@ -6,6 +6,9 @@ CSV uploads are sell-out observations; authoritative sales remain in the databas
 
 import argparse
 import csv
+from email.utils import parseaddr
+from pathlib import Path
+from zipfile import ZIP_DEFLATED, ZipFile
 
 import channel
 from harness import ROOT
@@ -40,12 +43,16 @@ CASES = [
 ]
 
 
-def install() -> list[dict]:
+def install(contacts: dict | None = None) -> list[dict]:
     """Preserve existing requests/effects; add each new case only once."""
+    contacts = {**CONTACTS, **(contacts or {})}
+    for dist, (name, email) in contacts.items():
+        if dist not in CONTACTS or not name or "@" not in email or any(c in email for c in "\r\n"):
+            raise ValueError("Contacts must name a demo distributor and a valid email address")
     if sales.distributor("SYN-DIST-001") is None:
         raise RuntimeError("Seed the app first: python -m harness.seed")
     with db.connect() as conn:
-        for dist, (_, email) in CONTACTS.items():
+        for dist, (_, email) in contacts.items():
             conn.execute("UPDATE distributors SET contact_email=? WHERE id=?", (email, dist))
             conn.execute("UPDATE requests SET contact_email=? WHERE distributor_id=?", (email, dist))
             # Historical deliveries retain their original recorded recipient.
@@ -55,7 +62,7 @@ def install() -> list[dict]:
     for n, (filename, dist, period, file_total, instruction) in enumerate(CASES, 1):
         thread = f"SYN-thread-ui-{n:02d}"
         rid = inbox.request_id(thread)
-        name, email = CONTACTS[dist]
+        name, email = contacts[dist]
         if inbox.get(rid) is None:
             inbox.add(thread, dist, email, "SYNTHETIC UI TEST. " + instruction,
                       filename, period, stamp="ui-demo-input")
@@ -108,18 +115,43 @@ def preview(req: dict, compare: bool) -> None:
     inbox.set_status(rid, "report_drafted")
 
 
+def write_bundle(rows: list[dict], output_dir: Path = DATA) -> Path:
+    """Build the manifest and ZIP together so their recipient/expected values agree."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    target = output_dir / "expected_results.csv"
+    with target.open("w", newline="", encoding="utf-8-sig") as stream:
+        writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+    bundle = output_dir / "ui-test-data.zip"
+    with ZipFile(bundle, "w", compression=ZIP_DEFLATED) as archive:
+        for name in [case[0] for case in CASES] + ["README.md"]:
+            archive.write(DATA / name, arcname=name)
+        archive.write(target, arcname=target.name)
+    return bundle
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--install", action="store_true", required=True)
+    parser.add_argument("--contact", action="append", default=[], metavar="DIST=NAME <EMAIL>",
+                        help="Override one synthetic demo contact; repeat for other distributors")
+    parser.add_argument("--output-dir", type=Path,
+                        help="Where to write expected_results.csv and its matching ZIP")
     args = parser.parse_args()
     if args.install:
-        rows = install()
-        target = DATA / "expected_results.csv"
-        with target.open("w", newline="", encoding="utf-8-sig") as stream:
-            writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
-            writer.writeheader()
-            writer.writerows(rows)
-        print(f"Installed {len(rows)} UI cases; expected values: {target}")
+        contacts = {}
+        for value in args.contact:
+            dist, separator, address = value.partition("=")
+            name, email = parseaddr(address)
+            if not separator or dist not in CONTACTS or "@" not in email:
+                parser.error("--contact must be 'SYN-DIST-001=Name <email@example.com>'")
+            contacts[dist] = (name or email, email)
+        rows = install(contacts)
+        # Personal overrides stay in ignored local state unless explicitly exported elsewhere.
+        output = args.output_dir or (db.path().parent / "ui-demo" if contacts else DATA)
+        bundle = write_bundle(rows, output)
+        print(f"Installed {len(rows)} UI cases; expected values and ZIP: {bundle.parent}")
         print("No model calls or email deliveries. Existing sent records preserved.")
 
 

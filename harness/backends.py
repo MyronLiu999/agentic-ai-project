@@ -279,6 +279,10 @@ class OpenAICompatibleBackend:
         if not key:
             raise RuntimeError(f"no API key: set the environment variable {env} "
                                "(settings.yaml's api_key_env names it)")
+        if any(not 33 <= ord(char) <= 126 for char in key):
+            raise RuntimeError(f"Invalid {env}: the API key contains whitespace, an invisible "
+                               "control character, or non-ASCII text. Replace it with the "
+                               "original key and restart the app. The key was not sent.")
         self.client = openai.OpenAI(api_key=key, base_url=settings.base_url or None)
         self.rate_limited = openai.RateLimitError
         # OpenAI's own API wants max_completion_tokens; most other providers take max_tokens.

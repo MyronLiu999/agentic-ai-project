@@ -273,4 +273,6 @@ cheaper setting.
 - [x] Part 4: baseline numbers, the first-failure table with run IDs and trace lines, the table of passes.
 - [x] Ledger entry with every field, prediction pushed before the arms; `switches.yaml` at the verdict.
 - [x] `CHANGES.md` complete; the model named in `README.md`; price line with its read date.
-- [ ] `results/` and the cited `traces/` committed; tag `m1` pushed; repo URL posted in Canvas.
+- [x] `results/` and cited `traces/` committed; historical evidence integrity verified.
+- [x] Final `main` and `m1` publication verified (see `docs/submission.md`).
+- [ ] Repository URL posted/confirmed in Canvas and receipt checked; login is required.

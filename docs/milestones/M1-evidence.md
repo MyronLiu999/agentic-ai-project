@@ -5,6 +5,9 @@ the current decisions, critique limitations and results. These historical
 sections preserve their original wording and trace citations; the main report
 supersedes any earlier wording that overstates what critique can verify.
 
+Additional [measurement notes](M1-method-notes.md) retain the pinned A1 source,
+development-repair chronology and semantic argument-counting rules.
+
 
 **Scripted step-size illustration, not a live planner result.**
 `tests/fixtures/agent_milestone_model.py` supplies a hand-authored proposal for

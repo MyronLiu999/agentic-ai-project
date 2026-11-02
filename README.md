@@ -23,7 +23,26 @@ It preserves existing work and makes no model calls. See [the demo guide](demo-d
 and [CSV test bundle](demo-data/ui-test-data.zip). New report emails include PNG charts;
 download a self-contained `.eml` from the request page or inspect chart images in Threads
 after a simulated send. Actual mailbox delivery is not configured. These additions are
-subsequent UI work; the historical M1 experiment evidence and `m1` tag are unchanged.
+subsequent UI work; the historical M1 experiment evidence is unchanged.
+The final `m1` tag includes the submission fixes; see [submission status](docs/submission.md).
+Repository demo contacts stay synthetic. Use `--contact "SYN-DIST-001=Name <email@example.net>"`
+(repeat for 002/003) to apply local contacts; the matching personal manifest/ZIP stays in
+ignored `state/ui-demo/`. See the demo guide before reloading.
+
+**Windows startup, preserving existing data:** activate your virtual environment, then set
+the key in that terminal and start the server. The app rejects pasted control characters
+before contacting the provider. An already-running server must be restarted after replacing
+its key; reloading a browser page does not change its environment.
+
+```powershell
+$modelKey = Read-Host "OpenAI API key" -AsSecureString
+$env:OPENAI_API_KEY = [System.Net.NetworkCredential]::new("", $modelKey).Password
+python -m harness.ping
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+`harness.ping` makes two small, metered model calls. Use `python -m harness.seed` only
+when you intend to reset the demo. Files named `.env` are not loaded automatically.
 
 **Run an arm** (every test task in `tasks/`, three sweeps; records go to `results/<arm>/`):
 
