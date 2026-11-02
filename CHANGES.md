@@ -1,5 +1,16 @@
 # Changes
 
+**UI demo and email charts (2026-11-01, after the M1 tag):** Added nine synthetic
+CSV scenarios, expected database figures, a downloadable bundle and an additive,
+repeatable UI installer. Demo contacts use the team's supplied university emails;
+official task fixtures remain unchanged. Manual and pending report emails include
+request-scoped PNG charts, frozen at simulated send time and displayed in Threads.
+Self-contained `.eml` downloads preserve edited text and embed chart images without
+sending. Historical emails retain their original contents. Added Pillow and tests
+for fixture totals, preserved state, MIME exports, chart scope and frozen images.
+Live mailbox delivery is not configured; these changes do not constitute a new
+measured pass or alter the historical M1 results.
+
 **Submission documentation (2026-11-01):** Completed the decision and action-grid
 explanations, clarified the limited scope of critique, updated Abraham's handoff,
 and added Claudea's Claude disclosure. Shortened the main report and preserved

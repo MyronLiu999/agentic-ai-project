@@ -16,7 +16,8 @@
     {% if thread %}
       <h2>{{ thread }}</h2>
       {% for m in messages %}
-        <div class="line {{ 'reply' if m.sender in ('agent', 'operator') else 'outside' }}"><div class="who">{{ m.sender }} · {{ m.at[:19] }}{% if m.seeded %} · seeded input{% endif %}{% if m.handled_by %} · to {{ m.handled_by }}{% endif %}</div>{{ m.text }}</div>
+        <div class="line {{ 'reply' if m.sender in ('agent', 'operator') else 'outside' }}"><div class="who">{{ m.sender }} · {{ m.at[:19] }}{% if m.seeded %} · seeded input{% endif %}{% if m.handled_by %} · to {{ m.handled_by }}{% endif %}</div>{{ m.text }}
+        {% for c in m.email_charts %}<figure><figcaption>{{ c.title }}</figcaption><a href="{{ c.url }}"><img src="{{ c.url }}" alt="{{ c.title }}" style="max-width:100%;height:auto"></a></figure>{% endfor %}</div>
       {% else %}
         <p class="muted">No messages on this thread.</p>
       {% endfor %}

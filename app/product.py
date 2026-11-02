@@ -7,13 +7,14 @@ out as the operator's."""
 from __future__ import annotations
 
 import secrets
+import base64
 
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse, Response
 
 import channel
 from app import templates
-from sandbox import charts, db, files, inbox, pending, reports, sales
+from sandbox import charts, db, email_packages, files, inbox, pending, reports, sales
 
 router = APIRouter()
 
@@ -31,8 +32,9 @@ def request_page(request: Request, rid: str):
         raise HTTPException(404, f"no request {rid}")
     upload = files.read_upload(rid, req["file_name"]) if req["file_name"] else ""
     return templates.TemplateResponse(request, "request.html", {
-        "page": "home", "req": req, "upload": upload, "messages": channel.messages(req["thread_id"]),
-        "reports": reports.for_request(rid), "pending": pending.for_request(rid),
+        "page": "home", "req": req, "upload": upload, "messages": thread_messages(req["thread_id"]),
+        "reports": reports.for_request(rid), "pending": [p | {"email_charts": email_packages.prepare(p)["charts"]}
+                                                       for p in pending.for_request(rid)],
         "charts": [c | {"svg": charts.read_svg(c)} for c in charts.for_request(rid)],
         "draft": _hand_draft(req)})
 
@@ -66,6 +68,52 @@ def email_by_hand(rid: str, subject: str = Form(...), body: str = Form(...)):
     return _deliver(record["id"])
 
 
+def _manual_package(rid: str, subject: str, body: str) -> dict:
+    req = inbox.get(rid)
+    if not req:
+        raise HTTPException(404, "no such request")
+    latest = reports.latest(rid)
+    return email_packages.prepare({"kind": "report_email", "request_id": rid, "status": "pending",
+                                   "report_id": latest["id"] if latest else None,
+                                   "recipient": req["contact_email"], "subject": subject, "body": body})
+
+
+@router.post("/requests/{rid}/email/download")
+def download_manual_email(rid: str, subject: str = Form(...), body: str = Form(...)):
+    return _email_response(_manual_package(rid, subject, body))
+
+
+def _email_response(payload: dict):
+    return Response(email_packages.eml(payload), media_type="message/rfc822",
+                    headers={"Content-Disposition": 'attachment; filename="sales-report.eml"'})
+
+
+@router.get("/pending/{pid}/email.eml")
+def download_pending_email(pid: int):
+    record = pending.get(pid)
+    if not record:
+        raise HTTPException(404, "no such pending record")
+    return _email_response(email_packages.prepare(record))
+
+
+@router.get("/pending/{pid}/charts/{index}.png")
+def email_chart(pid: int, index: int):
+    record = pending.get(pid)
+    if not record:
+        raise HTTPException(404, "no such pending record")
+    images = email_packages.prepare(record)["charts"]
+    if not 0 <= index < len(images):
+        raise HTTPException(404, "no such email chart")
+    return Response(base64.b64decode(images[index]["png"]), media_type="image/png")
+
+
+def thread_messages(thread_id: str) -> list[dict]:
+    messages = channel.messages(thread_id)
+    attachments = email_packages.message_charts([m.id for m in messages])
+    return [m.as_dict() | {"from_outside": m.from_outside, "email_charts": attachments.get(m.id, [])}
+            for m in messages]
+
+
 @router.get("/charts/{chart_id}.svg")
 def chart_svg(chart_id: int):
     chart = charts.get(chart_id)
@@ -85,7 +133,13 @@ def _deliver(pid: int):
     if not record:
         raise HTTPException(404, "no such pending record, or unavailable for sending")
     try:
-        channel.send(record["thread_id"], record["body"], sender="operator")
+        package = email_packages.freeze(record)
+        text = record["body"]
+        if package["charts"]:
+            text += "\n\nCharts included:\n" + "\n".join(
+                f"{c['title']}: /pending/{pid}/charts/{i}.png" for i, c in enumerate(package["charts"]))
+        message = channel.send(record["thread_id"], text, sender="operator")
+        email_packages.link_message(pid, message.id)
         if not pending.complete_send(pid):
             raise RuntimeError("delivery claim could not be completed")
     except Exception as exc:

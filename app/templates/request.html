@@ -8,7 +8,9 @@
 <pre>{{ upload }}</pre>
 <h2>Thread</h2>
 {% for m in messages %}<div class="line {{ 'outside' if m.from_outside else 'reply' }}"><span class="who">{{ m.sender }}</span>
-{{ m.text }}</div>{% else %}<p class="muted">No messages.</p>{% endfor %}
+{{ m.text }}
+{% for c in m.email_charts %}<figure><figcaption>{{ c.title }}</figcaption><a href="{{ c.url }}"><img src="{{ c.url }}" alt="{{ c.title }}" style="max-width:100%;height:auto"></a></figure>{% endfor %}
+</div>{% else %}<p class="muted">No messages.</p>{% endfor %}
 <h2>Reports</h2>
 {% for r in reports %}<div class="line"><span class="who">v{{ r.version }} &middot; {{ r.kind }} &middot; {{ r.stamp }}</span>
 <pre>{{ r.body }}</pre></div>{% else %}<p class="muted">None saved.</p>{% endfor %}
@@ -19,6 +21,9 @@
 {% for p in pending %}<div class="line"><span class="who">{{ p.kind }} &middot; to {{ p.recipient }} &middot; {{ p.status }} &middot; {{ p.stamp }}</span>
 <b>{{ p.subject }}</b>
 <pre>{{ p.body }}</pre>
+{% if p.email_charts %}<p>Charts included ({{ p.email_charts|length }}):</p>
+{% for c in p.email_charts %}<figure><figcaption>{{ c.title }}</figcaption><img src="/pending/{{ p.id }}/charts/{{ loop.index0 }}.png" alt="{{ c.title }}" style="max-width:100%;height:auto"></figure>{% endfor %}{% endif %}
+<p><a href="/pending/{{ p.id }}/email.eml">Download email{% if p.email_charts %} with charts{% endif %} (.eml)</a></p>
 {% if p.status == 'pending' %}<form method="post" action="/pending/{{ p.id }}/send"><button>Send as the operator</button></form>
 <form method="post" action="/pending/{{ p.id }}/discard"><button>Discard (never sent)</button></form>{% endif %}
 {% if p.status in ('sending', 'send_failed') %}<p class="muted">Delivery is in progress or could not be confirmed.
@@ -29,5 +34,8 @@ Check the thread before sending another message. This record cannot be retried a
 <p class="muted">To {{ draft.recipient }} (the request's contact). Sent as the operator; it cannot be recalled.</p>
 <p><input type="text" name="subject" value="{{ draft.subject }}" style="width:30em"></p>
 <p><textarea name="body" rows="7" style="width:40em">{{ draft.body }}</textarea></p>
+{% if charts %}<p>Includes this request's charts as PNG images (latest per title; the saved report's primary chart is preserved).</p>{% else %}<p>No charts saved for this request yet.</p>{% endif %}
+<p class="muted">Send records a local simulated message. Download creates a self-contained email draft with chart images for use in your mail application.</p>
+<button type="submit" formaction="/requests/{{ req.id }}/email/download">Download email with charts (.eml)</button>
 <button>Send as the operator</button></form>
 {% endblock %}

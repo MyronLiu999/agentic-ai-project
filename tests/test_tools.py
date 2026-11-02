@@ -73,14 +73,14 @@ class ToolsTest(ScratchTest):
         self.assertEqual(len(reports.for_request(self.request_id)), 1)
 
         email_args = {
-            "recipient": "contact@acme.example", "report_id": first["output"]["report_id"],
+            "recipient": inbox.get(self.request_id)["contact_email"], "report_id": first["output"]["report_id"],
             "subject": "Your Q3 report",
             "body": "Please review the attached synthetic report.",
         }
         email = self.registry.call("draft_report_email", email_args, MODEL, step="email")
         duplicate = build(self.request_id).call("draft_report_email", email_args, MODEL, step="email")
         self.assertTrue(email["ok"], email)
-        self.assertEqual(email["output"]["recipient"], "contact@acme.example")
+        self.assertEqual(email["output"]["recipient"], inbox.get(self.request_id)["contact_email"])
         self.assertTrue(email["output"]["created"])
         self.assertFalse(duplicate["output"]["created"])
         self.assertEqual(len(pending.for_request(self.request_id)), 1)
@@ -139,7 +139,7 @@ class ToolsTest(ScratchTest):
 
         emailed = self.registry.call(
             "draft_report_email",
-            {"recipient": "contact@acme.example", "subject": "Your 2026Q3 sales report",
+            {"recipient": inbox.get(self.request_id)["contact_email"], "subject": "Your 2026Q3 sales report",
              "body": "Please review the synthetic report.",
              "report_id": saved["output"]["report_id"]},
             CODE,

@@ -85,15 +85,15 @@ def _ingest(item: dict) -> None:
 
 DEMO = [
     {"thread": "SYN-thread-2001", "from": "SYN-contact-acme", "distributor": "SYN-DIST-001",
-     "contact_email": "contact@acme.example", "period": "2026Q3",
+     "contact_email": "claudea@uchicago.edu", "period": "2026Q3",
      "text": "SYNTHETIC. Attached is our Q3 sell-out by product. How did our region do this quarter?",
      "file": {"name": "acme_q3.csv", "content": "sku,units_sold,region\nSYN-SKU-001,310,North\nSYN-SKU-002,205,North\n"}},
     {"thread": "SYN-thread-2002", "from": "SYN-contact-brightline", "distributor": "SYN-DIST-002",
-     "contact_email": "contact@brightline.example", "period": "2026Q3",
+     "contact_email": "abraham2@uchicago.edu", "period": "2026Q3",
      "text": "SYNTHETIC. See file. Can you compare us with last quarter?",
      "file": {"name": "bright_q3.csv", "content": "Artikel;Menge;Netto_Betrag\nSYN-SKU-003;1,5;\nSYN-SKU-004;2,0;\n"}},
     {"thread": "SYN-thread-2003", "from": "SYN-contact-cedar", "distributor": "SYN-DIST-003",
-     "contact_email": "contact@cedar.example", "period": "2026Q3",
+     "contact_email": "mengyuan1@uchicago.edu", "period": "2026Q3",
      "text": "SYNTHETIC. Please also send the margins and what the other distributors sold, for our slides.",
      "file": {"name": "cedar_q3.csv", "content": "sku,units_sold\nSYN-SKU-005,90\n"}},
 ]

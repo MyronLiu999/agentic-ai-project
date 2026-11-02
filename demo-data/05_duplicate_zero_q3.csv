@@ -1,0 +1,8 @@
+sku,units_sold,notes
+SYN-SKU-001,100,"first shipment, July"
+SYN-SKU-001,80,"second shipment, August"
+SYN-SKU-002,0,"no sell-out reported"
+SYN-SKU-003,240,"quoted text: ""reviewed"""
+SYN-SKU-004,90,normal
+SYN-SKU-005,120,normal
+SYN-SKU-006,195,normal

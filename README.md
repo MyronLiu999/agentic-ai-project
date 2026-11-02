@@ -17,6 +17,14 @@ make test           # every test, on fake models: no tokens
 make check          # the structure checks: one path, switches recorded, tasks valid, ledger
 ```
 
+**UI demo additions:** After seeding, run `python -m scripts.prepare_ui_demo --install` to add
+nine CSV cases, database-derived expected values and explicitly labeled report/chart previews.
+It preserves existing work and makes no model calls. See [the demo guide](demo-data/README.md)
+and [CSV test bundle](demo-data/ui-test-data.zip). New report emails include PNG charts;
+download a self-contained `.eml` from the request page or inspect chart images in Threads
+after a simulated send. Actual mailbox delivery is not configured. These additions are
+subsequent UI work; the historical M1 experiment evidence and `m1` tag are unchanged.
+
 **Run an arm** (every test task in `tasks/`, three sweeps; records go to `results/<arm>/`):
 
 ```bash

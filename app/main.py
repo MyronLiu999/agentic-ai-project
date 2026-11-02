@@ -147,7 +147,7 @@ def queue(request: Request):
 
 @app.get("/threads", response_class=HTMLResponse)
 def threads(request: Request, thread: str | None = None):
-    messages = [m.as_dict() for m in channel.messages(thread)] if thread else []
+    messages = product.thread_messages(thread) if thread else []
     return page(request, "threads.html", threads=channel.threads(), thread=thread, messages=messages, notice=None)
 
 
@@ -163,7 +163,7 @@ def thread_reply(request: Request, thread_id: str = Form(...), text: str = Form(
     except Exception as exc:
         notice = _agent_error(exc)
     return page(request, "threads.html", threads=channel.threads(), thread=thread_id,
-                messages=[m.as_dict() for m in channel.messages(thread_id)], notice=notice)
+                messages=product.thread_messages(thread_id), notice=notice)
 
 
 # -- approvals -------------------------------------------------------------------------------
