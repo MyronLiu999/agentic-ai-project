@@ -39,6 +39,22 @@ its file, thread, reports, charts, pending records and a form to email a report 
 distributor's quarter with a chart and the change from last quarter; then the operator's `/console`,
 `/queue`, `/threads` and `/traces`. Write-up, decision table and owners: `docs/milestones/M1.md`.
 
+**Reproduce the committed Milestone 1 evidence without model calls:**
+
+```bash
+.venv/bin/python -m experiments.analysis.recompute --check  # verify sources and six derived artifacts
+.venv/bin/python -m experiments.analysis.recompute          # regenerate those artifacts
+.venv/bin/python -m experiments.analysis.failures results/  # physical trace citations for failures
+```
+
+The saved baseline and Pass 1 arms are historical measurements; the run commands above show
+how to run a new arm, rather than a reason to overwrite those records. Pass 1's negative
+verdict leaves `examples.save_report` off. Later fixes have scripted regression coverage and
+do not change historical scores. See the [agent/evidence handoff](docs/abraham-handoff.md) and
+[supporting technical notes](docs/milestones/M1-evidence.md). The final submission uses the
+verified commit tagged `m1`; the team must also confirm collaborator access and post the
+repository URL in Canvas.
+
 ---
 
 # Your project

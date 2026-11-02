@@ -9,7 +9,7 @@
 # added: <date> goes on a switch, never on a group. Quote "off" and "on": YAML
 # reads them bare as false and true. The README's "Your switches" says more.
 
-# DRAFT: the use cases and their paths are the team's first argument by the four gates (M1.md).
+# Implemented prototype paths; M1.md records evidence, provisional Gate 1 claims and reversal conditions.
 # A use case lists only the paths built; add the other when a pass builds it.
 control:
   standard_report: {setting: workflow, values: [workflow], about: "Clean known-format file to the standard quarterly report. Gate 1 fails (steps known in advance)."}

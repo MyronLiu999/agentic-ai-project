@@ -1,0 +1,651 @@
+# Milestone 1: supporting evidence and implementation notes
+
+Owners: Abraham (gates/planning/inventory), Claudea (domain/workflows/critique), Myron (tools/measurements). Read alongside the [final report](M1.md), whose decision table is authoritative. These extended methods, specimens and diagnostic details preserve source context; they are not additional claimed measurements. Historical runs retain the code/checks at their recorded commits.
+
+## Part 1: The first version (owners: claudea; the gates and routing, abraham)
+
+**User, task and success check** (owner: claudea). The user is an analyst on a company's sales team. Distributors
+email a data file (their sell-out by product) and a question, usually "how did our region do this quarter?". Today
+the analyst decodes each file by hand because distributors export differently, looks the
+distributor up in the sales database, builds a chart, and emails a report. What they want: the decoding and the
+comparison done, the report saved, the email ready for them to read and send. "Done" is a saved report whose figures
+match the sales database for that distributor and quarter, and one drafted email to that distributor's contact that
+states that revenue, points at that report and carries no one else's data. The **core task** is that standard quarterly report, taken as far as it goes without a
+stranger's answer: when a column cannot be decoded, the system drafts a clarifying question as a pending record and
+the operator is told (asking and waiting is Milestone 2's).
+
+**Use cases**, the kinds of case the core task meets in a day: `standard_report` (a clean, known-layout file);
+`messy_file` (a file in another layout: semicolons, decimal commas, other headers, columns per month);
+`compare_check` (the operator asks to check the table against last quarter's before it goes); `status_question`
+(the operator asks about work already done); `out_of_scope` (a distributor asks for margins or other distributors'
+sales); `batch_reports` (the operator asks for the reports on several requests at once). The **success check** reads
+the sandbox for rows stamped with the run's ID: the report row and its figures, the pending row, its recipient and
+text. It recomputes the right revenue from the `orders` table itself and never takes the agent's word.
+
+**Test tasks** (owner: claudea; `tasks/`). Chosen as one working day's inbox: the three demo distributors' typical
+files and questions, one of each use case, with the shapes we expect most often (a clean CSV; a German-locale
+export, as one of our demo distributors already sends) and the two operator requests that come late in
+the day (check against last quarter; do all the new ones).
+
+| Task | Use case, path | What it tests | Check (`checks/`) |
+|---|---|---|---|
+| `standard_report_clean` | standard_report, workflow | the clean file, end to end | `standard_report.py`: the report's `total_revenue` and `period` = the database's, one pending email to the contact stating that revenue for that report, no margin or other distributor, no duplicates |
+| `messy_file_semicolon` | messy_file, agent; **could be misrouted**: its text is word for word the clean task's, only the file differs | decoding a semicolon/decimal-comma file with German headers | `messy_file.py`: as above, plus the report carries the file's 1,240 units (the task's `expect:`, which the agent never reads) |
+| `compare_check_last_quarter` | compare_check, agent | Q3 against Q2 for Cedar (62,799.60 to 67,246.55: up) | `compare_check.py`: report carries both quarters' revenue; a reply that claims the wrong direction fails |
+| `status_question_done_work` | status_question, workflow | a question about a report the seed saved and sent | `status_question.py`: a reply gives the reported revenue; the run writes nothing |
+| `out_of_scope_margins` | out_of_scope, workflow | a request for margins and Acme's sales | `out_of_scope.py`: a pending reply to the contact; nothing written names another distributor or a margin |
+| `batch_reports_two` | batch_reports, agent (planned) | two new requests at once | `batch_reports.py`: per request, right revenue and exactly one pending email |
+| `tasks/dev/messy_file_tab` | messy_file (dev only) | tab-separated, a units column per month | `messy_file.py` |
+
+Each check has its two tests in `tests/test_domain_checks.py` (and `tests/test_checks.py` for the first): a run that
+said "Done." and left nothing fails, and a planted right effect from a silent run passes; more tests plant the wrong
+effects each check exists for (wrong revenue, wrong recipient, a duplicate email, a leak, a skipped request, a write
+on a status question). The status check scores an answer: the right figure passes, a wrong one fails. Each task file
+names its expected `use_case:`, which `analyze.py` uses to count misroutes.
+
+**The sandbox and the three properties** (owner: claudea). The sandbox is one SQLite file under the run's state
+folder (`sandbox/db.py`): distributors, products, orders over two quarters (seeded from a fixed random seed),
+margins, requests, reports, pending records and charts, with uploads and chart SVGs beside it. `sandbox/seed.py`'s
+`reset()` empties it; `seed(task)` loads the base data and each task input, puts the stranger's message on the
+channel, and, for a task with `history:`, the work already done (a saved report and its sent email, stamped `seed`).
+"Now" is fixed (`db.NOW = 2026-10-05`). Every write carries a stamp (`sandbox/stamp.py`): the run's ID, the console
+session's, or `manual` from the product page. Pages and tools share these modules.
+
+- *Input it does not control*: the distributor's message on the channel (`channel/`, seeded by `seed.py`) and the
+  uploaded file (`sandbox/files.py`), every cell of which is the stranger's.
+- *Private data*: the `margins` table (unit cost and margin per product) and every other distributor's orders. All
+  IDs carry `SYN-`. `sandbox/margins.py` is the only reader of `margins`, and only the operator's pages may import
+  it: `tests/test_domain_sandbox.py` fails if any file in `agent/` or `checks/` imports it, or if a module the tools
+  wrap does. `sandbox/sales.py` reads one distributor's orders only.
+- *A way out*: the emailed report. The agent's last effect is a row in `pending` (`sandbox/pending.py`); the operator
+  sends it from `/requests/<id>` with `channel.send(..., sender="operator")`, and it then stays done: a distributor
+  can read it and it cannot be recalled.
+
+**The console and the product page.** The console is the starter's page; each message goes to
+`agent.service.operator_turn` (abraham), as a task's scripted turns do. The router distinguishes work from status intent and resolves request scope
+from stored records; ambiguous intent uses one bounded classification call. The product page (owner: claudea; `app/product.py`) needs no agent: `/` lists the
+requests and the pending records waiting to be sent; `/requests/<id>` shows the file, the thread, the saved
+reports, charts and pending records, a button to send each pending record as the operator, and a form to **email a
+report by hand** (the core task without the agent: the body is prefilled from the database, the recipient is always
+the request's contact, and what is sent is recorded as a `manual` pending record marked sent); `/query` shows one
+distributor's quarter by product with a chart and the change from last quarter. `tests/test_product.py`.
+
+Operator delivery first claims the pending row in a committed SQLite update (`pending` to
+`sending`), so another process cannot send or discard the same draft. Successful delivery marks
+it `sent`; only a report matching the latest saved version, with no other unresolved pending
+work, closes the request. A new draft reopens completed work. A channel/finalization error leaves
+`send_failed`, while a process exit after claiming leaves `sending`; both remain visible on the
+request page for inspection without an automatic retry. `tests/test_pending_delivery.py` covers
+concurrent sends, discard races, ambiguous failures and preservation of newer work.
+
+**The workflows** (owner: claudea). `standard_report` (`agent/workflows.py`) runs six steps in a fixed order: parse,
+query, chart, save, draft the email (one model call writes the words around figures code computed) through the
+critique, then `draft_report_email`. A file whose header is not a SKU column plus a units column ends the run with
+`unknown_layout` instead of a guess, so a misrouted messy file shows in the end reasons. A failed tool ends it with
+`tool_error`. `status_question` (`agent/domain_workflows.py`) answers from the records and writes nothing;
+`out_of_scope` writes one fixed-template reply declining and offering the distributor's own report, as a pending
+record, and ends with `declined`.
+
+**Boundary: four gates (Abraham).** The actual
+[Milestone 1 handout](https://canvas.uchicago.edu/courses/75218/assignments/921328),
+Part 1 task 5, pp. 5–7, supplies these gates (Lecture 1, slides 33, 34, 36; read
+2026-10-31). The design choice is agent for `messy_file`, workflow for `standard_report`.
+
+| Gate | `messy_file` | `standard_report` | Evidence / verdict-changing result |
+|---|---|---|---|
+| 1. Do the steps vary? | Pass for unfamiliar layouts: an observed parse can require another delimiter, decimal convention, or clarification before continuing | Fail: the known header permits a fixed parse/query/chart/save/draft sequence | `messy_file_semicolon` and the tab-separated development fixture expose different layouts. These two formats alone could be branches; if real inputs reduce to a stable branch list, use a workflow. A1's 19 distinct sequences in 60 agent runs, with the top three covering 37/60, warns against assuming every variation needs an agent |
+| 2. Can damage be limited? | Pass: tools bind one selected request/distributor, exclude margins, and cannot send; calls/tokens/time are bounded | Pass: the workflow uses those same scoped tools | Request-scope and foreign-report tests; narrowing reach and replacing send with a pending draft are the design limits that make the agent case acceptable |
+| 3. Will an error be caught in time? | Pass with review: scoped sales and saved records support checks; the operator reviews the pending email before the irreversible send | Pass with the same review requirement | A wrong report can be replaced by a new version; an unsent draft can be left unsent. Neither a tool trace nor syntactically valid parsing proves correctness. The external critique and independent task checks help detect errors; a person remains before send |
+| 4. Is the added cost justified? | Pass under the explicit domain estimate `f=0.10` and correction-cost assumption below; this is a design estimate awaiting live evidence | Fail at estimated `f=0`: no extra correct cases are expected for the known sequence | The calculation below gives the break-even and sensitivity. Measured zero benefit reverses the messy-file decision; unit tests do not estimate it |
+
+Prior evidence comes from Myron's A1 commit `65125727e233902e9d69ba9655e4fe1a6ec4c715`, using OpenAI
+`gpt-4.1-mini`, with 60 runs per arm (six issues, ten runs each). Source and read date:
+[A1 report JSON](https://github.com/MyronLiu999/agentic-ai-assignment1/blob/65125727e233902e9d69ba9655e4fe1a6ec4c715/reports/LAB_01.json),
+2026-10-31. These are issue-triage results, not measurements of this sales analyst or its
+configured `gpt-4o-mini` model.
+
+| A1 arm | Passes / runs | Mean cost per run | Median / p95 latency |
+|---|---|---|---|
+| Direct | 20/60 | $0.000436867 | 0.750 / 1.000 s |
+| Workflow | 16/60 | $0.000595960 | 1.141 / 1.406 s |
+| Agent | 15/60 | $0.001991660 | 4.953 / 5.687 s |
+| Hybrid | 17/60 | $0.001353560 | 1.437 / 6.906 s |
+
+Recomputed from that JSON: `m = agent mean cost / workflow mean cost = 3.34194` and
+`c = $0.000595960`. The source defines `f` precisely as the fraction of six issues for which
+workflow passes fewer than five of ten runs and agent passes at least five of ten. None qualify:
+`f = 0/6 = 0`. This is not a per-run fallback probability. The report's analysis fields are null;
+these values are explicitly derived from its cost and per-issue counts using the
+[A1 format definitions](https://github.com/MyronLiu999/agentic-ai-assignment1/blob/65125727e233902e9d69ba9655e4fe1a6ec4c715/checks/FORMATS.md)
+(read 2026-10-31).
+
+**Gate 4 working (Abraham).** We borrow A1's workflow cost as the provisional project estimate
+`c=$0.000595960/run` and its multiplier `m=3.34194`, keeping the unrounded ratio in the
+arithmetic. Neither has been measured on this project's configured `gpt-4o-mini`.
+The extra cost is `c*(m-1)=$0.001395700` per case; the cost per extra correct case is
+`c*(m-1)/f`, compared with the user's wrong-case cost `W`.
+
+For unfamiliar layouts, estimate `f=0.10`: one in ten would need successful adaptive repair
+beyond the known-layout workflow. This is an unmeasured domain assumption, motivated by
+variable headers and decoding/clarification decisions, not inferred from the fixture mix or
+A1's measured `f=0`. For clean layouts estimate `f=0`: more decisions add no needed step.
+Use `W=$10.69`, assuming 15 minutes to correct an internal report before sending. The wage
+proxy is the BLS May 2025 median for operations research analysts, $42.76/hour
+([BLS Occupational Outlook Handbook](https://www.bls.gov/ooh/math/operations-research-analysts.htm),
+read 2026-10-31). The occupation proxy and repair time are assumptions; this values labor only,
+not leakage or harm after sending, which Gates 2–3 address.
+
+- Messy-file estimate: `$0.001395700/0.10=$0.013957` per extra correct case, below `$10.69`.
+- Break-even: `f*=c*(m-1)/W=0.00013056`, or `0.01306%`; the gate passes only when `f>f*`.
+  At `f=0.001`, the cost is `$1.3957`; at `f=0.0001`, it is `$13.957`, so the verdict reverses.
+  If correction takes only one minute, `W=$0.71267` and `f*=0.19584%`; at one hour,
+  `W=$42.76` and `f*=0.003264%`. Higher project cost raises these thresholds proportionally.
+- Standard-report estimate: `f=0` gives no extra correct cases, so the ratio has no finite
+  value and Gate 4 fails. The A1 sample likewise supplies no measured economic benefit.
+
+For the whole core reporting task, **routing share `r` is distinct from benefit share `f`**.
+An illustrative workload estimate `r=0.10` sends 90% of requests through the known-layout
+workflow and 10% through the agent. It gives `c*((1-r)+r*m)=$0.000735530/run`, beside
+workflow-only `$0.000595960` and all-agent `$0.001991660`. At `r=0.50` the blend is
+`$0.001293810`. These scenarios exclude routing overhead and are not observed hybrid costs;
+actual routing frequency, correction time, cost and success must come from project runs.
+
+A1's agent median/p95 of 4.953/5.687 seconds is below the handout's roughly ten-second
+interactive threshold, but it does not predict this project's latency. If project turns exceed
+that threshold, expose progress or choose the workflow where the gates allow it. Repeated
+success on the same cases, tool-sequence evidence and the sandbox checks must validate or
+reverse these provisional choices; a finite sample cannot establish such a small break-even
+benefit precisely. Losses on cases the workflow already passed would further weaken the
+agent's value and must be counted in the paired results.
+
+Routing applies the configured `control.<use_case>` switch after selecting scope from records.
+Only ambiguous operator intent uses a model, offered no tools and no outside file contents;
+request IDs and distributors remain code-selected. Unknown IDs, exclusions/alternatives, and
+ambiguous multi-request commands require clarification. The standard fingerprint is a header
+test, not a claim that all file rows are valid. Status questions can resolve an exact distributor
+name/ID plus a quarter/year to one stored request; duplicate or unmatched references need clarification.
+A recognized generic status follow-up reuses the last resolved route's IDs from that session
+trace, including status-only selections; without that evidence it asks for a selection.
+
+**Action table and approval line** (owner: claudea; tool extensions: myron).
+The unified action/tool table appears once, in Part 3. Reads change nothing;
+local charts/reports can be superseded, drafts remain unsent, and operator sends
+are irreversible. A trace confirms that a call happened, not that its figures
+were correct; sandbox checks and operator review provide that evidence.
+
+**The approval line** sits above the emailed report: reads and correctable local drafts precede operator review;
+the email cannot be recalled and its text is written by a model, so slide 37 puts it below. The agent has no send
+tool; the workflows and the loop stop at the pending record, and the operator sends it. No send in our system has
+text written by a fixed template that reaches a distributor without the operator.
+
+**Trifecta** (slide 49). Untrusted input: the distributor's message and file. Private data: margins and other
+distributors' orders. Way out: the emailed report. All three legs exist, so we cut them in code rather than in the
+prompt: (1) the private leg is narrowed at the tools: `query_sales` takes the distributor from the request record
+via `tools.build(request_id)`, never from the model [myron], and no tool or workflow imports `sandbox/margins.py`
+(tested); (2) the way out has a person on it: the email is a pending record; (3) the report-email critique rejects literal margin mentions and known other-distributor identifiers/names before that pending email is written; this is not proof against arbitrary paraphrased leakage. The leg we cannot remove is the analyst's own
+judgment when they press send: they see the full text on the request page first.
+
+## Part 2: Plan and critique (owners: the plan and inventory, abraham; the critique, claudea)
+
+### Plan design and step sizes (Abraham)
+
+Planning is enabled for `batch_reports`: the selected requests supply a finite set of report
+deliverables, so the model can declare their ordered steps before tools run. The validator uses
+the plan to reject missing request deliverables and the diff reveals skipped steps (Lecture 2,
+slides 5 and 54). The reactive
+`messy_file` path instead chooses its next tools from observations; an initial parse failure can
+change the investigation (slide 17). A fixed standard report already has known steps, one of
+slide 54's reasons to omit a plan. These were the prototype hypotheses; the final decision table in M1 records the limits of the available development evidence.
+
+Myron's A2 supplies a caution about assuming that planning improves outcomes. At commit
+`df425ccbbf25814a66234af045a1901852c8e18e`, OpenAI `gpt-4.1-mini` ran 18 cases per configuration
+(six issues, three sweeps). The following values come from the
+[A2 report JSON](https://github.com/MyronLiu999/agentic-ai-assignment2/blob/df425ccbbf25814a66234af045a1901852c8e18e/reports/LAB_02.json),
+read 2026-10-31; they are prior issue-triage evidence, not this project's results.
+
+| A2 configuration | Passes / runs | Mean tokens / run (rounded) | Runs with exact repeats | Median latency |
+|---|---|---|---|---|
+| Agent | 7/18 | 14,135 | 8/18 | 8.359 s |
+| Planned, critique off | 5/18 | 5,280 | 3/18 | 5.270 s |
+| Planned, self critique | 3/18 | 4,992 | 1/18 | 5.364 s |
+| Planned, external critique | 2/18 | 4,508 | 3/18 | 5.352 s |
+
+Planned/off used 62.6% fewer tokens, computed from the unrounded means, but lost two passes.
+The [A2 report discussion](https://github.com/MyronLiu999/agentic-ai-assignment2/blob/df425ccbbf25814a66234af045a1901852c8e18e/reports/LAB_02.md)
+(read 2026-10-31) attributes some savings to incomplete execution. Its checkpoint revised after
+search found no relevant TypeScript file under `src/`; validation retries and checkpoint revisions
+were each capped at one. All 54 planned runs averaged one revision, with maximum one. Its `s49`
+specimen still had a failing test while step 6 was skipped and the agent claimed completion;
+an aggregate false-finish rate was not measured. The project's separate predicates and sandbox
+observations address that distinction between following a plan and finishing the task. They still
+need project-local evidence before we claim a benefit.
+
+The planner receives the operator's request, tool contracts, and allowlisted record IDs/counts.
+It receives no distributor question, file text, contact address, period or arbitrary inbox
+fields. The executor resolves `{"$fill": "request.period"}` and
+`{"$fill": "request.contact_email"}` from the selected request at runtime. At a failed read
+checkpoint, the reviser sees code-owned status/counts/integer record IDs, not raw tool output
+or error text. Both planner inputs are constructed from allowlists; actual outputs remain
+available only to the executor.
+
+Each plan step names `id`, `request_id`, `tool`, `args`, `depends_on`, and an observable `expect`.
+The latter checks a documented output field with `exists`, `eq`, or numeric `gte`.
+`checkpoint: true` permits recovery at a read. Unknown IDs/totals are bindings such as
+`{"$fill": "save.report_id"}` or `{"$fill": "query"}`; the binding stays in the plan, while the
+checkpoint trace records resolved arguments. Output bindings must name successful ancestors
+in the same request; the two `request.*` bindings above are the only metadata exceptions.
+For example: query sales → save figures from the query → draft an email linked to
+the saved report. The orphan check rejects steps outside the terminal action's dependency
+graph. A declared dependency alone does not prove useful data flow; the per-step deletion
+test must also ask whether the deliverable actually needs that result.
+
+Validation checks tool/argument shapes, selected scope, unique IDs, cycles, missing or forward
+dependencies, binding reachability, and orphan steps before any tool executes. Each request has a read
+checkpoint, exactly one terminal email/question, and at most one save. The graph is capped at
+eight requests and 48 tool steps; JSON is capped at 64,000 characters and 32 nesting levels.
+These are implementation limits read from `agent/plan.py` on 2026-10-31, not measured optima.
+The guard authorizes only the next listed step with matching request, tool, and resolved
+arguments; independent ready steps cannot be reordered. Dependencies constrain that order;
+they do not prove that the model chose the right business logic.
+
+After a call, code checks its predicate and observes its result. Sales are compared with the
+scoped sandbox query; reports and pending drafts must exist with matching fields; a chart path
+must resolve to a file in the run's state directory. Parse observations require structured,
+untruncated output, but do not prove every parsed value is semantically correct. Full domain
+correctness remains the tools', critique's, and independent task checks' responsibility.
+
+A failed read checkpoint can request a revised plan. The initial plan and all replacements
+share an allowance of three planner attempts total. Completed steps form an immutable prefix,
+including their positions; the revised plan may only change the unfinished suffix. Their
+outputs remain available to the executor and completed writes are not executed again. A failed or unverified
+write stops execution because an effect may already exist. The executor does not automatically
+retry that write under changed arguments. A question stops the batch with its waiting thread;
+remaining work is recorded as skipped.
+
+`plan` events record accepted and rejected versions. `plan_diff` records executed, skipped,
+extra, and out-of-order steps. Both planned and reactive paths hash request, tool, and canonical
+arguments and emit `repeat_call` on an exact repeat; planned counts persist across revisions.
+Reactive write identity follows the requested effect, not the model round; the trace separately
+records the originating round. This lets a repeated identical write reuse its key while remaining
+visible as a repeated call. A skipped step on a replaced plan records that version's history;
+it does not alone prove the final run failed. A repeat is a diagnostic, not an automatic error:
+an intentional read retry can repeat while a changed-argument write may evade a simple hash.
+The uncertain-write stop and immutable completed steps handle those write cases.
+
+**Live planner specimen (2026-10-31).** Run
+`dev-myron-live-02-batch_reports_two-s01-792d75` used the configured real model
+`gpt-4o-mini-2024-07-18`. The verbatim trace is
+`traces/dev-myron-live-02-batch_reports_two-s01-792d75.trace.jsonl` (hereafter B).
+B:7 is its initial ten-step proposal; B:9 is the validated replacement after
+unused chart outputs were corrected to feed saved figures. B:29 and B:53 log
+email amendments after the external critique corrected literal placeholder
+recipients and added actual totals. Both requests passed their independent check.
+This one development run illustrates execution, not an estimated plan-success rate.
+
+| Live step | What its result teaches | What removing it breaks | Executed call |
+|---|---|---|---|
+| `r0_parse` | First upload is structured/untruncated, or its read checkpoint fails | First saved `file_row_count` binding | B:10 |
+| `r0_query` | First request's quarter totals match scoped database truth | First chart value and report totals | B:14 |
+| `r0_chart` | First SVG exists under this run's state directory | First saved `chart_id` binding | B:18 |
+| `r0_save` | First report row exists with exact figures/body | First email's report ID binding | B:22 |
+| `r0_email` | Critique passed and first pending row exists | First request's required email deliverable | B:30 |
+| `r1_parse` | Second upload is structured/untruncated, or its checkpoint fails | Second saved `file_row_count` binding | B:34 |
+| `r1_query` | Second request's scoped totals match the database | Second chart value and report totals | B:38 |
+| `r1_chart` | Second SVG exists in the run | Second report's `chart_id` binding | B:42 |
+| `r1_save` | Second report exists, independent of the first | Second email's report ID binding | B:46 |
+| `r1_email` | Critique passed and second pending row exists | Second request's email deliverable | B:54 |
+
+The first real development sweep passed 3/6 cases; its batch proposals omitted
+write outcomes and exhausted planning retries. The pre-baseline prompt repair
+required an explicit predicate on every step and supplied a complete scoped
+five-step example. The second sweep passed 5/6. Its first proposal still omitted
+chart output bindings; validation caught this and the replacement fixed it.
+Neither dependency declarations nor a parse row count alone establish semantic
+correctness. In particular, the remaining messy-file failure ignored file unit
+facts despite structurally correct parsing, which the independent check caught.
+
+**Scripted step-size illustration, not a live planner result.**
+`tests/fixtures/agent_milestone_model.py` supplies a hand-authored proposal for
+`tasks/batch_reports_two.yaml`; `tests/test_agent_official_flows.py` executes it through
+the real registry, critic and independent task check. `r0_` and `r1_` identify the first
+and second selected request. Each saved report includes the parsed row count and chart ID,
+as well as the scoped query's period, revenue and units.
+
+| Step in the scripted proposal | What success/failure tells us | What removing it breaks |
+|---|---|---|
+| `r0_parse` | A structured, untruncated file was read; a failed read checkpoint permits bounded repair | The first report's `file_row_count` binding cannot resolve |
+| `r0_query` | The selected request's quarter totals match the sandbox; a failed read checkpoint permits repair | The first chart value and saved figures cannot resolve |
+| `r0_chart` | The returned chart path exists inside this run; failed/uncertain writing halts | The first report's `chart_id` binding cannot resolve |
+| `r0_save` | The report row exists with matching request and figures; a success claim without that row fails | The first email has no saved `report_id` to bind |
+| `r0_email` | The critic passes the draft and the pending row links to the saved report; a hold writes nothing | The first request lacks its pending email deliverable |
+| `r1_parse` | The second file passes the same structured/untruncated read check, or requests bounded repair | The second report's `file_row_count` binding cannot resolve |
+| `r1_query` | The second request's scoped totals match the sandbox, or its read checkpoint fails | The second chart value and saved figures cannot resolve |
+| `r1_chart` | The second chart has an observed artifact, or execution halts on an uncertain write | The second report's `chart_id` binding cannot resolve |
+| `r1_save` | The second request has its own verified report row; the first request's row cannot satisfy it | The second email's `report_id` cannot resolve |
+| `r1_email` | A verified pending email completes the second request; a hold leaves it unfinished | The second request lacks its pending email deliverable |
+
+The review changed the scripted proposal to consume parse/chart outputs; merely adding
+`depends_on` edges had not shown that the final report needed them. The planner prompt
+now requires downstream use, and validation rejects unused non-checkpoint artifacts.
+This makes the fixture's deletion test meaningful; the separate live assessment
+above applies the same test to an actual model-produced proposal.
+
+The handout's five fake-model scenarios are covered on the official
+`tasks/batch_reports_two.yaml` task with `plan.batch_reports=on` in
+`tests/test_agent_batch_scenarios.py` (`AgentBatchScenariosTest`). These are synthetic
+model responses through the public entry point, not official model-run results.
+
+| Required scenario | Test method(s) | Observable assertion |
+|---|---|---|
+| Invalid plans reach the bound before effects | `test_invalid_official_batch_plan_stops_without_any_writes` | Three rejected proposals, `replan_bound`, no tool calls/report/pending writes |
+| Off-plan call is refused and traced | `test_off_plan_call_is_refused_and_traced_before_registry_execution` | `off_plan_refused` and `extra` diff, no registry execution |
+| Valid plan runs in listed order | `test_official_batch_executes_the_exact_logged_order` | Logged proposal precedes tools; exact ten-step order; two pending emails and report provenance |
+| Failed checkpoint permits a validated revision; invalid revision never runs | `test_failed_checkpoint_revises_remaining_steps_and_preserves_completed_parse`; `test_invalid_checkpoint_revision_never_executes_its_remaining_writes` | Completed parse runs once, failed query repeats; invalid replacement leaves report/pending writes absent |
+| Diff labels unreached steps skipped | `test_bound_labels_unreached_batch_steps_as_skipped` | Step bound ends the run and the diff names every unreached step |
+
+| Unit of work | What advances it | Bound and reason |
+|---|---|---|
+| Reactive loop step | One model invocation, including incomplete-response retries and email revisions | 12 calls: provisional allowance for tool rounds, final response, revisions, and repairs |
+| Planned execution step | One validated tool call with an observable outcome | At most 48 steps for up to eight requests; completed steps cannot be changed |
+| Planning/replanning step | One complete JSON proposal | Initial proposal plus two replacements total; invalid plans consume the same allowance |
+| Email revision | One tool-free model call proposing recipient, subject, body; planned contact remains code-bound | Passed to `critique.run(..., rounds=2)`; shares the execution budget; report and saved figures stay fixed |
+| Execution token/time budget | Metered tokens since loop/batch entry and monotonic elapsed time | 150,000 tokens and 90 seconds, also constrained by the session ceiling; provisional interactive limits |
+
+Bounds and their rationales are traced. Checks run around calls and before further tools. An
+already-running synchronous operation can overshoot a time/token allowance; this is a
+cooperative stop, not an interrupt. The router's optional classification call precedes the
+execution budget. With planning off, a batch uses separate request loops, each with its own
+execution limits while still subject to the shared session token ceiling.
+
+Both agent paths call the shared `EmailGate` before `draft_report_email`. It resolves the saved
+report within the selected request and supplies saved figures to critique. Revisions cannot
+change the report ID, figures, or trusted comparison requirement. Planned recipients are
+normalized to `request.contact_email` before validation and remain fixed through email
+revisions; the executable plan logs that binding. A passed planned-email revision is recorded as an amended
+plan before the changed arguments execute. Held drafts produce no pending email. Critique's
+actual sandbox recomputation and its detailed write-up remain claudea's responsibility; the
+merged implementation now supplies the real sandbox critic; focused integration probes
+exercise it alongside the agent paths, with scripted model responses.
+
+### Does it know what it did? (Abraham)
+
+This inventory describes code and scripted tests as of 2026-10-31, compared with
+the live batch trace B:9–58 and messy-file trace
+`traces/dev-myron-live-02-messy_file_semicolon-s01-f55d9b.trace.jsonl`: parsing,
+queries, saved report and pending email are visible, but the missing file total
+shows why recorded success is not semantic correctness. "Survives" means the record survives reopening the same run/session;
+starting a fresh evaluation run deliberately resets its sandbox. Durable evidence does not
+imply automatic execution resumption: neither executor reloads an interrupted tool conversation
+or partially completed graph. A new work turn starts a new execution. Status follow-ups do
+recover the selected IDs and read durable domain records.
+
+| Path / step | Recorded status or evidence | Can the model read it? | Can code read it? | Survives restart? |
+|---|---|---|---|---|
+| Batch: select requests | `route` event with IDs, path, and provenance; inbox rows | Planner receives allowlisted record IDs/counts only; period/contact are runtime bindings | Router/service read records and last route | Yes: records and trace |
+| Batch: propose/validate plan | `model_call`, accepted/rejected `plan`; active graph in memory | Planner sees its response and repair feedback | Validator/scheduler read active graph | Trace yes; active graph not restored |
+| Batch: parse, when planned | Registry `tool_call`; `checkpoint` with result verdict and resolved arguments | Replanner receives code-owned status/counts only, no file cells or error text | Scheduler uses validated output for fills | Trace/upload yes; output map not restored |
+| Batch: query sales | Registry result, checkpoint verdict, current sales rows | Replanner receives status/counts/IDs, not raw output | Observer recomputes sales and scheduler binds output | Trace/database yes; output map not restored |
+| Batch: chart, when planned | Registry result, artifact file, checkpoint verdict | Replanner receives status and record ID, not raw output/path text | Observer checks contained path and existence | Trace/artifact yes; no automatic continuation |
+| Batch: save report | Report row/version; call/checkpoint/plan-diff evidence | Replanner receives status and record ID; email binds report ID in code | Observer and email gate read saved row | Yes; completed-step memory alone is not restored |
+| Batch: critique email | `critique` events from critique; revision model calls; amended plan if text changed | Reviser gets draft and feedback | Gate checks pass and fixed report/figures | Trace yes; transient revision draft not resumed |
+| Batch: pending email | Pending row linked to request/report; progress and plan diff; `report_drafted` status | No additional model call required | Observer, service, status workflow read rows | Yes |
+| Batch: pending question instead | Pending question; `awaiting_answer`; reply waiting thread; remaining steps skipped | No further model call | Executor stops and service preserves waiting thread | Rows/trace yes; no automatic outside-reply continuation in M1 |
+| Batch: finish/bound | `end`, plan diffs, public reply; in-memory repeat counts | Planner gets repair feedback only before termination | Failure analysis reads end/diff evidence | Trace/reply yes; counters not restored |
+| Messy: select request | `route` and inbox row | Loop receives one selected scope and outside-data fields | Router/service select scope | Yes |
+| Messy: inspect/parse file | Registry `tool_call`, original upload; action progress | Tool result is in current conversation | Registry reads scoped upload | Trace/upload yes; conversation not restored |
+| Messy: query or compare | Tool results in trace and current conversation; sales rows | Model sees authoritative query outputs | Scoped tool queries; final check inspects figures | Trace/database yes; conversation not restored |
+| Messy: chart, when requested | Tool result and artifact file | Model sees result | Tool owns rendering/result validity | Trace/artifact yes; conversation not restored |
+| Messy: save report | Report/version; tool result and action line | Model sees returned report ID | Gate/service read saved report | Yes |
+| Messy: critique email | Critique/revision traces; fixed saved report figures | Reviser reads draft/feedback with no tools | Gate allows a passed draft only | Evidence yes; revision not resumed |
+| Messy: pending email | Pending row and call result; service verifies report link before `report_drafted` | Model receives result before a final answer | Service reads reports/pending records | Yes |
+| Messy: pending question instead | Pending row, action line, waiting thread, `awaiting_answer` | Loop stops immediately | Service preserves question state, even at a late bound | Rows/trace yes; M1 outside replies do not resume work |
+| Messy: final answer or bound | `end`, action lines, public reply, `repeat_call` events | Current model conversation only | Service distinguishes effects from a completion claim; analysis reads end/repeat events | Trace/domain state yes; repeat counters and conversation are not restored |
+
+A reactive `done` means the model ended its turn. It is not an independent task pass. The service
+does not mark an empty completion claim successful, and the task checker can still reject a
+saved but incorrect report. Planned `done` requires every planned observation to pass, yet still
+does not replace the domain check. Registry result validation and write idempotency remain
+Myron's contract; scripted tests include sandbox-writing substitutes and real-registry probes.
+
+### The critique loop (owner: claudea)
+
+**Where it helps: `draft_report_email`.** The three gates of slide 43 all hold. *Can a check find the error without
+solving the task?* Yes: the errors that matter in this email are the recipient, the quarter and the revenue, and
+each is a lookup or SQL sum (`sales.distributor_sales`), rather than generating another report.
+The critic independently recomputes trusted facts; the author may already have received those
+facts, so independence does not imply privileged information unavailable to the author.
+The check detects disagreements in the supported revenue/period assertions and structured
+figures. It is a bounded deterministic verifier, not a general natural-language fact checker.
+*Is there a limit and a log?* Yes: two rounds, each a `critique` trace event.
+
+**The check** (`agent/critique.py`, `check(request_id, draft)`) passes or fails with a reason, from the sandbox
+alone, never a task's check or expected answer: the recipient equals the request's `contact_email`; `figures.period`
+equals the request's period; finite `figures.total_revenue` equals the database's within 0.01.
+Comparisons require named `previous_total_revenue`, using trusted route metadata, linked report
+kind, request context or supplied comparison fields. Supplied previous period and revenue
+change must agree with the database. Supplied file units are checked against the upload's
+recognized units column; an unverifiable value holds the draft. Email and saved-report
+revenue clauses are checked in context, including supported quarter/direction comparisons;
+a transaction reference containing the right number does not establish a correct revenue claim.
+The body must state current revenue and must not mention margins or another distributor.
+Independent task checks separately require named file/comparison fields and an active pending
+email; discarded or sent records cannot satisfy that deliverable.
+**The bound:** `rounds=2` (`agent/workflows.py`, `CRITIQUE_ROUNDS`): the draft is checked, revised once
+by the author with the reason, and checked again. Each round writes `critique` with its round, verdict (`pass`,
+`revise`, `held`), reason and the fields that changed. A draft still failing is **held**: the caller writes no
+pending record, sets the request to `held`, ends the run with `critique_held` and tells the operator why. A reviser
+that raises also holds the draft; it never falls back to the old one. The switch `critique.report_email` takes
+`off | external`; off passes drafts through untouched.
+
+**Which paths draft the action.** Both: the `standard_report` workflow calls `critique.run` before
+`draft_report_email` (tested), and the agent loop calls the same function before it drafts the email
+through `EmailGate`. On 2026-10-31, `tests/fixtures/agent_integration_probe.py` passed with the
+real critic on both reactive and planned paths; those email probes use scripted models and
+sandbox-writing tool substitutes. A separate real-registry standard-report task also passed.
+
+**Where it does not help: the `out_of_scope` decline** (`draft_clarifying_question` with a fixed template in
+`agent/domain_workflows.py`). Code writes every word and fills the one fact (the distributor's own name and quarter)
+from the request record. The tested template has no model-authored interpretation to repair; another generative reread supplies no demonstrated correction signal. The final decision table separately assesses model-written questions.
+
+**Tests** (`tests/test_workflows.py`, on fake models, switch on): `check` alone fails each wrong field with its
+reason; `run` with a fake reviser revises with the reason and passes on round 2, and holds at the bound with one
+revision; through the workflow on a fake model, with `FakeRegistry`'s `draft_report_email` calling `pending.add`, a
+right draft is written once (one real pending row, and the task's own check passes), a wrong-then-right draft is
+revised and written once, and an always-wrong draft is never written and the run ends `critique_held`.
+**Assignment 2's result** (Myron's repository, [MyronLiu999/agentic-ai-assignment2](https://github.com/MyronLiu999/agentic-ai-assignment2),
+commit `df425cc`, `reports/LAB_02.json`, `gpt-4.1-mini`, 18 runs per configuration; read 2026-10-31 via
+`docs/assignment_refs.md`). With the same bound of two rounds, self and external critique averaged 0.22 and 0.17
+rounds per run and changed, fixed, broke or held no draft (0/0/0/0 each), while success went from 5/18 with the
+critique off to 3/18 (self) and 2/18 (external). Its external check tested parseability, that the file existed and
+had been seen, and label/file agreement: things the author already got right, so the check had nothing to catch.
+What it predicts for us: a critique buys something only where the author can be wrong about an independently verifiable fact, which is why ours recomputes revenue and reads stored recipient and period; those facts may already have been shown to the author. If the baseline's critique
+also changes no draft (rounds per run, held drafts and misses from `analyze.py`), slide 43 says switch it off.
+
+## Part 3: The tools (owner: myron)
+
+All six tools live in `agent/tools.py`; both model and workflow calls cross
+`agent/registry.py`. Trusted request metadata binds the distributor, upload and
+contact. No tool can send. The schemas describe caller-visible arguments; a
+registry-generated write key is never supplied by the model. All credentials
+are local sandbox access narrowed in code, not separate external service tokens.
+
+### Unified action/tool table
+
+T/P/A mean transient/permanent/ambiguous. Known SQLite-lock failures retry at
+most twice before returning a transient error; bad values return repair facts.
+Unknown names get a generic protocol result. An ambiguous outcome stops and
+requires environment inspection; automatic recovery is Milestone 2 work.
+
+| Action / tool | R/W; reach | If wrong, to whom | Undo path | Know, and when? | Grid | Result bound | Error contract | Caller; narrow scope |
+|---|---|---|---|---|---|---|---|---|
+| Decode / `parse_file` | Read one upload | Wrong figures, analyst | No effect to undo; repair parse arguments and reread | Shape/truncation now; units meaning needs raw-file comparison or operator clarification | Can undo (no effect); semantic meaning may be unknown: review before dependent use | 20,000 input characters; 50 returned rows; explicit truncation | T: locked store; P: absent file/header or invalid options; A: none for read | Model/code; bound request upload |
+| Sales / `query_sales` | Read one distributor/quarter | Wrong totals, analyst | No effect to undo; rerun query for the corrected period | Scope/type now; planned observer and email critic recompute totals before email drafting | Can undo (no effect); supported totals checkable: automate read | 50 product rows, full totals and truncation flag | T: DB locked; P: malformed period/missing request; A: none for read | Model/code; bound distributor, no margins |
+| Chart / `render_chart` | Write one SVG and charts row | Misleading chart, analyst | `charts.render` with a new key, then `reports.save` referencing its chart ID; old artifact remains | Row/SVG existence now; no general label/value-to-sales check; operator compares with `/query` | Can correct; will not automatically know semantic errors: review/monitor before use | One artifact; at most 20 bars from at most 50 input items | T: DB locked; P: invalid arrays/values; A: inspect row/file before retry | Model/code; bound request charts |
+| Report / `save_report` | Write one versioned report | Incorrect internal report | `reports.save` corrected figures/body with a new logical key; `pending.discard` old draft; history remains | Row/content now; email critic checks supported facts before pending email; broad prose needs review | Can correct; supported facts checked, broader meaning may be unknown: reviewed local draft | One report ID/version; body capped at 12,000 characters | T: DB locked; P: kind/figures/period invalid; A: inspect persisted row | Model/code; bound request reports |
+| Email / `draft_report_email` | Write pending row | Bad draft may mislead reviewer | `pending.discard(id)` while pending; create corrected draft; no recall after send | Active row/link now; bounded fact critique plus operator review before send | Can undo before send; known-field checks plus review: automate draft only | One pending ID; subject 200 and body 12,000 characters | T: DB locked; P: recipient/report mismatch or malformed text; A: inspect pending row | Model/code; own contact and report only |
+| Question / `draft_clarifying_question` | Write pending row | Unnecessary/wrong clarification | `pending.discard(id)` while pending; create replacement question | Row/scope now; semantic necessity has no general oracle, operator reviews | Can undo; will not automatically know semantic mistakes: review before sending | One pending ID; question 12,000 characters | T: DB locked; P: wrong type/overlong question; A: inspect pending row | Model/code; bound request/contact |
+| Email by hand / no agent tool | Send to request contact on local outside channel | Wrong/private figures reach distributor | None | Channel record shows delivery; silent factual/private-data harm may remain unknown | Cannot undo; may not know harmful content: do not automate; person reviews/sends | One message per operator action | Durable claim prevents duplicate delivery of the same pending ID; uncertain delivery remains inspectable without auto-retry | Operator/product page; request contact |
+
+### Rewrite and evidence limits
+
+The first-draft definition snapshot is `FIRST_DRAFT` in
+`scripts/definition_cost.py`, preserved from the original scaffold. It is a
+minimal tool-surface baseline, not a claim that the stub-era agent worked.
+All model-visible definitions were expanded to describe scoped behavior,
+constraints, bounded outputs and semantic IDs. Existing names remain fixed by
+the shared contract: the tools form one request-scoped sales/report domain;
+no new prefixed names are claimed. File decoding is consolidated into one
+configurable parser rather than a tool per delimiter.
+
+Across the six cases in the second development sweep, `query_sales` and
+`parse_file` tied as most-called: 7 calls each out of 28 tool calls (25% each).
+The other counts were chart 3, save 5, email 5, question 1. These recompute from
+`experiments/evidence/development_manifest.json` and the six archived
+`traces/dev-myron-live-02-*.trace.jsonl` files. The table uses `query_sales`,
+one of the two co-most-called tools.
+
+| `query_sales` change from scaffold | Lecture 3 rule |
+|---|---|
+| Trusted request fixes distributor; only `period` is supplied | Constrain arguments / describe behavior |
+| Quarter syntax, closed object, required field and local period check | Constrain arguments |
+| Both units and revenue remain in top-level totals and product rows | Describe result |
+| At most 50 rows plus row count and `truncated`; empty rows stay an explicit list | Bound and describe result, including emptiness |
+| Distributor ID, request ID and product SKUs survive the response | Return semantic identifiers |
+| Examples show valid quarters; strict treatment has its own switch | Per-tool examples/strict decisions |
+
+| Failure shape | Evidence currently available | Live-model observation |
+|---|---|---|
+| Right tool, wrong arguments | Scripted six-tool probe below | `traces/dev-myron-live-01-messy_file_semicolon-s01-c4adcb.trace.jsonl:7` supplies an invalid decimal option; `traces/dev-myron-live-01-compare_check_last_quarter-s01-c88845.trace.jsonl:14` omits required report figures |
+| Wrong tool | Unknown-name Registry test is only a mechanics test | No confidently attributable valid-but-wrong tool choice in these 12 development cases |
+| Misread/ignored result | A correct parse does not prove its data was used | `traces/dev-myron-live-02-messy_file_semicolon-s01-f55d9b.trace.jsonl:7` returns units 412, 388, 440; line 15 saves database totals without the distinct file-unit total; independent check fails |
+| No call | Missing effects are checked independently | `traces/dev-myron-live-01-batch_reports_two-s01-07790a.trace.jsonl:12` stops at replan_bound with zero calls; its plan versions at lines 7/9/11 omit outcomes. This is downstream of plan rejection, not proof the model refused a valid tool |
+
+The 12 development cases are tuning diagnostics, not the official baseline.
+`scripts/archive_dev_evidence.py` copied their cited traces verbatim and recorded
+hashes/check summaries in `experiments/evidence/development_manifest.json`;
+hash verification now normalizes CRLF to LF only, preserving original byte hashes and
+line-ending provenance alongside the normalized hashes. `python -m experiments.analysis.recompute --check`
+verifies the archived content and derived evidence without changing raw traces;
+entire `results/dev-*` arms remain local. No observation is invented for an
+unseen failure shape. The console's real two-turn report/status interaction is
+`traces/s-20261031-155455-4410.jsonl`: tool calls and critique precede the saved
+report reply, and the follow-up identifies the pending email (lines 13–18).
+It used the actual Console HTTP routes with isolated synthetic state, not a
+scripted model; that temporary domain state is not a restart-recovery claim.
+
+A later measured example of right tool/wrong arguments is
+`results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s02-712c70.trace.jsonl:17`:
+the real model called draft_report_email with report_id=0 before saving a
+report. The loop returned a structured protocol error without executing the
+write; the model subsequently saved a report and the run passed. This is one
+observed, recovered boundary rejection, not a final task failure.
+
+### Examples, strict mode and definition cost
+
+The decision table lists all six tools. Examples are on for parse/query and
+off for the four writes. Only `query_sales` is strict: its input has one
+required property, zero optional/union parameters, zero enum values, and one
+object nesting level. This reflects the agreed period-only interface, not an
+older metric argument. All objects in that strict input are closed.
+
+OpenAI's [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs)
+and [function-calling guide](https://developers.openai.com/api/docs/guides/function-calling),
+read 2026-10-31, require closed objects and required properties for strict
+schemas; optional values can use a required nullable field. Published schema
+limits are 5,000 properties, 10 nesting levels, 1,000 enum values and 120,000
+characters across schema identifiers/values. Our sole strict schema fits these
+limits. The live development calls accepted this query schema; the connectivity
+probe confirmed model `gpt-4o-mini-2024-07-18` and tool calling.
+
+`scripts/definition_cost.py` measures input-token differences for the saved
+first draft and current rewrite, with otherwise identical calls with/without
+definitions. Four real calls on 2026-10-31 produced the final baseline surface
+measurement in `experiments/evidence/definition_cost_final.json` (the exact
+definitions are included):
+
+| Surface | No definitions, input tokens | With definitions | Definition-token difference |
+|---|---:|---:|---:|
+| Scaffold first draft, six definitions | 32 | 147 | 115 |
+| Final rewrite, six definitions | 32 | 583 | 551 |
+
+The rewrite adds 436 definition tokens (4.79 times the draft); this measures
+interface cost, not a quality improvement. The earlier pre-prompt-repair
+rewrite measured 455 and is separately labeled in
+`experiments/evidence/definition_cost.json`. Myron's Assignment 3, commit
+`eb6b35703b212474b561099ec265c427174c7a4b`, measured five definitions at
+195 versus 1,682 tokens; derived keys/read-back left duplicates in 0/12 runs
+versus 6/12 UUID-key control runs. Those prior `gpt-4.1-mini` measurements are
+not this project's `gpt-4o-mini` results; sources and read date are in
+`docs/assignment_refs.md`.
+
+### Write identity and environmental confirmation
+
+The registry generates `tool:v1:sha256(canonical_json)` from version, run ID
+(or console session), request ID, tool name and either a code-owned logical
+step or effect fields. JSON keys are sorted with fixed separators. Reactive
+model rounds use `trace_step` only for attribution; they do not change write
+identity. Without a fixed step, chart identity is the ordered series labels and numeric values,
+excluding its display title; equivalent integral JSON numbers such as `10` and `10.0`
+have the same identity. Changed data/category series get a distinct chart. Report identity is
+kind/figures.period, email identity is recipient/report ID, and clarification
+identity is the bound request/tool. Prose is excluded. Thus a same-effect retry
+returns the first artifact/row; a genuinely revised report needs a new logical
+step/key, not reworded prose. Sandbox reports/pending/charts enforce the key.
+
+| Write | Environment read that confirms it | If it cannot answer; escalation |
+|---|---|---|
+| Chart | `charts.get(chart_id)` plus SVG file read | Halt/hold; analyst inspects row and artifact before retry |
+| Report | `reports.for_request(request_id)` matching returned report ID/key/figures | Hold; analyst inspects DB, never infer success from model prose |
+| Pending email | `pending.get(pending_id)` matching request, report, contact and key | Hold; analyst checks pending records before sending |
+| Pending question | `pending.get(pending_id)` matching request/contact/kind/key | Hold; analyst checks pending state before retry |
+
+The trace now preserves the complete caller result, including error details;
+only `result_summary` is shortened. Every call keeps latency, key, attempts,
+outcome and zero local tool cost. `tests/test_registry.py` covers long results
+and full errors; `tests/test_analysis_boundary.py` verifies classification of
+current and legacy records. This does not add Milestone 2 crash-resume behavior.
+
+### Scripted bad-argument trace evidence (owner: myron)
+
+On 2026-10-31, `tests.fixtures.tool_bad_args_model:BadArgs` submitted one malformed
+call for each of the six model-visible tools through `run.py`, the real service,
+router, agent loop and tool boundary. It then checked the six error-result blocks
+returned to the model before ending its turn. The independent check also read
+the sandbox: no reports, charts or pending records were written with this run's
+stamp, and no agent message was sent on the outside channel.
+
+Run ID: `tool-bad-args-step3-tool_bad_arguments-s01-39e388`.
+The record and trace are under `results/_free/tool-bad-args-step3/`; the trace is
+`results/_free/tool-bad-args-step3/tool-bad-args-step3-tool_bad_arguments-s01-39e388.trace.jsonl`.
+Physical trace lines below identify each `tool_call`; line 6 records the fake
+model's six requests, and line 13 records its acknowledgement after checking
+all six error responses.
+
+| Tool | Deliberately wrong input | Repair fact returned to the model | Rejecting component | Trace line |
+|---|---|---|---|---|
+| `parse_file` | `delimiter: "??"` | Lists the accepted delimiter values | Registry | 7 |
+| `query_sales` | `period: "third quarter"` | Requires a quarter such as `2026Q3` | Registry | 8 |
+| `render_chart` | `values: ["not a number"]` | Values must be numbers | Registry | 9 |
+| `save_report` | Empty `figures` | Requires `figures.period` and `figures.total_revenue` | Registry | 10 |
+| `draft_report_email` | Only `subject` supplied | Requires recipient, subject, body and integer report ID | Loop's existing email gate, before Registry | 11 |
+| `draft_clarifying_question` | `question: 42` | Question must be a string | Registry | 12 |
+
+Every call has `is_error: true`; the five Registry rejections preserve the full
+error/repair envelope, and the email gate returns its required-field message.
+The analyzer counts six tool errors and six protocol rejections. This is a
+negative-test pass, not a successful sales-report task. All six inputs were
+intentionally scripted examples of **right tool, wrong arguments**. They do not
+replace the separate live-model development failure table. `free: true` and
+`dirty: true` in the record explicitly identify a local scripted test of
+uncommitted probe additions, not baseline or measured-pass evidence; its token
+counts are synthetic.
+
+Reproduce it with the existing runner (a free backend; no API key required):
+
+```sh
+python run.py --tasks tests/fixtures/tool_bad_arguments.yaml --sweeps 1 --arm tool-bad-args-step3 --backend tests.fixtures.tool_bad_args_model:BadArgs
+python experiments/analysis/analyze.py results/_free/tool-bad-args-step3 --json
+```
+
+`tests/test_tool_bad_args_probe.py` exercises this route in scratch state and
+checks that a completion claim without the six calls fails the independent check.

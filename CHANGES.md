@@ -1,6 +1,22 @@
 # Changes
 
+Dated entries preserve the implementation and evidence status at that time. The current
+Milestone 1 report and handoff supersede older statements that work remained pending.
+
 ## Milestone 1
+
+**Submission writeup reconciliation (2026-11-01, audit item 7):** completed every
+applicable path/plan/critique/examples/strict decision, separated fixed declines
+from model-written questions, and made undo/correction and correctness-detection
+limits explicit in the action grid. Comparison and homogeneous batch agent
+routes are labeled provisional because their fixtures do not establish Gate 1.
+Shortened the required Parts 1–3 prose while retaining excluded evidence tables;
+extended source/specimen details are separately linked in `M1-evidence.md`.
+Replaced stale pending-live-evidence handoff claims with the archived development,
+baseline and pass sources, and consolidated the AI disclosure into the handout's
+single ending line, including Codex's Claudea-owned fixes. Added free evidence
+verification commands above the preserved README starter guide. Runtime behavior,
+model settings, historical results and the measured-pass verdict were not changed.
 
 **Post-measurement audit fixes (2026-11-01, items 1–6):** report checks and the
 email critic now require finite named revenue/file/comparison figures, validate
