@@ -161,7 +161,7 @@ an email with a wrong amount); a report task's email must state the true revenue
 planted emails now do). `analyze.py` scores a misroute on a run's first route only: a follow-up turn routes to
 `status_question` by design; a first turn the router declined is counted as unrouted, apart from misroutes.
 
-**claudea — UI check fixes (2026-11-01, after the `m1` tag at `e121df6`; no run record changed):** a live
+**claudea — UI check fixes (2026-11-01, after the baseline and the pass; no run record changed):** a live
 console turn on SYN-thread-2002 held four correct comparison drafts. `sandbox/report_validation.py` read "Q3
 2026" as quarter plus a 2026 revenue amount, read a change ("a decrease in revenue of 1,377.90", "a decrease of
 1,377.90 in revenue") as a revenue total, and flipped the expected direction of a change noun ("showing a
@@ -171,7 +171,7 @@ draft with an unfilled template slot, as the sent "Dear [Distributor's Contact],
 `sandbox/seed.py`, `scripts/prepare_ui_demo.py` and `demo-data/` are synthetic `.example` addresses again
 (`43aa53a` had set team members' real addresses). Tests in `tests/test_report_validation_regressions.py`.
 
-**claudea — chat console and email prompt (2026-11-01, after the `m1` tag; no run record changed):** the console
+**claudea — chat console and email prompt (2026-11-01, after the baseline and the pass; no run record changed):** the console
 is a chat page (`app/templates/console.html`, `_history.html`): suggested prompts for the open requests, and under
 each reply a card per request it names, read from `sandbox/` (`product.request_cards`), with the latest report's
 figures, its chart and its drafts with Send and Discard (the same `/pending/<id>` routes). The routes and the one
@@ -188,6 +188,9 @@ Explore data (`/query`) shows no data until the operator presses Show, then the 
 change column per product. Run traces lists runs with pass/fail badges and arm, task and failed-only filters, and
 chat sessions by their first message; a run's page shows its check result and a filterable timeline, a readable
 line per trace line (numbered as in the `.trace.jsonl` file) with the full line under it.
+M1.md Part 1 again names the core task's six use cases and the console, and states the approval line as a
+ranking with the line drawn and the trifecta; the build table's console row names the chat page; the AI line
+names `app/templates/`.
 
 **Abraham — milestone audit fixes (2026-10-31, before the baseline):** accepted the
 official batch command and relative report follow-ups without widening request scope;

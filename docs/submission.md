@@ -29,6 +29,13 @@ Verified during finalization:
   `m1` target was `e121df6`; that commit remains in main's history. The tag now
   includes the final submission fixes, rather than an earlier document revision.
 
+Later on 2026-11-01 (claudea): `m1` was moved from `6ff57f5` to the commit that adds the chat console, the
+Requests/Explore data/Run traces pages and the M1.md Part 1 approval line. At that commit, from a fresh clone of
+the tag: 384 tests and all four checks passed; `recompute --check` verified six artifacts; the baseline and both
+pass arms recompute to M1.md's numbers; one real-model sweep of all six tasks (`dev-claudea`, not committed) ran
+every task end to end, 4/6 passing: compare_check's critique correctly held a draft whose change was 446.95,
+not 4,446.95, and messy_file omitted the file's units, as in the baseline.
+
 **Canvas remains unverified.** The assignment link opens the university login
 landing page in this session. No submission or submission receipt is visible.
 The team must sign in, post/confirm the repository URL at
