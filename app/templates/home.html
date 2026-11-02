@@ -1,19 +1,94 @@
 {% extends "base.html" %}
+{% block title %}Requests · Sales Analyst{% endblock %}
 {% block content %}
-<h1>Requests</h1>
-<p><a href="/query">Query page</a> &middot; <span class="muted">distributors' files and questions, and what is waiting to be sent</span></p>
-<div class="scroll"><table>
-<tr><th>Request</th><th>Distributor</th><th>Period</th><th>Question</th><th>Status</th></tr>
-{% for r in requests %}
-<tr><td><a href="/requests/{{ r.id }}">{{ r.id }}</a></td><td>{{ r.distributor_id }}</td><td>{{ r.period }}</td>
-<td>{{ r.question[:90] }}</td><td>{{ r.status }}</td></tr>
-{% else %}<tr><td colspan="5" class="muted">No requests.</td></tr>{% endfor %}
-</table></div>
-<h2>Waiting for you to send</h2>
-<div class="scroll"><table>
-<tr><th>Id</th><th>Kind</th><th>To</th><th>Subject</th><th>Request</th></tr>
+<style>
+  .hero { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin: 8px 0 18px; }
+  .hero h1 { margin: 0 0 4px; font-size: 1.6rem; }
+  .hero p { margin: 0; max-width: 640px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 22px; }
+  .tile { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--card); box-shadow: var(--shadow); }
+  .tile b { font-size: 1.6rem; display: block; line-height: 1.2; }
+  .tile small { color: var(--muted); }
+  .how { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 0 0 26px; }
+  .how div { background: var(--soft); border-radius: 12px; padding: 12px 14px; font-size: 14px; }
+  .how b { display: block; margin-bottom: 2px; }
+  .how .n { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+            background: var(--accent); color: #fff; font-size: 12px; margin-right: 6px; }
+  .list { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--card); box-shadow: var(--shadow); }
+  .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: center;
+         padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: 0; }
+  .row .title { font-weight: 600; }
+  .row .title a { color: var(--fg); text-decoration: none; }
+  .row .title a:hover { text-decoration: underline; }
+  .row .meta { color: var(--muted); font-size: 13px; }
+  .row .q { font-size: 14px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .act { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+  .row .act a.button { padding: 7px 14px; border-radius: 8px; border: 1px solid var(--line); text-decoration: none; color: var(--fg); background: var(--soft); }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin: 26px 0 8px; }
+  .section-head h2 { margin: 0; }
+  .empty { padding: 16px; color: var(--muted); }
+</style>
+
+<div class="hero">
+  <div>
+    <h1>Distributor requests</h1>
+    <p class="muted">Each distributor sends their quarter's sell-out file and a question. Hand a request to the analyst,
+      or do it yourself from its page. Drafted emails wait here until you send them.</p>
+  </div>
+  <form method="post" action="/console/new"><button class="primary">Ask the analyst</button></form>
+</div>
+
+<div class="tiles">
+  <div class="tile"><b>{{ counts.open }}</b><small>open requests</small></div>
+  <div class="tile"><b>{{ counts.waiting }}</b><small>emails waiting for you to send</small></div>
+  <div class="tile"><b>{{ counts.done }}</b><small>requests done</small></div>
+</div>
+
+<div class="how">
+  <div><span class="n">1</span><b style="display:inline">Pick a request</b><br>Read the distributor's file and question.</div>
+  <div><span class="n">2</span><b style="display:inline">Ask the analyst</b><br>It queries sales, saves the report and chart, and drafts the email.</div>
+  <div><span class="n">3</span><b style="display:inline">Check and send</b><br>Nothing goes out until you press Send. Discard what is wrong.</div>
+</div>
+
+<div class="section-head"><h2>Waiting for you to send</h2><span class="muted">{{ pending|length }} draft{{ 's' if pending|length != 1 }}</span></div>
+<div class="list">
 {% for p in pending %}
-<tr><td>{{ p.id }}</td><td>{{ p.kind }}</td><td>{{ p.recipient }}</td><td>{{ p.subject }}</td><td><a href="/requests/{{ p.request_id }}">{{ p.request_id }}</a></td></tr>
-{% else %}<tr><td colspan="5" class="muted">Nothing pending.</td></tr>{% endfor %}
-</table></div>
+  <div class="row">
+    <div>
+      <div class="title"><a href="/requests/{{ p.request_id }}">{{ p.subject }}</a></div>
+      <div class="meta">{{ 'Report email' if p.kind == 'report_email' else 'Question' }} · to {{ p.recipient }} · {{ names.get(p.request_id, p.request_id) }} · {{ p.request_id }}</div>
+    </div>
+    <div class="act">
+      <a class="button" href="/requests/{{ p.request_id }}">Review</a>
+      <form method="post" action="/pending/{{ p.id }}/send" onsubmit="return confirm('Send this email to {{ p.recipient }} as the operator? It cannot be recalled.')"><button class="primary">Send</button></form>
+      <form method="post" action="/pending/{{ p.id }}/discard"><button>Discard</button></form>
+    </div>
+  </div>
+{% else %}
+  <div class="empty">Nothing pending. Drafts the analyst writes appear here for you to review and send.</div>
+{% endfor %}
+</div>
+
+<div class="section-head"><h2>Requests</h2><a href="/query">Explore the sales data yourself →</a></div>
+<div class="list">
+{% for r in requests %}
+  <div class="row">
+    <div>
+      <div class="title"><a href="/requests/{{ r.id }}">{{ r.distributor_name }}</a>
+        <span class="badge {{ 'done' if r.status == 'done' else 'wait' if r.status in ('report_drafted', 'awaiting_answer') else 'open' }}">{{ r.status|replace('_', ' ') }}</span></div>
+      <div class="meta">{{ r.id }} · {{ r.period or 'no period' }}{% if r.file_name %} · 📎 {{ r.file_name }}{% endif %}</div>
+      <div class="q" title="{{ r.question }}">“{{ r.question }}”</div>
+    </div>
+    <div class="act">
+      <a class="button" href="/requests/{{ r.id }}">Open</a>
+      {% if r.status != 'done' %}
+      <form method="post" action="/console/new"><input type="hidden" name="prompt" value="Handle {{ r.id }}."><button class="primary">Ask the analyst</button></form>
+      {% endif %}
+    </div>
+  </div>
+{% else %}
+  <div class="empty">No requests.</div>
+{% endfor %}
+</div>
 {% endblock %}

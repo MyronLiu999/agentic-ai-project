@@ -22,8 +22,15 @@ router = APIRouter()
 
 @router.get("/")
 def home(request: Request):
+    names = {d["id"]: d["name"] for d in _distributors()}
+    requests = [r | {"distributor_name": names.get(r["distributor_id"], r["distributor_id"])}
+                for r in inbox.all_requests()]
+    waiting = pending.all_pending("pending")
+    counts = {"open": sum(r["status"] != "done" for r in requests), "waiting": len(waiting),
+              "done": sum(r["status"] == "done" for r in requests)}
     return templates.TemplateResponse(request, "home.html", {
-        "page": "home", "requests": inbox.all_requests(), "pending": pending.all_pending("pending")})
+        "page": "home", "requests": requests, "pending": waiting, "counts": counts,
+        "names": {r["id"]: r["distributor_name"] for r in requests}})
 
 
 @router.get("/requests/{rid}")

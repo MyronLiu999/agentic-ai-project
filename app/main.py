@@ -27,6 +27,7 @@ import secrets
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
+from urllib.parse import urlencode
 
 from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
@@ -110,11 +111,14 @@ def console_list(request: Request):
 
 
 @app.post("/console/new")
-def console_new():
+def console_new(prompt: str = Form("")):
+    """A new session. `prompt`, from a request's "Ask the analyst" button, is only put in the
+    message box for the operator to send; nothing goes to the agent until they do."""
     session_id = f"s-{time.strftime('%Y%m%d-%H%M%S')}-{secrets.token_hex(2)}"
     SessionTrace(traces_dir() / f"{session_id}.jsonl", session_id).write(
         {"type": "session_start", "source": "console", "switches": runtime.switches()})
-    return RedirectResponse(f"/console/{session_id}", status_code=303)
+    query = f"?{urlencode({'q': prompt[:300]})}" if prompt.strip() else ""
+    return RedirectResponse(f"/console/{session_id}{query}", status_code=303)
 
 
 @app.get("/console/{session_id}", response_class=HTMLResponse)

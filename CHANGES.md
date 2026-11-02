@@ -167,6 +167,10 @@ path through `harness.turns` are unchanged. The standard-report email prompt (`a
 "Hello," and forbids placeholders: given no contact name, gpt-4o-mini wrote "Dear [Distributor's Contact]," which
 the new placeholder check held on both rounds (1 of 1 live run before, 0 of 3 after). Runs after this prompt change
 are not comparable with the baseline's email drafts.
+The menu leads with the milestone's pages (Requests, the product page; Ask the analyst, the console; Explore data;
+Run traces), each with a tooltip; Threads, Queue and Approvals sit under "More". The Requests page shows the
+distributor names, counts, the three steps, the drafts with Review/Send/Discard, and an "Ask the analyst" button
+per request that opens a chat with "Handle <id>." in the message box, sent only when the operator sends it.
 
 **Abraham — milestone audit fixes (2026-10-31, before the baseline):** accepted the
 official batch command and relative report follow-ups without widening request scope;

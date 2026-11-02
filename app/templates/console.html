@@ -197,6 +197,8 @@
     if (!r.ok) alert("That draft is no longer pending (already sent or discarded).");
     box.dataset.last = ""; await refresh();
   });
+  const asked = new URLSearchParams(location.search).get("q");
+  if (asked) { input.value = asked; grow(); history.replaceState(null, "", location.pathname); }
   showEmpty(); toBottom(); input.focus();
   setInterval(() => { if (!pending) refresh(); }, 3000);
 </script>

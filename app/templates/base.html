@@ -22,6 +22,14 @@
   nav a { color: var(--muted); text-decoration: none; padding: 5px 10px; border-radius: 8px; }
   nav a:hover { background: var(--soft); color: var(--fg); }
   nav a.here { color: var(--fg); font-weight: 600; background: var(--soft); }
+  nav .more { margin-left: auto; display: flex; align-items: center; gap: 2px; font-size: 13px; }
+  nav .more-label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; margin-right: 4px; }
+  nav .more a { padding: 4px 8px; }
+  .badge { display: inline-block; font-size: 12px; padding: 2px 9px; border-radius: 999px; background: var(--soft);
+           color: var(--muted); white-space: nowrap; }
+  .badge.open { background: var(--agent); color: var(--accent); }
+  .badge.wait { background: var(--outside); color: var(--fg); }
+  .badge.done { color: var(--ok); }
   main { max-width: 1100px; margin: 0 auto; padding: 16px; }
   h1 { font-size: 1.4rem; margin: 8px 0 12px; }
   h2 { font-size: 1.1rem; margin: 22px 0 8px; }
@@ -53,14 +61,17 @@
 </head>
 <body>
 <nav>
-  <a href="/console" class="brand">Sales <span>Analyst</span></a>
-  <a href="/console" class="{{ 'here' if page == 'console' }}">Chat</a>
-  <a href="/" class="{{ 'here' if page == 'home' }}">Requests</a>
-  <a href="/query" class="{{ 'here' if page == 'query' }}">Explore data</a>
-  <a href="/queue" class="{{ 'here' if page == 'queue' }}">Queue</a>
-  <a href="/threads" class="{{ 'here' if page == 'threads' }}">Threads</a>
-  <a href="/approvals" class="{{ 'here' if page == 'approvals' }}">Approvals</a>
-  <a href="/traces" class="{{ 'here' if page in ('traces', 'trace') }}">Traces</a>
+  <a href="/" class="brand" title="Home: the distributors' requests">Sales <span>Analyst</span></a>
+  <a href="/" class="{{ 'here' if page == 'home' }}" title="The distributors' requests and the emails waiting for you to send. Everything here works without the agent.">Requests</a>
+  <a href="/console" class="{{ 'here' if page == 'console' }}" title="Chat with the analyst agent: give it a request, see its report, chart and draft, and ask follow-up questions.">Ask the analyst</a>
+  <a href="/query" class="{{ 'here' if page == 'query' }}" title="Look up any distributor's quarter yourself: revenue by product, the change from last quarter, and a chart.">Explore data</a>
+  <a href="/traces" class="{{ 'here' if page in ('traces', 'trace') }}" title="Every run and chat session, step by step: each tool call, model call and how it ended.">Run traces</a>
+  <span class="more">
+    <span class="more-label">More</span>
+    <a href="/threads" class="{{ 'here' if page == 'threads' }}" title="The distributors' email threads. You can also write as a distributor to try a conversation.">Threads</a>
+    <a href="/queue" class="{{ 'here' if page == 'queue' }}" title="Work waiting on someone. Used from Milestone 2.">Queue</a>
+    <a href="/approvals" class="{{ 'here' if page == 'approvals' }}" title="Actions waiting for your approval. Empty until Milestone 2: for now you send drafts yourself from Requests.">Approvals</a>
+  </span>
 </nav>
 {% block main %}<main>
 {% block content %}{% endblock %}

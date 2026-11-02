@@ -112,3 +112,13 @@ class ProductPageTest(ScratchTest):
         page = self.client.get("/console/s-card/history").text
         self.assertNotIn(f"/pending/{record['id']}/send", page)        # sent: no second Send button
         self.assertIn("sent", page)
+
+    def test_home_names_distributors_and_ask_the_analyst_only_fills_the_message_box(self):
+        home = self.client.get("/").text
+        for text in ("open requests", "Waiting for you to send", "SYNTHETIC.", 'value="Handle REQ-SYN-thread-2001."'):
+            self.assertIn(text, home)
+        with mock.patch.object(service, "operator_turn") as turn:
+            r = self.client.post("/console/new", data={"prompt": f"Handle {RID}."}, follow_redirects=False)
+        self.assertEqual(r.status_code, 303)
+        self.assertIn("?q=Handle+REQ-SYN-thread-2001.", r.headers["location"])
+        turn.assert_not_called()                                     # nothing reaches the agent until sent
