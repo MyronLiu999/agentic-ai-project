@@ -30,6 +30,7 @@ regression tests; no new live-model performance is claimed for those fixes.
 Pending emails remain subject to human review; the critic does not establish
 the truth of every statement.
 
-Before submission, run tests and structural checks on the final commit, verify
-a fresh-clone app startup, complete contributor disclosures, and tag and submit
-according to `PLAN.md`.
+Contributor disclosures and the report's decision tables are complete. Tests,
+structural checks and historical evidence recomputation passed during finalization.
+The remaining release and Canvas status is tracked separately in
+[submission status](submission.md), so completed evidence is not listed as pending.

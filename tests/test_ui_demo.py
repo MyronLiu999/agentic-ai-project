@@ -2,14 +2,44 @@
 
 import csv
 from decimal import Decimal
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from zipfile import ZipFile
 
 import channel
 from sandbox import charts, files, inbox, pending, reports, seed
-from scripts.prepare_ui_demo import CASES, DATA, install
+from scripts.prepare_ui_demo import CASES, DATA, install, write_bundle
 from tests.support import ScratchTest
 
 
 class UIDemoTest(ScratchTest):
+    def test_committed_bundle_matches_documented_fixtures(self):
+        with ZipFile(DATA / "ui-test-data.zip") as archive:
+            for name in [case[0] for case in CASES] + ["README.md", "expected_results.csv"]:
+                self.assertEqual(archive.read(name).decode("utf-8-sig").replace("\r\n", "\n"),
+                                 (DATA / name).read_text(encoding="utf-8-sig"), name)
+
+    def test_contact_override_and_matching_download_preserve_sent_history(self):
+        with channel.seeding():
+            seed.seed(None)
+        rid = "REQ-SYN-thread-2001"
+        sent, _ = pending.add("report_email", rid, "SYN-thread-2001", "old@example.com",
+                              "History", "Original", key="old", stamp="manual")
+        pending.mark_sent(sent["id"])
+        rows = install({"SYN-DIST-001": ("Demo reviewer", "reviewer@example.net")})
+        self.assertEqual(inbox.get(rid)["contact_email"], "reviewer@example.net")
+        self.assertEqual(pending.get(sent["id"])["recipient"], "old@example.com")
+        self.assertEqual(rows[0]["recipient"], "reviewer@example.net")
+        self.assertEqual(rows[1]["recipient"], "contact@brightline.example")
+        with TemporaryDirectory() as folder:
+            output = Path(folder)
+            bundle = write_bundle(rows, output)
+            with ZipFile(bundle) as archive:
+                self.assertEqual(archive.read("expected_results.csv"),
+                                 (output / "expected_results.csv").read_bytes())
+                for filename, *_ in CASES:
+                    self.assertEqual(archive.read(filename), (DATA / filename).read_bytes())
+
     def test_documented_csv_totals_match_fixture_rows(self):
         for filename, _, _, expected, _ in CASES:
             if expected is None:

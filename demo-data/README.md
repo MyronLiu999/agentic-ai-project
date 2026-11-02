@@ -2,7 +2,7 @@
 
 所有销售数据均为合成数据。CSV 表示经销商的 sell-out 上传文件；报告收入的权威来源仍是本地 orders 数据库。CSV 中的 units 与数据库 units 可以不同，报告应保留并解释差异。
 
-已加载的联系人：Acme → SYN Acme contact (`contact@acme.example`)；Brightline → SYN Brightline contact (`contact@brightline.example`)；Cedar → SYN Cedar contact (`contact@cedar.example`)。
+仓库默认联系人：Acme → SYN Acme contact (`contact@acme.example`)；Brightline → SYN Brightline contact (`contact@brightline.example`)；Cedar → SYN Cedar contact (`contact@cedar.example`)。使用个人邮箱覆盖后，以该次生成的 `expected_results.csv` 和请求页为准。
 
 ## 直接查看
 
@@ -41,5 +41,9 @@
 ## 重新加载
 
 在本仓库环境中执行 `python -m scripts.prepare_ui_demo --install`。重复执行不重建已存在请求、不重置状态、不重新生成已处理的预览，也不调用模型或发送消息。手动修改过原始 CSV 后请使用新的请求 ID，脚本不会覆盖已有附件。
+
+个人演示可用 `--contact "SYN-DIST-001=Reviewer <reviewer@example.net>"` 覆盖联系人，三个经销商分别对应 001/002/003；多次传入该选项可同时配置。个人版清单和 ZIP 默认写入被 Git 忽略的 `state/ui-demo/`，不会覆盖仓库的合成默认值。后续重新加载时保留同样的参数；不带覆盖参数运行会恢复合成联系人。已发送消息的历史收件人始终保留。
+
+每次安装会一起生成清单和 `ui-test-data.zip`，包含九个 CSV、清单和本说明。仓库 ZIP 与仓库文件一致；个人版 ZIP 与本地清单一致。
 
 如果执行 `make app`，它会重置所有演示状态；之后需再次运行上述加载命令。`make serve` 直接保留已有状态。Console 使用真实模型时会消耗 API tokens。

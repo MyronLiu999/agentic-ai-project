@@ -1,9 +1,21 @@
 # Changes
 
+**Final submission maintenance (2026-11-01):** synchronized main with the team's
+latest critique fixes, reduced M1 to approximately 1,800 prose words while retaining
+all 19 tables, and narrowed claims about unseen facts and arbitrary email prose.
+Malformed API keys now fail locally with an actionable, credential-free message;
+the local UI's 400 error was traced to an invisible character in its process key.
+The live smoke check also exposed repeated contact-name placeholders; standard
+email instructions now request a generic greeting when no personal name is supplied.
+Demo defaults remain synthetic, with explicit local contact overrides and matching
+manifest/ZIP generation. Historical baseline/pass records and scores are unchanged.
+The final submission tag is advanced to include these fixes; Canvas submission is
+tracked separately in `docs/submission.md`.
+
 **UI demo and email charts (2026-11-01, after the M1 tag):** Added nine synthetic
 CSV scenarios, expected database figures, a downloadable bundle and an additive,
-repeatable UI installer. Demo contacts use the team's supplied university emails;
-official task fixtures remain unchanged. Manual and pending report emails include
+repeatable UI installer. Personal demo overrides can use supplied university emails;
+repository defaults and official fixtures stay synthetic. Manual and pending report emails include
 request-scoped PNG charts, frozen at simulated send time and displayed in Threads.
 Self-contained `.eml` downloads preserve edited text and embed chart images without
 sending. Historical emails retain their original contents. Added Pillow and tests
