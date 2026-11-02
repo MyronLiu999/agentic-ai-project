@@ -1,5 +1,5 @@
 {
-  "purpose": "Real development diagnostics; not baseline or pass evidence",
+  "purpose": "Real development diagnostics; not baseline or pass evidence. source_record paths identify local-only original records not included in the repository; committed trace paths and metadata are the archived evidence.",
   "runs": [
     {
       "run_id": "dev-myron-live-01-batch_reports_two-s01-07790a",

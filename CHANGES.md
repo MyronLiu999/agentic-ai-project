@@ -1,5 +1,11 @@
 # Changes
 
+**Submission documentation (2026-11-01):** Completed the decision and action-grid
+explanations, clarified the limited scope of critique, updated Abraham's handoff,
+and added Claudea's Claude disclosure. Shortened the main report and preserved
+supporting specimens and individual failure diagnoses in
+`docs/milestones/M1-evidence.md`. The simulated email channel remains unchanged.
+
 ## Milestone 1
 
 **Myron — live development corrections (2026-10-31, before baseline):** the first

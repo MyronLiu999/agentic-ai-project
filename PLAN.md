@@ -266,11 +266,11 @@ cheaper setting.
 
 ## 8. Final checklist before the tag
 
-- [ ] `make test` and `make check` pass; `make app` works from a fresh clone.
-- [ ] 5+ test tasks (both paths, 2+ agent, 1 misroutable) and 1 dev task; every check has its two tests.
-- [ ] `M1.md` has: build table, decision table, Parts 1 to 4, the team (an owner under every heading), the
+- [x] Tests and structure checks pass; an independently installed fresh clone seeds and serves the main pages.
+- [x] 5+ test tasks (both paths, 2+ agent, 1 misroutable) and 1 dev task; every check has its two tests.
+- [x] `M1.md` has: build table, decision table, Parts 1 to 4, the team (an owner under every heading), the
       AI assistance line, and no placeholders left.
-- [ ] Part 4: baseline numbers, the first-failure table with run IDs and trace lines, the table of passes.
-- [ ] Ledger entry with every field, prediction pushed before the arms; `switches.yaml` at the verdict.
-- [ ] `CHANGES.md` complete; the model named in `README.md`; price line with its read date.
+- [x] Part 4: baseline numbers, the first-failure table with run IDs and trace lines, the table of passes.
+- [x] Ledger entry with every field, prediction pushed before the arms; `switches.yaml` at the verdict.
+- [x] `CHANGES.md` complete; the model named in `README.md`; price line with its read date.
 - [ ] `results/` and the cited `traces/` committed; tag `m1` pushed; repo URL posted in Canvas.

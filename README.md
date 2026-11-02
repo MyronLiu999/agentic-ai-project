@@ -96,13 +96,13 @@ without resetting the sandbox, to show that something survives a restart.
 tokens. `make seed TASK=tasks/<file>.yaml` seeds one test task's inputs instead of
 the demo data.
 
-Until you build your agent, the console answers that the agent is not built yet.
+The console runs the implemented agent.
 
 ## The pages
 
 | Page | What it shows |
 |---|---|
-| `/` | Your product's own pages: a placeholder until you write them |
+| `/` | Requests and pending records |
 | `/console` | The operator's chat with the agent: sessions and their history. Each message goes to `operator_turn` |
 | `/queue` | The work waiting: your sandbox's queue (`sandbox/queue.py`), the threads your agent waits on, and what waits for approval |
 | `/threads` | The outside channel's conversations. You can write as the stranger; each message reaches the agent once, through `on_outside_reply` |
