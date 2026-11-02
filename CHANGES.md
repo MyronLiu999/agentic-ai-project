@@ -171,6 +171,10 @@ The menu leads with the milestone's pages (Requests, the product page; Ask the a
 Run traces), each with a tooltip; Threads, Queue and Approvals sit under "More". The Requests page shows the
 distributor names, counts, the three steps, the drafts with Review/Send/Discard, and an "Ask the analyst" button
 per request that opens a chat with "Handle <id>." in the message box, sent only when the operator sends it.
+Explore data (`/query`) shows the totals, the previous quarter and the change as tiles, quarter arrows, and a
+change column per product. Run traces lists runs with pass/fail badges and arm, task and failed-only filters, and
+chat sessions by their first message; a run's page shows its check result and a filterable timeline, a readable
+line per trace line (numbered as in the `.trace.jsonl` file) with the full line under it.
 
 **Abraham — milestone audit fixes (2026-10-31, before the baseline):** accepted the
 official batch command and relative report follow-ups without widening request scope;

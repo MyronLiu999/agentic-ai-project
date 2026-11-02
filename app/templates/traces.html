@@ -1,25 +1,108 @@
 {% extends "base.html" %}
-{% block title %}Traces{% endblock %}
+{% block title %}Run traces · Sales Analyst{% endblock %}
 {% block content %}
-<h1>Traces</h1>
-<h2>Runs</h2>
+<style>
+  .hero h1 { margin: 8px 0 4px; font-size: 1.6rem; }
+  .hero p { margin: 0 0 16px; max-width: 720px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 18px; }
+  .tile { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--card); box-shadow: var(--shadow); }
+  .tile small { color: var(--muted); display: block; }
+  .tile b { font-size: 1.45rem; display: block; line-height: 1.3; }
+  .tabs { display: flex; gap: 6px; margin: 0 0 12px; border-bottom: 1px solid var(--line); }
+  .tabs button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 8px 12px; color: var(--muted); }
+  .tabs button.on { color: var(--fg); border-bottom-color: var(--accent); font-weight: 600; }
+  .filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; font-size: 14px; }
+  .filters select { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); }
+  .panel { border: 1px solid var(--line); border-radius: 12px; background: var(--card); box-shadow: var(--shadow); overflow: hidden; }
+  .panel table td, .panel table th { padding: 8px 12px; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .badge.pass { background: #e7f6ec; color: #1a7f37; } .badge.fail { background: #fdecea; color: #b42318; }
+  @media (prefers-color-scheme: dark) { .badge.pass { background: #173322; color: #6fdd8b; } .badge.fail { background: #3a1c1a; color: #ff8a80; } }
+  .runid { font-size: 13px; word-break: break-all; }
+  .chatrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  .chatrow:last-child { border-bottom: 0; }
+</style>
+
+<div class="hero">
+  <h1>Run traces</h1>
+  <p class="muted">Everything the agent did, step by step. <b>Test runs</b> are the recorded experiments in <code>results/</code>
+    (the baseline, the pass's two arms, and free runs); <b>chat sessions</b> are the conversations on Ask the analyst.
+    Open one to see each model call, tool call, critique round and how it ended.</p>
+</div>
+
+{% set passed = runs|selectattr('passed')|list|length %}
+<div class="tiles">
+  <div class="tile"><small>Test runs</small><b>{{ runs|length + more }}</b></div>
+  <div class="tile"><small>Passed their check</small><b>{{ passed }} / {{ runs|length }}</b></div>
+  <div class="tile"><small>Arms</small><b>{{ runs|map(attribute='arm')|unique|list|length }}</b></div>
+  <div class="tile"><small>Chat sessions</small><b>{{ sessions|length }}</b></div>
+</div>
+
+<div class="tabs">
+  <button type="button" class="on" data-tab="runs">Test runs</button>
+  <button type="button" data-tab="sessions">Chat sessions</button>
+</div>
+
+<section id="tab-runs">
 {% if runs %}
-  <div class="scroll"><table>
-    <tr><th>Run</th><th>Arm</th><th>Task</th><th>Sweep</th><th>Outcome</th><th>Check</th><th>Tokens</th><th>Latency</th></tr>
+  <div class="filters">
+    <label>Arm <select id="arm"><option value="">All arms</option>
+      {% for a in runs|map(attribute='arm')|unique|sort %}<option>{{ a }}</option>{% endfor %}</select></label>
+    <label>Task <select id="task"><option value="">All tasks</option>
+      {% for t in runs|map(attribute='task')|unique|sort %}<option>{{ t }}</option>{% endfor %}</select></label>
+    <label><input type="checkbox" id="failed"> Failed only</label>
+    <span class="muted" id="shown"></span>
+  </div>
+  <div class="panel scroll"><table id="runs">
+    <tr><th>Check</th><th>Task</th><th>Arm</th><th class="num">Sweep</th><th>Outcome</th>
+        <th class="num">Tokens</th><th class="num">Latency</th><th>Run</th></tr>
     {% for r in runs %}
-      <tr><td><a href="{{ r.link }}">{{ r.run_id }}</a></td><td>{{ r.arm }}</td><td>{{ r.task }}</td>
-          <td>{{ r.sweep }}</td><td>{{ r.outcome }}</td><td>{{ 'pass' if r.passed else 'fail' }}</td>
-          <td>{{ r.tokens }}</td><td>{{ r.latency_s }} s</td></tr>
+      <tr data-arm="{{ r.arm }}" data-task="{{ r.task }}" data-passed="{{ 1 if r.passed else 0 }}">
+        <td><span class="badge {{ 'pass' if r.passed else 'fail' }}">{{ 'pass' if r.passed else 'fail' }}</span></td>
+        <td>{{ r.task }}</td><td>{{ r.arm }}</td><td class="num">{{ r.sweep }}</td><td>{{ r.outcome }}</td>
+        <td class="num">{{ "{:,}".format(r.tokens) if r.tokens is not none else '' }}</td>
+        <td class="num">{{ r.latency_s }} s</td>
+        <td class="runid"><a href="{{ r.link }}">{{ r.run_id }}</a></td></tr>
     {% endfor %}
   </table></div>
   {% if more %}<p class="muted">and {{ more }} older runs.</p>{% endif %}
 {% else %}
   <p class="muted">No runs yet. <code>python run.py --tasks tasks/ --arm NAME</code> records them in <code>results/</code>.</p>
 {% endif %}
-<h2>Sessions</h2>
-{% for s in sessions %}
-  <p><a href="/traces/session/{{ s.id }}">{{ s.id }}</a> <span class="muted">{{ s.lines }} lines · {{ s.modified }}</span></p>
-{% else %}
-  <p class="muted">No console sessions yet.</p>
-{% endfor %}
+</section>
+
+<section id="tab-sessions" hidden>
+  <div class="panel">
+  {% for s in sessions %}
+    <div class="chatrow">
+      <div><a href="/traces/session/{{ s.id }}">{{ s.first or s.id }}</a><br><span class="muted" style="font-size:13px">{{ s.id }}</span></div>
+      <div class="muted" style="font-size:13px; text-align:right">{{ s.lines }} lines<br>{{ s.modified }}</div>
+    </div>
+  {% else %}
+    <p class="muted" style="padding: 12px 14px">No console sessions yet.</p>
+  {% endfor %}
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("on", x === b));
+    document.getElementById("tab-runs").hidden = b.dataset.tab !== "runs";
+    document.getElementById("tab-sessions").hidden = b.dataset.tab !== "sessions";
+  }));
+  const table = document.getElementById("runs");
+  function filter() {
+    if (!table) return;
+    const arm = document.getElementById("arm").value, task = document.getElementById("task").value;
+    const failed = document.getElementById("failed").checked;
+    let shown = 0;
+    table.querySelectorAll("tr[data-arm]").forEach(tr => {
+      const ok = (!arm || tr.dataset.arm === arm) && (!task || tr.dataset.task === task) && (!failed || tr.dataset.passed === "0");
+      tr.hidden = !ok; shown += ok;
+    });
+    document.getElementById("shown").textContent = `${shown} shown`;
+  }
+  ["arm", "task", "failed"].forEach(id => document.getElementById(id)?.addEventListener("change", filter));
+  filter();
+</script>
 {% endblock %}

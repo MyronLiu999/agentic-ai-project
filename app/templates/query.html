@@ -1,17 +1,79 @@
 {% extends "base.html" %}
+{% block title %}Explore data · Sales Analyst{% endblock %}
 {% block content %}
-<h1>Query</h1>
-<form method="get">
-<select name="distributor">{% for d in distributors %}<option value="{{ d.id }}" {{ 'selected' if d.id == distributor }}>{{ d.id }} &middot; {{ d.name }}</option>{% endfor %}</select>
-<input type="text" name="period" value="{{ period }}" style="width:8em"> <button>Show</button></form>
-{% if error %}<p class="error">{{ error }}</p>{% endif %}
+<style>
+  .hero h1 { margin: 8px 0 4px; font-size: 1.6rem; }
+  .hero p { margin: 0 0 16px; max-width: 680px; }
+  .filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; padding: 14px; margin-bottom: 18px;
+             border: 1px solid var(--line); border-radius: 12px; background: var(--card); box-shadow: var(--shadow); }
+  .filters label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted);
+                   text-transform: uppercase; letter-spacing: .04em; }
+  .filters select, .filters input { font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--line);
+                                    border-radius: 8px; background: var(--bg); color: var(--fg); text-transform: none; }
+  .filters input { width: 9em; }
+  .filters .arrows { display: flex; gap: 6px; margin-left: auto; }
+  .filters .arrows a { padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; text-decoration: none;
+                       color: var(--fg); background: var(--soft); font-size: 14px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-bottom: 18px; }
+  .tile { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--card); box-shadow: var(--shadow); }
+  .tile small { color: var(--muted); display: block; }
+  .tile b { font-size: 1.45rem; display: block; line-height: 1.3; font-variant-numeric: tabular-nums; }
+  .up { color: var(--ok); } .down { color: var(--error); }
+  .panel { border: 1px solid var(--line); border-radius: 12px; background: var(--card); box-shadow: var(--shadow);
+           margin-bottom: 18px; overflow: hidden; }
+  .panel h2 { margin: 0; padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: 1rem; }
+  .panel .body { padding: 12px 16px; }
+  .chart { background: #fff; border-radius: 8px; padding: 6px; overflow-x: auto; color: #1d1f23; }
+  .chart svg { max-width: 100%; height: auto; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+</style>
+
+<div class="hero">
+  <h1>Explore sales data</h1>
+  <p class="muted">Look up any distributor's quarter straight from the sales database: total revenue and units, revenue by
+    product, and the change from the quarter before. This page only reads; it saves and sends nothing.</p>
+</div>
+
+<form method="get" class="filters">
+  <label>Distributor
+    <select name="distributor" onchange="this.form.submit()">{% for d in distributors %}<option value="{{ d.id }}" {{ 'selected' if d.id == distributor }}>{{ d.name }} ({{ d.id }})</option>{% endfor %}</select>
+  </label>
+  <label>Quarter
+    <input type="text" name="period" value="{{ period }}" placeholder="2026Q3">
+  </label>
+  <button class="primary">Show</button>
+  {% if earlier %}<div class="arrows">
+    <a href="?distributor={{ distributor }}&period={{ earlier }}">← {{ earlier }}</a>
+    <a href="?distributor={{ distributor }}&period={{ later }}">{{ later }} →</a>
+  </div>{% endif %}
+</form>
+
+{% if error %}<div class="notice error">{{ error }}</div>{% endif %}
+
 {% if data %}
-<p>{{ data.total_units }} units, revenue {{ "{:,.2f}".format(data.total_revenue) }}
-{% if before %}&middot; previous quarter ({{ before.period }}) {{ "{:,.2f}".format(before.total_revenue) }}
-{% if before.total_revenue %}({{ "{:+.1f}".format((data.total_revenue - before.total_revenue) / before.total_revenue * 100) }}%){% endif %}{% endif %}</p>
-<div>{{ chart|safe }}</div>
-<div class="scroll"><table><tr><th>SKU</th><th>Product</th><th>Units</th><th>Revenue</th><th>Previous quarter</th></tr>
-{% for r in rows %}<tr><td>{{ r.sku }}</td><td>{{ r.name }}</td><td>{{ r.units }}</td><td>{{ "{:,.2f}".format(r.revenue) }}</td>
-<td>{{ "{:,.2f}".format(r.prev_revenue) if r.prev_revenue is not none else "none" }}</td></tr>{% endfor %}
-</table></div>{% endif %}
+<div class="tiles">
+  <div class="tile"><small>Revenue, {{ name }} · {{ period }}</small><b>{{ "{:,.2f}".format(data.total_revenue) }}</b></div>
+  <div class="tile"><small>Units sold</small><b>{{ "{:,}".format(data.total_units) }}</b></div>
+  {% if before %}
+  <div class="tile"><small>Revenue, previous quarter ({{ before.period }})</small><b>{{ "{:,.2f}".format(before.total_revenue) }}</b></div>
+  <div class="tile"><small>Change from {{ before.period }}</small>
+    <b class="{{ 'up' if change > 0 else 'down' if change < 0 }}">{{ "{:+,.2f}".format(change) }}{% if pct is not none %} <span style="font-size:.9rem">({{ "{:+.1f}".format(pct) }}%)</span>{% endif %}</b></div>
+  {% endif %}
+</div>
+
+<div class="panel"><h2>Revenue by product</h2><div class="body"><div class="chart">{{ chart|safe }}</div></div></div>
+
+<div class="panel"><h2>By product</h2>
+  <div class="scroll"><table>
+    <tr><th>Product</th><th>SKU</th><th class="num">Units</th><th class="num">Revenue</th>
+        <th class="num">Previous quarter</th><th class="num">Change</th></tr>
+    {% for r in rows %}
+    <tr><td>{{ r.name }}</td><td class="muted">{{ r.sku }}</td><td class="num">{{ r.units }}</td>
+        <td class="num">{{ "{:,.2f}".format(r.revenue) }}</td>
+        <td class="num">{{ "{:,.2f}".format(r.prev_revenue) if r.prev_revenue is not none else "none" }}</td>
+        <td class="num {{ 'up' if r.change and r.change > 0 else 'down' if r.change and r.change < 0 }}">{{ "{:+,.2f}".format(r.change) if r.change is not none else "" }}</td></tr>
+    {% endfor %}
+  </table></div>
+</div>
+{% endif %}
 {% endblock %}

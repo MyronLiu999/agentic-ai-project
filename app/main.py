@@ -238,17 +238,69 @@ def traces(request: Request):
                                "link": f"/traces/run/{prefix}{folder.name}/{r['run_id']}"})
     runs.sort(key=lambda r: str(r["started"]), reverse=True)
     sessions = sorted(({"id": p.stem, "lines": sum(1 for _ in p.open()), "modified": time.strftime(
-        "%Y-%m-%d %H:%M", time.localtime(p.stat().st_mtime))} for p in traces_dir().glob("*.jsonl")),
-        key=lambda s: s["modified"], reverse=True)
+        "%Y-%m-%d %H:%M", time.localtime(p.stat().st_mtime)), "first": _first_message(p)}
+        for p in traces_dir().glob("*.jsonl")), key=lambda s: s["modified"], reverse=True)
     return page(request, "traces.html", runs=runs[:300], more=max(0, len(runs) - 300), sessions=sessions)
+
+
+# A plain name and a colour group for each trace line type, for the trace page's timeline.
+LINE_KINDS = {"operator": ("You", "user"), "reply": ("Reply", "agent"), "route": ("Route", "agent"),
+              "model_call": ("Model call", "model"), "tool_call": ("Tool call", "tool"), "tool_use": ("Tool use", "tool"),
+              "critique": ("Critique", "check"), "checkpoint": ("Checkpoint", "check"), "plan": ("Plan", "plan"),
+              "plan_diff": ("Plan diff", "plan"), "bound": ("Bound", "meta"), "end": ("End", "end"),
+              "error": ("Error", "bad"), "invalid_arguments": ("Invalid arguments", "bad"), "progress": ("Progress", "meta")}
+
+
+def _summary(x: dict) -> str:
+    """One readable line for a trace line; the full line stays under it."""
+    t = x.get("type")
+    if t in ("operator", "progress", "text"):
+        return str(x.get("text", ""))
+    if t == "reply":
+        return str(x.get("text", ""))
+    if t == "route":
+        return f"{x.get('use_case')} → {x.get('path')} path ({', '.join(x.get('request_ids') or [])})"
+    if t == "model_call":
+        usage = x.get("usage") or {}
+        tokens = (usage.get("input_tokens") or 0) + (usage.get("output_tokens") or 0)
+        return f"{x.get('purpose') or 'model'} · {tokens} tokens · {x.get('latency_s')} s"
+    if t == "tool_call":
+        mark = "✗" if x.get("is_error") else "✓"
+        return f"{mark} {x.get('name')} · {x.get('outcome') or ''} · {x.get('latency_s')} s"
+    if t == "critique":
+        return f"round {x.get('round')}: {x.get('verdict')}" + (f": {x.get('reason')}" if x.get("reason") else "")
+    if t == "checkpoint":
+        return f"{x.get('step_id')}: {'passed' if x.get('passed') else 'failed'} ({x.get('reason')})"
+    if t == "plan":
+        steps = (x.get("plan") or {}).get("steps") or []
+        return f"version {x.get('version')}: {len(steps)} steps, {'accepted' if x.get('accepted') else 'rejected'}"
+    if t == "plan_diff":
+        return f"{x.get('step_id')}: {x.get('label')}"
+    if t == "end":
+        return f"{x.get('terminal_reason')}" + (f": {x.get('detail')}" if x.get("detail") else "")
+    if t in ("run_start", "run_end", "session_start", "sandbox"):
+        return ", ".join(f"{k} {x[k]}" for k in ("task", "arm", "sweep", "outcome", "seeded", "source") if x.get(k) is not None)
+    return ""
+
+
+def _first_message(path: Path) -> str:
+    try:
+        return next((str(x.get("text", "")) for x in read_trace(path) if x.get("type") == "operator"), "")[:120]
+    except Exception:
+        return ""
 
 
 def _lines(path: Path) -> list[dict]:
     out = []
     for x in read_trace(path):
         rest = {k: v for k, v in x.items() if k not in ("at", "type", "session_id", "run_id")}
-        out.append({"at": str(x.get("at", ""))[11:23], "type": x.get("type"),
-                    "detail": json.dumps(rest, default=str)[:600]})
+        label, kind = LINE_KINDS.get(x.get("type"), (str(x.get("type", "")).replace("_", " ").capitalize(), "meta"))
+        try:
+            summary = _summary(x)
+        except Exception:
+            summary = ""
+        out.append({"at": str(x.get("at", ""))[11:23], "type": x.get("type"), "label": label, "kind": kind,
+                    "summary": summary[:300], "detail": json.dumps(rest, default=str, indent=1)[:4000]})
     return out
 
 
@@ -267,7 +319,13 @@ def _run_page(request: Request, folder: Path, run_id: str):
     if not record_path.exists():
         raise HTTPException(404, "no such run")
     record = json.loads(record_path.read_text())
-    return page(request, "trace.html", title=f"Run {run_id}", record=json.dumps(record, indent=2),
+    summary = {"task": record.get("task"), "arm": record.get("arm"), "sweep": record.get("sweep"),
+               "passed": record.get("passed"), "outcome": record.get("outcome"), "end_reason": record.get("end_reason"),
+               "tokens": (record.get("tokens") or {}).get("total"), "latency_s": record.get("latency_s"),
+               "cost_usd": record.get("cost_usd"), "model": record.get("model"),
+               "check": (record.get("check") or {}).get("reason"), "model_calls": record.get("model_calls"),
+               "tool_calls": len(record.get("tool_calls") or [])}
+    return page(request, "trace.html", title=f"Run {run_id}", record=json.dumps(record, indent=2), summary=summary,
                 lines=_lines(trace_path) if trace_path.exists() else [])
 
 
@@ -276,4 +334,5 @@ def trace_session(request: Request, session_id: str):
     path = traces_dir() / f"{_safe(session_id)}.jsonl"
     if not path.exists():
         raise HTTPException(404, "no such session")
-    return page(request, "trace.html", title=f"Session {session_id}", record=None, lines=_lines(path))
+    return page(request, "trace.html", title=f"Session {session_id}", record=None, summary=None, lines=_lines(path),
+                session_id=session_id)

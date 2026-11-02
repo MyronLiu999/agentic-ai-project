@@ -177,10 +177,29 @@ def query_page(request: Request, distributor: str = "SYN-DIST-001", period: str 
     except (ValueError, IndexError) as exc:
         error = str(exc)
     prev = {r["sku"]: r for r in (before or {}).get("by_product", [])}
-    rows = [r | {"prev_revenue": prev.get(r["sku"], {}).get("revenue")} for r in (data or {}).get("by_product", [])]
+    rows = []
+    for r in (data or {}).get("by_product", []):
+        p = prev.get(r["sku"], {})
+        change = r["revenue"] - p["revenue"] if p.get("revenue") is not None else None
+        rows.append(r | {"prev_revenue": p.get("revenue"), "prev_units": p.get("units"), "change": change})
+    change = pct = None
+    if data and before:
+        change = data["total_revenue"] - before["total_revenue"]
+        pct = change / before["total_revenue"] * 100 if before["total_revenue"] else None
     return templates.TemplateResponse(request, "query.html", {
         "page": "query", "data": data, "before": before, "rows": rows, "error": error, "distributor": distributor,
-        "period": period, "chart": chart, "distributors": [d for d in _distributors()]})
+        "period": period, "chart": chart, "distributors": [d for d in _distributors()], "change": change, "pct": pct,
+        "earlier": _step_period(period, -1), "later": _step_period(period, 1),
+        "name": next((d["name"] for d in _distributors() if d["id"] == distributor), distributor)})
+
+
+def _step_period(period: str, step: int) -> str | None:
+    """The quarter before or after '2026Q3', for the page's arrows; None for a malformed period."""
+    m = re.fullmatch(r"(\d{4})Q([1-4])", period or "")
+    if not m:
+        return None
+    n = int(m[1]) * 4 + int(m[2]) - 1 + step
+    return f"{n // 4}Q{n % 4 + 1}"
 
 
 def _distributors() -> list[dict]:

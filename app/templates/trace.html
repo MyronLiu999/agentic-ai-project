@@ -1,15 +1,84 @@
 {% extends "base.html" %}
 {% block title %}{{ title }}{% endblock %}
 {% block content %}
-<h1>{{ title }}</h1>
-{% if record %}<h2>Record</h2><pre>{{ record }}</pre>{% endif %}
-<h2>Trace</h2>
+<style>
+  .back { font-size: 14px; }
+  h1.tt { font-size: 1.25rem; margin: 8px 0 14px; word-break: break-all; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .tile { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: var(--card); box-shadow: var(--shadow); }
+  .tile small { color: var(--muted); display: block; font-size: 12px; }
+  .tile b { font-size: 1.05rem; overflow-wrap: anywhere; }
+  .check { padding: 10px 14px; border-radius: 10px; margin-bottom: 16px; }
+  .check.pass { background: #e7f6ec; color: #14532d; } .check.fail { background: #fdecea; color: #7a1d14; }
+  @media (prefers-color-scheme: dark) { .check.pass { background: #173322; color: #b8f0c8; } .check.fail { background: #3a1c1a; color: #ffc9c3; } }
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; }
+  .filters button { font-size: 13px; padding: 4px 10px; border-radius: 999px; }
+  .filters button.off { opacity: .45; }
+  .timeline { border-left: 2px solid var(--line); margin-left: 8px; padding-left: 0; }
+  .ev { position: relative; padding: 6px 0 6px 20px; }
+  .ev::before { content: ""; position: absolute; left: -7px; top: 13px; width: 12px; height: 12px; border-radius: 50%;
+                background: var(--card); border: 2px solid var(--muted); }
+  .ev .top { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .ev .t { font-size: 12px; color: var(--muted); font-family: ui-monospace, monospace; }
+  .ev .lab { font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: var(--soft); }
+  .ev .num { font-size: 12px; color: var(--muted); }
+  .ev .sum { white-space: pre-wrap; font-size: 14px; }
+  .ev details summary { cursor: pointer; font-size: 12px; color: var(--muted); }
+  .ev pre { font-size: 12px; max-height: 320px; overflow: auto; white-space: pre-wrap; word-break: break-word; }
+  .k-user::before { border-color: var(--accent); background: var(--accent); } .k-user .lab { background: var(--accent); color: #fff; }
+  .k-agent::before { border-color: var(--accent); } .k-agent .lab { background: var(--agent); color: var(--accent); }
+  .k-model::before { border-color: #8b5cf6; } .k-model .lab { background: #f1ebff; color: #5b21b6; }
+  .k-tool::before { border-color: #0e9384; } .k-tool .lab { background: #e3f6f3; color: #0b6b60; }
+  .k-check::before { border-color: #c2780b; } .k-check .lab { background: #fff4e0; color: #8a5300; }
+  .k-plan::before { border-color: #2563eb; } .k-plan .lab { background: #e8efff; color: #1e40af; }
+  .k-end::before { border-color: var(--fg); background: var(--fg); } .k-end .lab { background: var(--fg); color: var(--bg); }
+  .k-bad::before { border-color: var(--error); background: var(--error); } .k-bad .lab { background: #fdecea; color: var(--error); }
+  @media (prefers-color-scheme: dark) { .ev .lab { filter: saturate(.8) brightness(.9); } }
+</style>
+
+<p class="back"><a href="/traces">← All traces</a>{% if session_id %} · <a href="/console/{{ session_id }}">Open this chat</a>{% endif %}</p>
+<h1 class="tt">{{ title }}</h1>
+
+{% if summary %}
+<div class="tiles">
+  <div class="tile"><small>Task</small><b>{{ summary.task }}</b></div>
+  <div class="tile"><small>Arm · sweep</small><b>{{ summary.arm }} · {{ summary.sweep }}</b></div>
+  <div class="tile"><small>Ended</small><b>{{ summary.end_reason or summary.outcome }}</b></div>
+  <div class="tile"><small>Model / tool calls</small><b>{{ summary.model_calls }} / {{ summary.tool_calls }}</b></div>
+  <div class="tile"><small>Tokens</small><b>{{ "{:,}".format(summary.tokens) if summary.tokens is not none else '' }}</b></div>
+  <div class="tile"><small>Latency · cost</small><b>{{ summary.latency_s }} s · ${{ "%.6f"|format(summary.cost_usd or 0) }}</b></div>
+</div>
+<div class="check {{ 'pass' if summary.passed else 'fail' }}"><b>Check {{ 'passed' if summary.passed else 'failed' }}</b>{% if summary.check %}: {{ summary.check }}{% endif %}
+  <span style="opacity:.7"> · read from the sandbox by the task's check, not from the agent's reply</span></div>
+{% endif %}
+
+<h2>Step by step</h2>
 {% if lines %}
-  <div class="scroll"><table>
-    <tr><th>Time (UTC)</th><th>Line</th><th>Detail</th></tr>
-    {% for x in lines %}<tr><td>{{ x.at }}</td><td>{{ x.type }}</td><td><code>{{ x.detail }}</code></td></tr>{% endfor %}
-  </table></div>
+  <div class="filters" id="kinds">
+    {% for kind, label in [('user', 'You'), ('agent', 'Routing & replies'), ('model', 'Model calls'), ('tool', 'Tool calls'), ('check', 'Critique & checkpoints'), ('plan', 'Plans'), ('end', 'End'), ('bad', 'Errors'), ('meta', 'Other')] %}
+      {% if lines|selectattr('kind', 'equalto', kind)|list %}<button type="button" data-kind="{{ kind }}">{{ label }} ({{ lines|selectattr('kind', 'equalto', kind)|list|length }})</button>{% endif %}
+    {% endfor %}
+  </div>
+  <div class="timeline">
+    {% for x in lines %}
+      <div class="ev k-{{ x.kind }}" data-kind="{{ x.kind }}">
+        <div class="top"><span class="lab">{{ x.label }}</span><span class="t">{{ x.at }}</span><span class="num">line {{ loop.index }} · {{ x.type }}</span></div>
+        {% if x.summary %}<div class="sum">{{ x.summary }}</div>{% endif %}
+        <details><summary>Full line</summary><pre>{{ x.detail }}</pre></details>
+      </div>
+    {% endfor %}
+  </div>
 {% else %}
   <p class="muted">No trace lines.</p>
 {% endif %}
+
+{% if record %}<details style="margin-top:18px"><summary><b>Run record (JSON)</b></summary><pre>{{ record }}</pre></details>{% endif %}
+
+<script>
+  document.querySelectorAll("#kinds button").forEach(b => b.addEventListener("click", () => {
+    b.classList.toggle("off");
+    const hide = b.classList.contains("off");
+    document.querySelectorAll(`.ev[data-kind="${b.dataset.kind}"]`).forEach(e => e.hidden = hide);
+  }));
+</script>
 {% endblock %}
