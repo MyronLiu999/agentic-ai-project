@@ -2,7 +2,7 @@
 
 所有销售数据均为合成数据。CSV 表示经销商的 sell-out 上传文件；报告收入的权威来源仍是本地 orders 数据库。CSV 中的 units 与数据库 units 可以不同，报告应保留并解释差异。
 
-已加载的联系人：Acme → Claudea (`claudea@uchicago.edu`)；Brightline → Abraham Washington (`abraham2@uchicago.edu`)；Cedar → Mengyuan (`mengyuan1@uchicago.edu`)。
+已加载的联系人：Acme → SYN Acme contact (`contact@acme.example`)；Brightline → SYN Brightline contact (`contact@brightline.example`)；Cedar → SYN Cedar contact (`contact@cedar.example`)。
 
 ## 直接查看
 

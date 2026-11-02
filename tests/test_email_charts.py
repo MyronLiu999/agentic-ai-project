@@ -33,7 +33,7 @@ class EmailChartsTest(ScratchTest):
                                     data={"subject": "Reviewed subject", "body": "My <edited> email"})
         self.assertEqual(response.status_code, 200)
         message = BytesParser(policy=policy.default).parsebytes(response.content)
-        self.assertEqual(message["To"], "claudea@uchicago.edu")
+        self.assertEqual(message["To"], "contact@acme.example")
         self.assertEqual(message["Subject"], "Reviewed subject")
         self.assertIn("My <edited> email", message.get_body(preferencelist=("plain",)).get_content())
         html = message.get_body(preferencelist=("html",)).get_content()
@@ -65,10 +65,10 @@ class EmailChartsTest(ScratchTest):
         self.assertEqual(len([m for m in channel.messages("SYN-thread-2001") if m.sender == "operator"]), 1)
 
     def test_questions_and_historical_messages_do_not_gain_charts(self):
-        question = pending.add("clarifying_question", RID, "SYN-thread-2001", "claudea@uchicago.edu",
+        question = pending.add("clarifying_question", RID, "SYN-thread-2001", "contact@acme.example",
                                "Question", "Which quarter?", key="question")[0]
         self.assertEqual(email_packages.prepare(question)["charts"], [])
-        old = pending.add("report_email", RID, "SYN-thread-2001", "claudea@uchicago.edu",
+        old = pending.add("report_email", RID, "SYN-thread-2001", "contact@acme.example",
                           "Old", "Already sent", key="old")[0]
         pending.mark_sent(old["id"])
         self.assertEqual(email_packages.prepare(pending.get(old["id"]))["charts"], [])
@@ -76,7 +76,7 @@ class EmailChartsTest(ScratchTest):
     def test_primary_chart_uses_report_binding_and_rejects_foreign_chart(self):
         charts.render(RID, "Quarter revenue", ["New data"], [1], key="later")
         record = {"kind": "report_email", "request_id": RID, "status": "pending",
-                  "report_id": self.report["id"], "recipient": "claudea@uchicago.edu",
+                  "report_id": self.report["id"], "recipient": "contact@acme.example",
                   "subject": "Report", "body": "Figures"}
         self.assertEqual(email_packages.prepare(record)["charts"][0]["filename"], f"chart-{self.chart['id']}.png")
         other = charts.for_request("REQ-SYN-thread-2002")[0]

@@ -149,6 +149,16 @@ an email with a wrong amount); a report task's email must state the true revenue
 planted emails now do). `analyze.py` scores a misroute on a run's first route only: a follow-up turn routes to
 `status_question` by design; a first turn the router declined is counted as unrouted, apart from misroutes.
 
+**claudea — UI check fixes (2026-11-01, after the `m1` tag at `e121df6`; no run record changed):** a live
+console turn on SYN-thread-2002 held four correct comparison drafts. `sandbox/report_validation.py` read "Q3
+2026" as quarter plus a 2026 revenue amount, read a change ("a decrease in revenue of 1,377.90", "a decrease of
+1,377.90 in revenue") as a revenue total, and flipped the expected direction of a change noun ("showing a
+decrease") when the sentence first named the previous quarter; a list line under a "Previous Period:
+2026Q2" heading now belongs to that quarter. The critique (`agent/critique.py`) now holds a
+draft with an unfilled template slot, as the sent "Dear [Distributor's Contact]," was. The demo contacts in
+`sandbox/seed.py`, `scripts/prepare_ui_demo.py` and `demo-data/` are synthetic `.example` addresses again
+(`43aa53a` had set team members' real addresses). Tests in `tests/test_report_validation_regressions.py`.
+
 **Abraham — milestone audit fixes (2026-10-31, before the baseline):** accepted the
 official batch command and relative report follow-ups without widening request scope;
 comparison follow-ups read the saved difference. Reactive calls now use effect-based

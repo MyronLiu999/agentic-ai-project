@@ -284,3 +284,47 @@ class RuntimeReviewRegressionTest(ScratchTest):
                 result, critic = self._verdicts(body)
                 self.assertEqual(result["passed"], expected, result["reason"])
                 self.assertEqual(critic[0], expected, critic[1])
+
+
+class HeldCorrectComparisonTest(ScratchTest):
+    """Four correct gpt-4o-mini comparison drafts for SYN-thread-2002 held in the UI on 2026-11-01."""
+    NOW, BEFORE = 60854.60, 62232.50
+
+    def test_correct_change_prose_passes(self):
+        from sandbox.report_validation import revenue_problems
+        for text in (
+            "Current quarter revenue is 60854.60. The previous quarter's revenue was 62232.50, "
+            "showing a decrease of 1377.90.",
+            "The total revenue for the current period 2026Q3 is $60854.60, while the previous period 2026Q2 "
+            "had a revenue of $62232.50, reflecting a decrease of $1377.90.",
+            "Report for Q3 2026:\n- **Total Revenue:** 60854.60 EUR\nCompared to Q2 2026 (Total Revenue: "
+            "62232.50 EUR), we observed a decrease in revenue of 1377.90 EUR.",
+            "The reported Q3 total revenue is 60854.60. Compared to Q2, where the revenue was 62232.50, "
+            "there is a decrease of 1377.90 in revenue.",
+            "#### Current Period: 2026Q3\n- **Total Revenue:** $60854.60\n\n#### Previous Period: 2026Q2\n"
+            "- **Total Revenue:** $62232.50\n\n#### Revenue Change:\n- **Change in Revenue:** -$1377.90",
+            "Please find the comparison for the current period 2026Q3.\n- **Total Revenue:** $60854.60\n"
+            "Here are the figures from the previous period (2026Q2):\n- **Total Revenue:** $62232.50",
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(revenue_problems(text, self.NOW, "2026Q3", self.BEFORE, "2026Q2",
+                                                  require_current=True), [])
+
+    def test_wrong_change_prose_still_fails(self):
+        from sandbox.report_validation import revenue_problems
+        for text in ("Q3 revenue was 60,854.60. Compared to Q2, revenue was 62,232.50, showing an increase.",
+                     "Q3 2026 revenue was 99.00.",
+                     "Q3 revenue was 60,854.60.\n#### Previous Period: 2026Q2\n- **Total Revenue:** $60854.60",
+                     "Q3 revenue was 60,854.60. The previous quarter's revenue was 1.00, showing a decrease."):
+            with self.subTest(text=text):
+                self.assertTrue(revenue_problems(text, self.NOW, "2026Q3", self.BEFORE, "2026Q2",
+                                                 require_current=True))
+
+
+class PlaceholderTest(ScratchTest):
+    def test_unfilled_template_slots_are_caught_and_links_are_not(self):
+        from agent.critique import PLACEHOLDER
+        for text in ("Dear [Distributor's Contact],", "Hi {name},", "Regards, <Your Name>"):
+            self.assertTrue(PLACEHOLDER.search(text), text)
+        for text in ("See [the chart](https://example.com/c.svg).", "**Total Revenue:** 1.00", "Revenue (EUR)"):
+            self.assertFalse(PLACEHOLDER.search(text), text)

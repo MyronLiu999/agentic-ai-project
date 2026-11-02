@@ -29,7 +29,7 @@ class UIDemoTest(ScratchTest):
         pending.mark_sent(sent["id"])
         rows = install()
         self.assertEqual(len(rows), 9)
-        self.assertEqual(inbox.get(rid)["contact_email"], "claudea@uchicago.edu")
+        self.assertEqual(inbox.get(rid)["contact_email"], "contact@acme.example")
         self.assertEqual(pending.get(sent["id"])["recipient"], "old@example.com")
         self.assertEqual(reports.latest(rid)["stamp"], "ui-demo-preview")
         self.assertEqual(len(charts.for_request("REQ-SYN-thread-2002")), 2)

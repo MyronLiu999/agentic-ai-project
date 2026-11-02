@@ -13,9 +13,9 @@ from sandbox import charts, db, files, inbox, pending, reports, sales
 
 DATA = ROOT / "demo-data"
 CONTACTS = {
-    "SYN-DIST-001": ("Claudea", "claudea@uchicago.edu"),
-    "SYN-DIST-002": ("Abraham Washington", "abraham2@uchicago.edu"),
-    "SYN-DIST-003": ("Mengyuan", "mengyuan1@uchicago.edu"),
+    "SYN-DIST-001": ("SYN Acme contact", "contact@acme.example"),
+    "SYN-DIST-002": ("SYN Brightline contact", "contact@brightline.example"),
+    "SYN-DIST-003": ("SYN Cedar contact", "contact@cedar.example"),
 }
 # filename, distributor, period, file units (None means invalid), operator instruction
 CASES = [

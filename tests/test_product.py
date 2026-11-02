@@ -30,7 +30,7 @@ class ProductPageTest(ScratchTest):
         page = self.client.get(f"/requests/{RID}")
         self.assertEqual(page.status_code, 200)
         for text in ("acme_q3.csv", "SYN-SKU-001,310", "How did our region do", "Email a report by hand",
-                     "claudea@uchicago.edu"):
+                     "contact@acme.example"):
             self.assertIn(text, page.text)
         self.assertEqual(self.client.get("/requests/REQ-nope").status_code, 404)
 
@@ -53,7 +53,7 @@ class ProductPageTest(ScratchTest):
         self.assertEqual(r.status_code, 303)
         sent = pending.for_request(RID)
         self.assertEqual([(p["status"], p["stamp"], p["recipient"]) for p in sent],
-                         [("sent", "manual", "claudea@uchicago.edu")])
+                         [("sent", "manual", "contact@acme.example")])
         self.assertEqual(channel.messages("SYN-thread-2001")[-1].sender, "operator")
         self.assertEqual(inbox.get(RID)["status"], "done")
 

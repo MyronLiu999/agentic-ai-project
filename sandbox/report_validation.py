@@ -45,11 +45,17 @@ def upload_units(text: str) -> int | None:
     return int(sum(values))
 
 
-_PERIOD = re.compile(r"\b(?:(\d{4})\s*)?Q([1-4])\b", re.I)
+# A quarter may carry its year before or after it: 2026Q3, Q3 2026.
+_PERIOD = re.compile(r"\b(?:(\d{4})\s*)?Q([1-4])(?:\s+((?:19|20)\d{2})(?![\d.,]?\d))?\b", re.I)
 _REVENUE = re.compile(r"\b(?:revenue|sales(?:\s+total)?|turnover)\b", re.I)
 _AMOUNT = re.compile(r"(?<![\w.,])(?:[-+]?\d[\d.,]*\d|\d|[-+]?(?:NaN|Infinity|Inf))(?!\w)", re.I)
 _UP = re.compile(r"\b(?:increas\w*|grew|grown|rose|risen|higher)\b|\b(?:went|was|is|are|were)\s+up\b|\bup\s+(?:from|by|on)\b|\brevenue\s+up\b", re.I)
 _DOWN = re.compile(r"\b(?:decreas\w*|fell|fallen|declin\w*|dropped|lower)\b|\b(?:went|was|is|are|were)\s+down\b|\bdown\s+(?:from|by|on)\b|\brevenue\s+down\b", re.I)
+# A change named as a noun ('a decrease', 'decrease in revenue') describes the move
+# from the previous quarter to the current one, whatever quarter the sentence names first.
+_CHANGE_NOUN = re.compile(r"\b(?:an?|the)\s+(?:\w+\s+)?(?:increase|decrease|decline|drop|rise|fall|gain|loss)\b"
+                          r"|\b(?:increase|decrease|decline|drop|rise|change)\s+(?:in|of)\b", re.I)
+_DELTA_BEFORE = re.compile(r"\b(?:change|increase|decrease|decline|drop|rise|fall|gain|loss|difference)\s+(?:in|of)\s*$", re.I)
 _FLAT = re.compile(r"\b(?:unchanged|flat|stable)\b|\b(?:no change|the same)\b", re.I)
 
 
@@ -63,7 +69,7 @@ def _clauses(text):
 
 
 def _periods(text, current):
-    return [f"{m[1] or current[:4]}Q{m[2]}" for m in _PERIOD.finditer(text)]
+    return [f"{m[1] or m[3] or current[:4]}Q{m[2]}" for m in _PERIOD.finditer(text)]
 
 
 def _amount(text):
@@ -104,7 +110,9 @@ def wrong_direction_claims(text: str, now: float, before: float, period: str) ->
         subject = revenue_clause[:min(directions) if directions else noun.end()]
         expected = true_direction
         subject_periods = _periods(subject, period)
-        if (re.search(r"\b(?:previous|prior|last)\b", subject, re.I)
+        if _CHANGE_NOUN.search(revenue_clause):
+            pass  # the overall change, not a comparison of the sentence's subject
+        elif (re.search(r"\b(?:previous|prior|last)\b", subject, re.I)
                 or (subject_periods and subject_periods[-1] != period)
                 or re.search(r"\b(?:was|were)\b.*\b(?:last|previous|prior) quarter\b", clause, re.I)):
             expected = -expected
@@ -123,9 +131,14 @@ def revenue_problems(text: str, truth: float, period: str, before: float | None 
     and percentages are not interpreted as headline revenue totals.
     """
     problems, current_stated = [], False
+    heading = None  # '#### Previous Period: 2026Q2' labels the list lines below it
     for clause in _clauses(text):
         nouns = list(_REVENUE.finditer(clause))
         tags = _periods(clause, period)
+        bare = clause.strip(" \t*#-")
+        if len(tags) == 1 and not _AMOUNT.search(_PERIOD.sub("", bare)) and (
+                bare.endswith(":") or clause.lstrip().startswith("#") or re.search(r"\b(?:period|quarter)\s*:", bare, re.I)):
+            heading = tags[0]
         # Two explicitly labelled quarters can place the labels before or after
         # their totals, including 'Q2 and Q3 revenue: X versus Y'.
         unlabelled = _PERIOD.sub("", clause)
@@ -150,8 +163,11 @@ def revenue_problems(text: str, truth: float, period: str, before: float | None 
                 suffix = re.split(r"\b(?:compared|versus|vs\.?|while|and)\b", suffix, flags=re.I)[0]
             tags = _periods(prefix, period) or _periods(suffix.split(" from ")[0], period)
             prior = bool(re.search(r"\b(?:previous|prior|last)\b", prefix + suffix[:20], re.I))
-            claimed_period = tags[-1] if tags else previous_period if prior else period
+            claimed_period = tags[-1] if tags else previous_period if prior else heading or period
             expected = before if claimed_period == previous_period else truth if claimed_period == period else None
+            # 'a decrease in revenue of 1,377.90' names the change, not a total.
+            if _DELTA_BEFORE.search(prefix):
+                continue
             # A change has its own quantity, rather than being a revenue total.
             if re.match(r"\s*(?:change|increas\w*|decreas\w*|grew|rose|fell|declin\w*|dropped)\b", suffix, re.I):
                 # Endpoint markers identify totals regardless of word order. A
@@ -170,8 +186,11 @@ def revenue_problems(text: str, truth: float, period: str, before: float | None 
                 continue
             value, stated = _amount(suffix)
             if not stated:
-                # Also accept '51,264.85 in revenue'.
-                value, stated = _amount(re.sub(r"\bin\s*$", "", prefix))
+                # Also accept '51,264.85 in revenue', but not 'a decrease of 1,377.90 in revenue'.
+                lead = re.sub(r"\bin\s*$", "", prefix)
+                if re.search(r"\b(?:change|increase|decrease|decline|drop|rise|fall|gain|loss|difference)\b", lead, re.I):
+                    continue
+                value, stated = _amount(lead)
             if stated:
                 if expected is None or value is None or abs(value - expected) > .01:
                     problems.append(f"revenue assertion for {claimed_period or 'previous period'} does not match the database")

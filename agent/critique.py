@@ -15,7 +15,8 @@ never a test task's check or expected answer, and recomputes what the author cou
   - figures     finite named totals, including required comparisons, recomputed from the orders table
                 for the request's own distributor (sandbox/sales.py)
   - upload      file_total_units, when given, recomputed from the raw uploaded units column
-  - body        states the correct revenue/period and direction, with no other distributor or margin
+  - body        states the correct revenue/period and direction, with no other distributor or margin,
+                and no unfilled template slot such as [Distributor's Contact]
 
 Three gates (slide 43): the check finds the error without redoing the report (bounded sandbox reads);
 it independently recomputes facts from the request and database; its rounds are bounded and each is a
@@ -25,6 +26,7 @@ reason, and checked again; a draft still failing then is held, and the caller wr
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from agent import events
@@ -34,6 +36,9 @@ from sandbox.report_validation import (comparison_requested, named_number_proble
                                        revenue_problems, upload_units)
 
 FIELDS = ("recipient", "subject", "body", "figures")
+# Template slots a model leaves for someone to fill: [Distributor's Contact], {name}, {{x}}, <Your Name>.
+# A markdown link [text](url) is not a slot.
+PLACEHOLDER = re.compile(r"\[[^\[\]\n]{1,60}\](?!\()|\{\{?[^{}\n]{1,60}\}\}?|<[A-Za-z][^<>\n]{0,40}\b(?:name|contact|company)\b[^<>\n]{0,20}>", re.I)
 
 
 @dataclass
@@ -109,6 +114,10 @@ def check(request_id: str, draft: dict) -> tuple[bool, str]:
             if saved:
                 problems += [f"the saved report {p}" for p in revenue_problems(
                     saved.get("body", ""), truth, period, before, before_period)]
+
+    placeholder = PLACEHOLDER.search(body)
+    if placeholder:
+        problems.append(f"the draft has an unfilled placeholder, {placeholder[0]}; write the real words")
 
     low = body.lower()
     if "margin" in low:
