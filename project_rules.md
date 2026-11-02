@@ -1,4 +1,4 @@
-# Project rules for Claude Code sessions
+# Project rules
 
 This is the team's Milestone 1 project (a data analyst agent). Read `PLAN.md` first: it names the
 owners, branches, contracts and the timeline (independent work to Oct 29; merge, baseline, the pass, the
