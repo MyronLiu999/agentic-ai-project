@@ -24,10 +24,11 @@ Evidence previously listed as pending is now available:
 - The official tasks and scripted plan/boundary tests are in `tasks/` and
   `tests/`. Scripted tests demonstrate mechanisms, not live-model reliability.
 
-Known limitations include literal example recipients in some batch plans and
-incomplete comparison figures. These are documented in Part 4 and were not
-fixed by the measured pass. The pending email remains subject to human review;
-the critic does not establish the truth of every statement.
+The measured runs exposed literal example recipients and incomplete comparison
+figures. Later code binds recipients and strengthens figure validation, with
+regression tests; no new live-model performance is claimed for those fixes.
+Pending emails remain subject to human review; the critic does not establish
+the truth of every statement.
 
 Before submission, run tests and structural checks on the final commit, verify
 a fresh-clone app startup, complete contributor disclosures, and tag and submit

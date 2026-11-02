@@ -6,6 +6,7 @@ must agree with the database."""
 from __future__ import annotations
 
 from checks.common import previous_revenue, report_email_problems, truth_revenue
+from sandbox.report_validation import wrong_direction_claims
 
 
 def check(run):
@@ -13,15 +14,12 @@ def check(run):
     now = truth_revenue(run, item["distributor"], item["period"])
     before = previous_revenue(run, item["distributor"], item["period"])
     problems, counts = report_email_problems(run, item, extra_value=before)
-    said = " ".join(str(r.get("text", "")) for r in run.replies).lower()
-    direction = "up" if now > before else "down"
-    wrong = "down" if direction == "up" else "up"
-    wrong_words = {"up": ("increase", "grew", "higher", " up "), "down": ("decrease", "fell", "lower", " down ")}[wrong]
-    right_words = {"up": ("increase", "grew", "higher", " up "), "down": ("decrease", "fell", "lower", " down ")}[direction]
-    claims_wrong = any(w in f" {said} " for w in wrong_words) and not any(w in f" {said} " for w in right_words)
+    direction = "up" if now > before else "down" if now < before else "unchanged"
+    claims_wrong = any(wrong_direction_claims(str(reply.get("text", "")), now, before, item["period"])
+                       for reply in run.replies)
     counts["wrong_direction_claimed"] = int(claims_wrong)
     if claims_wrong:
-        problems.append(f"a reply says revenue went {wrong}, but the database says {direction} "
+        problems.append(f"a reply makes an incorrect revenue direction claim; the database says {direction} "
                         f"({before:,.2f} to {now:,.2f})")
     if problems:
         return False, "; ".join(problems), counts

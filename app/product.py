@@ -63,10 +63,7 @@ def email_by_hand(rid: str, subject: str = Form(...), body: str = Form(...)):
     record, _ = pending.add("report_email", rid, req["thread_id"], req["contact_email"], subject, body,
                             key=f"manual-{secrets.token_hex(6)}", report_id=latest["id"] if latest else None,
                             stamp="manual")
-    channel.send(req["thread_id"], body, sender="operator")
-    pending.mark_sent(record["id"])
-    inbox.set_status(rid, "done")
-    return RedirectResponse(f"/requests/{rid}", status_code=303)
+    return _deliver(record["id"])
 
 
 @router.get("/charts/{chart_id}.svg")
@@ -80,14 +77,21 @@ def chart_svg(chart_id: int):
 @router.post("/pending/{pid}/send")
 def send_pending(pid: int):
     """Do a pending record by hand: the operator sends it, as the operator."""
-    record = pending.get(pid)
-    if not record or record["status"] != "pending":
-        raise HTTPException(404, "no such pending record, or already sent")
-    channel.send(record["thread_id"], record["body"], sender="operator")
-    pending.mark_sent(pid)
-    if record["kind"] == "report_email":
-        # the report has gone out: the request is done, as the hand email form marks it
-        inbox.set_status(record["request_id"], "done")
+    return _deliver(pid)
+
+
+def _deliver(pid: int):
+    record = pending.claim_send(pid)
+    if not record:
+        raise HTTPException(404, "no such pending record, or unavailable for sending")
+    try:
+        channel.send(record["thread_id"], record["body"], sender="operator")
+        if not pending.complete_send(pid):
+            raise RuntimeError("delivery claim could not be completed")
+    except Exception as exc:
+        pending.fail_send(pid)
+        raise HTTPException(502, "Delivery could not be confirmed. Check the thread before sending another message; "
+                            "this record cannot be retried automatically.") from exc
     return RedirectResponse(f"/requests/{record['request_id']}", status_code=303)
 
 

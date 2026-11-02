@@ -9,6 +9,7 @@ import re
 from checks.helpers import connect
 from sandbox import db, inbox
 from sandbox.sales import period_bounds, previous_period
+from sandbox.report_validation import comparison_requested, named_number_problems, revenue_problems
 
 
 def truth_revenue(run, distributor_id: str, period: str) -> float:
@@ -33,9 +34,11 @@ def run_reports(run, thread_id: str | None = None) -> list[dict]:
         return conn.execute("SELECT * FROM reports WHERE stamp = ? ORDER BY id", (run.run_id,)).fetchall()
 
 
-def run_pending(run, thread_id: str | None = None, kind: str | None = None) -> list[dict]:
+def run_pending(run, thread_id: str | None = None, kind: str | None = None, *, active_only: bool = False) -> list[dict]:
     """Pending records this run wrote (for one request, or all; of one kind, or any)."""
     sql, args = "SELECT * FROM pending WHERE stamp = ?", [run.run_id]
+    if active_only:
+        sql += " AND status = 'pending'"
     if thread_id:
         sql, args = sql + " AND request_id = ?", args + [inbox.request_id(thread_id)]
     if kind:
@@ -82,34 +85,6 @@ def mentions(text: str, value: float) -> bool:
     return False
 
 
-def figures_hold(report: dict, value: float, tolerance: float = 0.01) -> bool:
-    """Whether a report carries `value`: any number in its figures, or written in its body."""
-    try:
-        figures = json.loads(report["figures_json"])
-    except (TypeError, json.JSONDecodeError):
-        figures = {}
-    numbers = []
-
-    def walk(x):
-        if isinstance(x, bool):
-            return
-        if isinstance(x, (int, float)):
-            numbers.append(float(x))
-        elif isinstance(x, dict):
-            for v in x.values():
-                walk(v)
-        elif isinstance(x, list):
-            for v in x:
-                walk(v)
-        elif isinstance(x, str):
-            try:
-                numbers.append(float(x.replace(",", "")))
-            except ValueError:
-                pass
-    walk(figures)
-    return any(abs(n - value) <= tolerance for n in numbers) or mentions(report.get("body", ""), value)
-
-
 def report_figure_problems(report: dict, truth: float, period: str, tolerance: float = 0.01) -> list[str]:
     """The report's own headline fields must be right: figures.total_revenue is the true revenue and
     figures.period the request's period. The right number elsewhere in the report does not count."""
@@ -120,15 +95,8 @@ def report_figure_problems(report: dict, truth: float, period: str, tolerance: f
     if not isinstance(figures, dict):
         return ["the last report has no figures"]
     problems = []
-    revenue = figures.get("total_revenue")
-    try:
-        revenue = float(str(revenue).replace(",", "")) if not isinstance(revenue, bool) else None
-    except (TypeError, ValueError):
-        revenue = None
-    if revenue is None:
-        problems.append("the last report's figures have no total_revenue")
-    elif abs(revenue - truth) > tolerance:
-        problems.append(f"the last report's total_revenue is {revenue:,.2f}, not {truth:,.2f}")
+    problems += [f"the last report's {p}" for p in
+                 named_number_problems(figures, "total_revenue", truth, tolerance)]
     if str(figures.get("period", "")).upper() != str(period).upper():
         problems.append(f"the last report's period is {figures.get('period')!r}, not {period!r}")
     return problems
@@ -156,15 +124,22 @@ def report_email_problems(run, item: dict, extra_value: float | None = None) -> 
     thread, dist, period, email = item["thread"], item["distributor"], item["period"], item["contact_email"]
     truth = truth_revenue(run, dist, period)
     saved = run_reports(run, thread)
-    emails = run_pending(run, thread, "report_email")
+    emails = run_pending(run, thread, "report_email", active_only=True)
     counts = {"reports": len(saved), "emails": len(emails), "duplicate_emails": max(0, len(emails) - 1)}
     problems = []
     if not saved:
         problems.append(f"{thread}: no report saved")
     else:
         problems += [f"{thread}: {p}" for p in report_figure_problems(saved[-1], truth, period)]
-        if extra_value is not None and not figures_hold(saved[-1], extra_value):
-            problems.append(f"{thread}: the last report does not carry {extra_value:,.2f}")
+        if (extra_value is not None or saved[-1].get("kind") == "comparison"
+                or comparison_requested(saved[-1].get("body", ""), period)):
+            extra_value = previous_revenue(run, dist, period)
+            figures = report_figures(saved[-1])
+            problems += [f"{thread}: the last report's {p}" for p in
+                         named_number_problems(figures, "previous_total_revenue", extra_value)]
+        before = previous_revenue(run, dist, period)
+        problems += [f"{thread}: the report {p}" for p in revenue_problems(
+            saved[-1].get("body", ""), truth, period, before, previous_period(period))]
     if not emails:
         problems.append(f"{thread}: no pending report email")
     else:
@@ -173,8 +148,13 @@ def report_email_problems(run, item: dict, extra_value: float | None = None) -> 
         last = emails[-1]
         if last["recipient"] != email:
             problems.append(f"{thread}: email addressed to {last['recipient']}, not {email}")
-        if not mentions(last["body"], truth):
-            problems.append(f"{thread}: the email does not state the revenue {truth:,.2f}")
+        prose = revenue_problems(last["subject"] + "\n" + last["body"], truth, period,
+                                 previous_revenue(run, dist, period), previous_period(period), require_current=True)
+        for problem in prose:
+            # Preserve the check's established description while reporting contextual failures.
+            if problem.startswith("does not state the total revenue"):
+                problem = problem.replace("total revenue", "revenue", 1)
+            problems.append(f"{thread}: the email {problem}")
         if saved and last.get("report_id") != saved[-1]["id"]:
             problems.append(f"{thread}: the email is for report {last.get('report_id')}, "
                             f"not the last one saved ({saved[-1]['id']})")
@@ -187,3 +167,11 @@ def report_email_problems(run, item: dict, extra_value: float | None = None) -> 
 
 def _dict(cursor, row):
     return {c[0]: row[i] for i, c in enumerate(cursor.description)}
+
+
+def report_figures(report: dict) -> dict:
+    try:
+        value = json.loads(report.get("figures_json", ""))
+    except (TypeError, ValueError):
+        return {}
+    return value if isinstance(value, dict) else {}

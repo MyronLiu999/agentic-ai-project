@@ -118,6 +118,44 @@ class AnalyzeCountingTest(unittest.TestCase):
     def tearDown(self):
         self._tmp.cleanup()
 
+    def test_relocated_root_reads_its_own_relative_task_metadata(self):
+        (self.tmp / "tasks").mkdir()
+        (self.tmp / "tasks/t.yaml").write_text("use_case: messy_file\n")
+        write_run(self.agent, "r1", "a", 1, passed=True, cost=0, task_file=r"tasks\t.yaml",
+                  trace=[{"type": "route", "use_case": "messy_file"}])
+        routing = analyze.analyze_arm(self.agent, repo_root=self.tmp)["routing"]
+        self.assertEqual(routing["scored_routes"], 1)
+        self.assertEqual(routing["misroutes"], 0)
+
+    def test_proposal_rejections_and_terminal_rejections_are_separate(self):
+        write_run(self.agent, "repaired", "a", 1, passed=True, cost=0,
+                  trace=[{"type": "plan", "accepted": False}, {"type": "plan", "accepted": True}])
+        write_run(self.agent, "stopped", "b", 1, passed=False, cost=0, ends=("plan_rejected",),
+                  trace=[{"type": "plan", "accepted": False}])
+        plan = analyze.analyze_arm(self.agent)["plan"]
+        self.assertEqual(plan["proposal_rejections"], 2)
+        self.assertEqual(plan["plan_rejected"], 1)
+
+    def test_false_finish_counts_only_done_in_initial_task_turn(self):
+        write_run(self.agent, "held", "a", 1, passed=False, cost=0, ends=("critique_held", "done"),
+                  trace=[{"type": "operator"}, {"type": "end", "terminal_reason": "critique_held"},
+                         {"type": "operator"}, {"type": "end", "terminal_reason": "done"}])
+        write_run(self.agent, "false", "b", 1, passed=False, cost=0, ends=("done", "done"),
+                  trace=[{"type": "operator"}, {"type": "end", "terminal_reason": "done"},
+                         {"type": "operator"}, {"type": "end", "terminal_reason": "done"}])
+        result = analyze.analyze_arm(self.agent)
+        self.assertEqual(result["false_finishes"], 2)
+        self.assertEqual(result["initial_task_false_finish_runs"], ["false"])
+        self.assertEqual(result["initial_task_false_finishes"], 1)
+
+    def test_target_costs_and_tokens_use_only_selected_task_runs(self):
+        write_run(self.agent, "one", "target", 1, passed=True, cost=0.02)
+        write_run(self.agent, "two", "target", 2, passed=False, cost=0.04)
+        write_run(self.agent, "other", "other", 1, passed=True, cost=7)
+        target = analyze.task_metrics(analyze.analyze_arm(self.agent), "target")
+        self.assertEqual((target["runs"], target["passes"], target["mean_tokens"]), (2, 1, 30))
+        self.assertAlmostEqual(target["mean_cost_usd"], 0.03)
+
     def test_a_run_ended_at_two_bounds_is_one_bounded_run(self):
         write_run(self.agent, "r1", "a", 1, passed=False, cost=0.01, ends=("step_limit", "wall_clock"))
         a = analyze.analyze_arm(self.agent)

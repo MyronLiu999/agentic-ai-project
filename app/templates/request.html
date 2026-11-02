@@ -21,6 +21,8 @@
 <pre>{{ p.body }}</pre>
 {% if p.status == 'pending' %}<form method="post" action="/pending/{{ p.id }}/send"><button>Send as the operator</button></form>
 <form method="post" action="/pending/{{ p.id }}/discard"><button>Discard (never sent)</button></form>{% endif %}
+{% if p.status in ('sending', 'send_failed') %}<p class="muted">Delivery is in progress or could not be confirmed.
+Check the thread before sending another message. This record cannot be retried automatically.</p>{% endif %}
 </div>{% else %}<p class="muted">None.</p>{% endfor %}
 <h2>Email a report by hand</h2>
 <form method="post" action="/requests/{{ req.id }}/email">

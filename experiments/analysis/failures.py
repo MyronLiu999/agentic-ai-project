@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 ROOT = Path(__file__).resolve().parents[2]
 BOUNDS = {"step_limit", "wall_clock", "agent_budget", "token_budget", "plan_rejected", "replan_bound", "critique_held"}
@@ -50,9 +50,23 @@ def _first_signal(line, check_reason):
     return None
 
 
+def resolve_trace(record, path: Path, repo_root: Path = ROOT) -> Path:
+    """Prefer the current paired trace; use portable stored paths only as fallback."""
+    paired = Path(path).with_suffix(".trace.jsonl")
+    stored = record.get("trace") or record.get("trace_path")
+    candidates = [paired]
+    if stored:
+        portable = Path(str(stored).replace("\\", "/"))
+        # A Windows drive path is not relative to a POSIX checkout.
+        if portable.is_absolute() or PureWindowsPath(str(stored)).is_absolute():
+            candidates.append(portable)
+        else:
+            candidates.append(Path(repo_root) / portable)
+    return next((candidate for candidate in candidates if candidate.is_file()), candidates[0])
+
+
 def inspect_record(record, path: Path, repo_root: Path):
-    trace = Path(record.get("trace") or path.with_suffix(".trace.jsonl"))
-    trace = trace if trace.is_absolute() else repo_root / trace
+    trace = resolve_trace(record, path, repo_root)
     issues, first = [], None
     check_reason = str((record.get("check") or {}).get("reason") or "")
     try:

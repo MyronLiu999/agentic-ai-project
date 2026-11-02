@@ -12,24 +12,26 @@ never a test task's check or expected answer, and recomputes what the author cou
 
   - recipient   the contact on the request record (code's, not the stranger's text)
   - period      the request record's period
-  - figures     total_revenue (and previous_total_revenue, if given) recomputed from the orders table
+  - figures     finite named totals, including required comparisons, recomputed from the orders table
                 for the request's own distributor (sandbox/sales.py)
-  - body        writes the recomputed total, and names no other distributor and no margin
+  - upload      file_total_units, when given, recomputed from the raw uploaded units column
+  - body        states the correct revenue/period and direction, with no other distributor or margin
 
-Three gates (slide 43): the check finds the error without redoing the report (one SQL sum); it knows
-what the author did not (the request record and the database); its rounds are bounded and each is a
+Three gates (slide 43): the check finds the error without redoing the report (bounded sandbox reads);
+it independently recomputes facts from the request and database; its rounds are bounded and each is a
 `critique` trace event. A round is one check: with rounds=2 a draft is checked, revised once with the
 reason, and checked again; a draft still failing then is held, and the caller writes nothing.
 """
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 
 from agent import events
 from harness import runtime
-from sandbox import db, inbox, sales
+from sandbox import db, files, inbox, reports, sales
+from sandbox.report_validation import (comparison_requested, named_number_problems,
+                                       revenue_problems, upload_units)
 
 FIELDS = ("recipient", "subject", "body", "figures")
 
@@ -46,25 +48,6 @@ def enabled() -> bool:
     return runtime.switch("critique.report_email") == "external"
 
 
-def _forms(value: float) -> list[str]:
-    value = round(float(value), 2)
-    forms = {f"{value:,.2f}", f"{value:.2f}", f"{value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")}
-    if value == int(value):
-        forms |= {f"{int(value):,}", str(int(value))}
-    return sorted(forms, key=len, reverse=True)
-
-
-def writes_figure(text: str, value: float) -> bool:
-    return any(re.search(rf"(?<![\d.,]){re.escape(f)}(?![\d]|[.,]\d)", text or "") for f in _forms(value))
-
-
-def _number(x) -> float | None:
-    try:
-        return float(str(x).replace(",", "")) if not isinstance(x, bool) else None
-    except (TypeError, ValueError):
-        return None
-
-
 def check(request_id: str, draft: dict) -> tuple[bool, str]:
     """Pass or fail with a reason, from the sandbox alone."""
     req = inbox.get(request_id)
@@ -75,6 +58,9 @@ def check(request_id: str, draft: dict) -> tuple[bool, str]:
     if missing:
         problems.append(f"the draft has no {', '.join(missing)}")
     figures = draft.get("figures") or {}
+    if not isinstance(figures, dict):
+        problems.append("the draft figures must be an object")
+        figures = {}
     body = f"{draft.get('subject', '')}\n{draft.get('body', '')}"
 
     if draft.get("recipient") and draft["recipient"] != req["contact_email"]:
@@ -93,18 +79,36 @@ def check(request_id: str, draft: dict) -> tuple[bool, str]:
             truth = None
             problems.append(str(exc))
         if truth is not None:
-            given = _number(figures.get("total_revenue"))
-            if given is None or abs(given - truth) > 0.01:
-                problems.append(f"total_revenue is {figures.get('total_revenue')}, but the database says "
-                                f"{truth:,.2f} for {period}")
-            if draft.get("body") and not writes_figure(body, truth):
-                problems.append(f"the body does not state the total revenue {truth:,.2f}")
-            if "previous_total_revenue" in figures:
-                before = sales.distributor_sales(req["distributor_id"], sales.previous_period(period))["total_revenue"]
-                given = _number(figures.get("previous_total_revenue"))
-                if given is None or abs(given - before) > 0.01:
-                    problems.append(f"previous_total_revenue is {figures.get('previous_total_revenue')}, but the "
-                                    f"database says {before:,.2f} for {sales.previous_period(period)}")
+            problems += named_number_problems(figures, "total_revenue", truth)
+            before_period = sales.previous_period(period)
+            before = sales.distributor_sales(req["distributor_id"], before_period)["total_revenue"]
+            saved = next((r for r in reports.for_request(request_id) if r["id"] == draft.get("report_id")), None)
+            needs_comparison = (bool(draft.get("comparison_required")) or draft.get("report_kind") == "comparison"
+                                or (saved and saved["kind"] == "comparison")
+                                or comparison_requested(req.get("question", ""))
+                                or comparison_requested(body, period)
+                                or any(k in figures for k in ("previous_total_revenue", "previous_period", "revenue_change")))
+            if needs_comparison:
+                problems += named_number_problems(figures, "previous_total_revenue", before)
+            if "previous_period" in figures and figures["previous_period"] != before_period:
+                problems.append(f"previous_period is {figures['previous_period']}, not {before_period}")
+            if "revenue_change" in figures:
+                problems += named_number_problems(figures, "revenue_change", truth - before)
+            if "file_total_units" in figures:
+                try:
+                    units = upload_units(files.read_upload(request_id, req["file_name"])) if req.get("file_name") else None
+                except (OSError, TypeError):
+                    units = None
+                if units is None:
+                    problems.append("cannot verify file_total_units from the uploaded units column")
+                else:
+                    problems += named_number_problems(figures, "file_total_units", units)
+            if draft.get("body"):
+                problems += [f"the body {p}" for p in revenue_problems(
+                    body, truth, period, before, before_period, require_current=True)]
+            if saved:
+                problems += [f"the saved report {p}" for p in revenue_problems(
+                    saved.get("body", ""), truth, period, before, before_period)]
 
     low = body.lower()
     if "margin" in low:

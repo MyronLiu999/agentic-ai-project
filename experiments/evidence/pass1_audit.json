@@ -1,21 +1,23 @@
 {
   "commit": "2e18da0dca47b211ea516fe1a0fa1e1dd49d08c2",
   "prediction_committed_at": "2026-10-31T16:08:46-05:00",
+  "hash_policy": "sha256 of bytes after CRLF-to-LF normalization only; preserve all other bytes",
   "invariants_checked": [
     "18 unique task/sweep pairs per arm",
     "all completed, non-free, clean and identical commit",
-    "identical settings/backend/price sheet",
+    "identical settings/backend/price sheet/model",
     "only examples.save_report switch differs",
     "all run starts after prediction commit",
-    "all 36 traces parse as JSONL"
+    "all 36 traces parse as JSONL and match run metadata",
+    "all file contents match original LF/CRLF hash provenance"
   ],
   "metrics": {
     "pass1-examples-off": {
       "task_turn_false_finishes": [],
       "held_then_status_done": [
         "pass1-examples-off-batch_reports_two-s01-b4d71f",
-        "pass1-examples-off-batch_reports_two-s02-b6501f",
-        "pass1-examples-off-compare_check_last_quarter-s01-8c0d0a"
+        "pass1-examples-off-compare_check_last_quarter-s01-8c0d0a",
+        "pass1-examples-off-batch_reports_two-s02-b6501f"
       ],
       "target_mean_tokens": 8089.666666666667,
       "target_mean_cost_usd": 0.000978
@@ -36,291 +38,435 @@
   "files": [
     {
       "path": "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s01-b4d71f.json",
-      "sha256": "84cfc1f8a438e56a69ec0ccc9300d52b758bd1ce70e6186111b25936b4a26113"
+      "sha256": "00fad24c0f3ee87999672c677be202f7539d50ca480435be3e72625f8db99788",
+      "original_sha256": "84cfc1f8a438e56a69ec0ccc9300d52b758bd1ce70e6186111b25936b4a26113",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s01-b4d71f.trace.jsonl",
-      "sha256": "42d0f4b265e81b1bdc17e78e007e82db4e6f14aa301750353f1c662662ee6f9a"
+      "sha256": "288f65efb936ac09318d6bcf1fd887bf7170b6a6a2414e4c1ff397caf02d9e4e",
+      "original_sha256": "42d0f4b265e81b1bdc17e78e007e82db4e6f14aa301750353f1c662662ee6f9a",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s02-b6501f.json",
-      "sha256": "1d2e5ad316de53a02cd3895b7b7b9d5b770166cdede90f6d9ce355127f89e232"
+      "sha256": "f065dd704046e38b5e1787cc2095c467aee7b414681af7425c0c83b6a2bfc1f1",
+      "original_sha256": "1d2e5ad316de53a02cd3895b7b7b9d5b770166cdede90f6d9ce355127f89e232",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s02-b6501f.trace.jsonl",
-      "sha256": "1d4aee3c059a84bb276a73103eed7b9696a2cdd4c6c09e486e372d71cb390017"
+      "sha256": "bf5cb64fd1ad054699268b47bce608c540d74b0d6c553e260ff7d51cf56c28b4",
+      "original_sha256": "1d4aee3c059a84bb276a73103eed7b9696a2cdd4c6c09e486e372d71cb390017",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s03-e6fb94.json",
-      "sha256": "3aa791914cc3b64a162be2aead56ae52c1c940e073c1c388ee7f9b4b1b994406"
+      "sha256": "b2a5e133d5f8f0ba1d85d6fca1419ffae1ebb8c97230794a5c485613ce9201c7",
+      "original_sha256": "3aa791914cc3b64a162be2aead56ae52c1c940e073c1c388ee7f9b4b1b994406",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s03-e6fb94.trace.jsonl",
-      "sha256": "5f1bb4b1459facb683c9ce9a7ff6cc52c7fe4a9824d2f4324c061b10418f0e0b"
+      "sha256": "b5ba1f73d5fb618a530121859f64f94ea787c1bd4f8218fa68a00f0fd8a8041a",
+      "original_sha256": "5f1bb4b1459facb683c9ce9a7ff6cc52c7fe4a9824d2f4324c061b10418f0e0b",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-compare_check_last_quarter-s01-8c0d0a.json",
-      "sha256": "14bbe005afed2de8b6bca46573d3ea0d818e1ebd1c3d3f4bd7436b560b304468"
+      "sha256": "0d5bf935488fc5475cbfc0c43c1d8bdd0404e4c5bf432bf2edf2853bb8656c53",
+      "original_sha256": "14bbe005afed2de8b6bca46573d3ea0d818e1ebd1c3d3f4bd7436b560b304468",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-compare_check_last_quarter-s01-8c0d0a.trace.jsonl",
-      "sha256": "f03e4aec6667399618365331319fce35215ba51f19aad660badacc9f24d69a25"
+      "sha256": "2fad65ee0392d0a796a5b52d5e2377a6fccb192fad34e6bdc8772eef6719707c",
+      "original_sha256": "f03e4aec6667399618365331319fce35215ba51f19aad660badacc9f24d69a25",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-compare_check_last_quarter-s02-88336e.json",
-      "sha256": "955ac688a8969c04e724c535f90f5357d23dcc183dca57ab890804e02c86f322"
+      "sha256": "7dfadfa0f03cf701b17c0763b96ff21d3f08f364df43cd2647fba4f66ca674c0",
+      "original_sha256": "955ac688a8969c04e724c535f90f5357d23dcc183dca57ab890804e02c86f322",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-compare_check_last_quarter-s02-88336e.trace.jsonl",
-      "sha256": "b7ec9981273ecd765ac912155d8b5c337086838824366dcf342d27a8f9607681"
+      "sha256": "60843ca11f4f30ae1894a0c6e6f952ffeb2d309de821570d563f92a961bcc592",
+      "original_sha256": "b7ec9981273ecd765ac912155d8b5c337086838824366dcf342d27a8f9607681",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-compare_check_last_quarter-s03-df171b.json",
-      "sha256": "14844b1d9a9ed4c9ff4e58402079e4dfb9100ae28ca0085ebe31522c0fedba74"
+      "sha256": "97983cb7f6725d2859462be531ebd9de98453df47f29ae1acd7e66707574fc9a",
+      "original_sha256": "14844b1d9a9ed4c9ff4e58402079e4dfb9100ae28ca0085ebe31522c0fedba74",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-compare_check_last_quarter-s03-df171b.trace.jsonl",
-      "sha256": "2dc03549c6b0bd0fec3d818bed422948a1f0d41b5a7c42725574dc453a70ac48"
+      "sha256": "0c9c509a753e879573ae58b813932c67f50fb80b11327e2e47d1a331d7627709",
+      "original_sha256": "2dc03549c6b0bd0fec3d818bed422948a1f0d41b5a7c42725574dc453a70ac48",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-messy_file_semicolon-s01-9c7c17.json",
-      "sha256": "3ebdf3a98b80a9806fd845253b00659fe6fe262a5941ccaa965892962015477d"
+      "sha256": "09713ba2a7fc67bcb73eb44d39efe0516c76df11cd93a331bf1e1e495936dca4",
+      "original_sha256": "3ebdf3a98b80a9806fd845253b00659fe6fe262a5941ccaa965892962015477d",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-messy_file_semicolon-s01-9c7c17.trace.jsonl",
-      "sha256": "597da4e8147bb0e60d658e90d02404445e06e6cf71c07d8dbe506d7d6e4b8daf"
+      "sha256": "9d45b43475cc9fa8fca796043d3a6f701da43fb7423f25b4477cf354703ce3e2",
+      "original_sha256": "597da4e8147bb0e60d658e90d02404445e06e6cf71c07d8dbe506d7d6e4b8daf",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-messy_file_semicolon-s02-885308.json",
-      "sha256": "e7364922afda9c6e0a83d45e09b3e8ba45ae87d245f49273a35edf7a53ee8b08"
+      "sha256": "9b8fd1cf16c974869f5c87421d7a590cd1852d8b398e75422b29e9de68a47cf6",
+      "original_sha256": "e7364922afda9c6e0a83d45e09b3e8ba45ae87d245f49273a35edf7a53ee8b08",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-messy_file_semicolon-s02-885308.trace.jsonl",
-      "sha256": "a7f622281349b034256d814bebfb15d6c82f7358fbba38b09cb0782c0789eeff"
+      "sha256": "c5c9981db0c3dd072eb701f3a08d30bcad3b140b92016ac4d105e1fedbc59a4d",
+      "original_sha256": "a7f622281349b034256d814bebfb15d6c82f7358fbba38b09cb0782c0789eeff",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-messy_file_semicolon-s03-d706a1.json",
-      "sha256": "3f98f3ce6a8141ac5c474b77ae758fe719e8f9d866f6dbac644175ff4a4d5180"
+      "sha256": "a6e7b2e6a5dc31b23b43c41902a55e4c546e3ef8ab454df6afd62ca9bc87b43e",
+      "original_sha256": "3f98f3ce6a8141ac5c474b77ae758fe719e8f9d866f6dbac644175ff4a4d5180",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-messy_file_semicolon-s03-d706a1.trace.jsonl",
-      "sha256": "60b2a768a2a9f273ae8d0b10dcf3db57e2fed314c6009e83c43ef4842d4490f8"
+      "sha256": "ab839b09e3c12c9aa91478a8909a5a403f0a433d19bb3096cccad74d1c55cbfe",
+      "original_sha256": "60b2a768a2a9f273ae8d0b10dcf3db57e2fed314c6009e83c43ef4842d4490f8",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-out_of_scope_margins-s01-26f496.json",
-      "sha256": "b0864a061dfccd30afefe509c40f577a2d750ad9aa46e0f27549ce121a9f0c32"
+      "sha256": "df035232e3bc5b1411cf69efbc355339e86b000e094e1b18277731a09fe6f942",
+      "original_sha256": "b0864a061dfccd30afefe509c40f577a2d750ad9aa46e0f27549ce121a9f0c32",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-out_of_scope_margins-s01-26f496.trace.jsonl",
-      "sha256": "5aa61a35dd51935df070f550d580dd581b907cab4348cfd96df4680f20a0b685"
+      "sha256": "e52abcc95513604cf95fe11a2c443b474cf6589541c65e56937dd03ed6c65b9c",
+      "original_sha256": "5aa61a35dd51935df070f550d580dd581b907cab4348cfd96df4680f20a0b685",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-out_of_scope_margins-s02-e08653.json",
-      "sha256": "763ee9358c313656c9ff9ea6dc7d6341cd0d335ac7a75b33734df824d57899a0"
+      "sha256": "b354058621cac0bc132760fda902962cf311515a9f89966cdf513c60d24cb9c5",
+      "original_sha256": "763ee9358c313656c9ff9ea6dc7d6341cd0d335ac7a75b33734df824d57899a0",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-out_of_scope_margins-s02-e08653.trace.jsonl",
-      "sha256": "c28af265b4a9ec51ce58286cb431d99909678f50b7232746bad814cc80fb169f"
+      "sha256": "5c89710ed9bd1be790de8ea80627f645841d3313e2c6807473fc8762e90db8d0",
+      "original_sha256": "c28af265b4a9ec51ce58286cb431d99909678f50b7232746bad814cc80fb169f",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-out_of_scope_margins-s03-e26d3f.json",
-      "sha256": "0f1ed8c3a5efba82ac31b32b232fc0ae8f723f35397d92e8063498c193f9c4c5"
+      "sha256": "fc126c5513aec1a5cfb5fab2ac4d8b2ac00bbec047bb3ca2358a892d36dda624",
+      "original_sha256": "0f1ed8c3a5efba82ac31b32b232fc0ae8f723f35397d92e8063498c193f9c4c5",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-out_of_scope_margins-s03-e26d3f.trace.jsonl",
-      "sha256": "964c838772826e78407a31f8161db2058fc8987095cf40a4b19f93ec77b29d89"
+      "sha256": "9f4dcac6838ee439ada777b9bd971fd7aec5ca6087c17aad2b4f8d4e9c2baba5",
+      "original_sha256": "964c838772826e78407a31f8161db2058fc8987095cf40a4b19f93ec77b29d89",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-standard_report_clean-s01-472a40.json",
-      "sha256": "ce72005411c503c8822cae0683b380172815b2e44b81e104be9b8d4c873a50e8"
+      "sha256": "da2d560f4dce01816c222847c52ffd894c53e108b7320940dd958bcb34932eb5",
+      "original_sha256": "ce72005411c503c8822cae0683b380172815b2e44b81e104be9b8d4c873a50e8",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-standard_report_clean-s01-472a40.trace.jsonl",
-      "sha256": "9b16f8af97c2aec985e1f4ac71cd33110510e47b387f95c04318850a3c3d6283"
+      "sha256": "90a4d49e5b5322f9bf50ccb62929a19e3cef4267c1a2191719fff284dc025ee9",
+      "original_sha256": "9b16f8af97c2aec985e1f4ac71cd33110510e47b387f95c04318850a3c3d6283",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-standard_report_clean-s02-e744ad.json",
-      "sha256": "cab7951ead3252140f624c04e2617a3162bb803c1a642628976228764839d5ee"
+      "sha256": "a6e628f68cab314428be855f6779bf0f4ebdd6e93ac0c8e784f5f118cfee92f6",
+      "original_sha256": "cab7951ead3252140f624c04e2617a3162bb803c1a642628976228764839d5ee",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-standard_report_clean-s02-e744ad.trace.jsonl",
-      "sha256": "78575ca0d7e8965dcc5e0d0d57b7b8fe5cdc0618bca7c6dfd99b10d92811739d"
+      "sha256": "63794622713e0075e502ea9a2be5ada61ed7391781af0f6483ebfb4acd55be4a",
+      "original_sha256": "78575ca0d7e8965dcc5e0d0d57b7b8fe5cdc0618bca7c6dfd99b10d92811739d",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-standard_report_clean-s03-64a05f.json",
-      "sha256": "b6ecc8722838f8f5d91de6d815467be8a468bbca31952ae4f2c05a2469a08076"
+      "sha256": "340d58b68e586401766aaf93b6891efecd532d0ab3cdb9e09a3a015d4aca9244",
+      "original_sha256": "b6ecc8722838f8f5d91de6d815467be8a468bbca31952ae4f2c05a2469a08076",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-standard_report_clean-s03-64a05f.trace.jsonl",
-      "sha256": "0e6f86b79c0bd91c8bd945d0a37d7f6e5465d13dc1e0cc52f52bff5f1b1f3fb4"
+      "sha256": "4d88f704432e55c6f9b468317d261553be537b7a97bebb6fe4d088947c312fe4",
+      "original_sha256": "0e6f86b79c0bd91c8bd945d0a37d7f6e5465d13dc1e0cc52f52bff5f1b1f3fb4",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-status_question_done_work-s01-653aff.json",
-      "sha256": "b134cfbaefacf0cc8b8868ce9541bcaf705792a9aefa550d781da55ca979698a"
+      "sha256": "10d8e665f145f5b4bbbfd89c8a75f9fd2bb7282bb06c49ecefb70b6ab9d718b6",
+      "original_sha256": "b134cfbaefacf0cc8b8868ce9541bcaf705792a9aefa550d781da55ca979698a",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-status_question_done_work-s01-653aff.trace.jsonl",
-      "sha256": "71a3a5d8c5f4d5af98266c70b636fda1c42f472003085c41505a30446aca2fae"
+      "sha256": "45ece6d5d5596bc4a5387f5487946ec8ac5afbc34a395920d649670eedd26b08",
+      "original_sha256": "71a3a5d8c5f4d5af98266c70b636fda1c42f472003085c41505a30446aca2fae",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-status_question_done_work-s02-1800ff.json",
-      "sha256": "76656be49db28dee5e85ed7e12f8ede5f61e0792b368eaa3545ca5e8e31980fa"
+      "sha256": "1b878460a011064b69ddd2d4f0598c39b02adff5dc6d408dbc0efe5fa9c83fc5",
+      "original_sha256": "76656be49db28dee5e85ed7e12f8ede5f61e0792b368eaa3545ca5e8e31980fa",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-status_question_done_work-s02-1800ff.trace.jsonl",
-      "sha256": "4eecfbe8286cb92329b71776f356d4381e5e3fad13e9ef4a41bd019052a7a609"
+      "sha256": "72957021893bb459af899ff076e343114f20d47017036ca039bb336fd64c50bb",
+      "original_sha256": "4eecfbe8286cb92329b71776f356d4381e5e3fad13e9ef4a41bd019052a7a609",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-status_question_done_work-s03-1e028a.json",
-      "sha256": "ebfb457777cd01a5abb1d5bff3f92a82bb44983209251d058e0de2035688155e"
+      "sha256": "24594ea41d231bf9cf6887b936e5774f453d15b212893614459947cdd5ffad20",
+      "original_sha256": "ebfb457777cd01a5abb1d5bff3f92a82bb44983209251d058e0de2035688155e",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-off/pass1-examples-off-status_question_done_work-s03-1e028a.trace.jsonl",
-      "sha256": "65eacc268fbe69b0a2846b95136ed418424d9d302d1bda73686faa19516d7355"
+      "sha256": "fbaa585776fa58fe5343bd9f3f8aa5b97fc5ca44b0f877860dfd0e5ec1d1393a",
+      "original_sha256": "65eacc268fbe69b0a2846b95136ed418424d9d302d1bda73686faa19516d7355",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s01-e6bbc7.json",
-      "sha256": "eb462613f06878095cf13edcf06c9cde559957fb5e2daf59ddece751345ea6df"
+      "sha256": "0ea5cc784484e31a9432fd9f990babeebcf814d4da4643ded4051bf5efb8c982",
+      "original_sha256": "eb462613f06878095cf13edcf06c9cde559957fb5e2daf59ddece751345ea6df",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s01-e6bbc7.trace.jsonl",
-      "sha256": "036ce61c3677840cf45f43a3628f4a5dc0b05d28a7439e833ee973c920d5f774"
+      "sha256": "975426f0176c8e840d4d2b74f29e571b1eb60886008e0c77e142e1dc68407b05",
+      "original_sha256": "036ce61c3677840cf45f43a3628f4a5dc0b05d28a7439e833ee973c920d5f774",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s02-32f1cf.json",
-      "sha256": "33ad33b54fa8dd7996dd3ccc7b8e209b0ccee4b2403acec2784c05fa1b862d1a"
+      "sha256": "e60a1e2a089d3553d4a9b66402fc773f2c4565346946448b7e3aebca3bb3a0d0",
+      "original_sha256": "33ad33b54fa8dd7996dd3ccc7b8e209b0ccee4b2403acec2784c05fa1b862d1a",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s02-32f1cf.trace.jsonl",
-      "sha256": "bbc3a98bde71573d7bce353c9b33c7d3586b3f1660aba411935b529fb6d1b078"
+      "sha256": "0a708291328d10b6aa169cc178ac978178fa81510ee263cc55a2b92ce54ea348",
+      "original_sha256": "bbc3a98bde71573d7bce353c9b33c7d3586b3f1660aba411935b529fb6d1b078",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s03-5ed0c7.json",
-      "sha256": "00060dd5ee867920d53e85e2b51118341f2e5f52f8e6c1cc8eaab44123fa65ac"
+      "sha256": "70274b701e819be1c88ab457bf73063df090afda5017f0b467467cc7c75b4513",
+      "original_sha256": "00060dd5ee867920d53e85e2b51118341f2e5f52f8e6c1cc8eaab44123fa65ac",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s03-5ed0c7.trace.jsonl",
-      "sha256": "4ef85c1efda20a5e9394c4092cfd16950c454b4a0ea030706d08ac450b8437f2"
+      "sha256": "d8d6ef4be0cac39702ca87c5296a8261fe67c155eecb558351fa96d4c75bdaad",
+      "original_sha256": "4ef85c1efda20a5e9394c4092cfd16950c454b4a0ea030706d08ac450b8437f2",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s01-0e1be2.json",
-      "sha256": "a09e28dc56cbc314aeb67569e957a6a9be3c2a68dc489dc3fc90aa8cb0ee9cb5"
+      "sha256": "11d8ad9ea303b09d2258ab4cc1f0c3c926ee438fd56b830ebdfced69c5cfa030",
+      "original_sha256": "a09e28dc56cbc314aeb67569e957a6a9be3c2a68dc489dc3fc90aa8cb0ee9cb5",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s01-0e1be2.trace.jsonl",
-      "sha256": "5934e82e5bc84da41dfacf448880e8264be37c596b65b384738e1792d3e31621"
+      "sha256": "b68fd740f4e027f6ce7953497e5960e217c006336ebcc598fd2a46143f7b700f",
+      "original_sha256": "5934e82e5bc84da41dfacf448880e8264be37c596b65b384738e1792d3e31621",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s02-712c70.json",
-      "sha256": "8594326238ac894e724c24d27a12a75c3508e2822027be10671de3b4fa1a1119"
+      "sha256": "9856b95d33467159eb606f74c0cb19d7a92b5eb26eace35a0f6055e4e15212cd",
+      "original_sha256": "8594326238ac894e724c24d27a12a75c3508e2822027be10671de3b4fa1a1119",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s02-712c70.trace.jsonl",
-      "sha256": "4fb1a07d4bf3aa9ebbd791f3918bdef8af58730cf01f86c692e6e49eaef02880"
+      "sha256": "a33815d91b7a05c994c848641986e2186e2387f47eb7f7ee3ab3cfef3f8b3401",
+      "original_sha256": "4fb1a07d4bf3aa9ebbd791f3918bdef8af58730cf01f86c692e6e49eaef02880",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s03-83ec59.json",
-      "sha256": "8f672c8228a0ab6a752f157b372cbf3cedf24fb8a7e24ff3b3240c177ab1070a"
+      "sha256": "c3ea921fdd3c0f26d3ac22b527d2e0117efc1e861bb063b342554fd7a55d9c58",
+      "original_sha256": "8f672c8228a0ab6a752f157b372cbf3cedf24fb8a7e24ff3b3240c177ab1070a",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s03-83ec59.trace.jsonl",
-      "sha256": "c2d2ccc3e8e803dc3bd31ca0b5af2da800bde63604a226b3186aba48f153a289"
+      "sha256": "e41d8e9a69394a4ffb9157439d333152465b66eca20e2dbd72f3b6b6f2b69154",
+      "original_sha256": "c2d2ccc3e8e803dc3bd31ca0b5af2da800bde63604a226b3186aba48f153a289",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-messy_file_semicolon-s01-75daf4.json",
-      "sha256": "4403d9ddfb330068eac2818c1fea13dc9916649f7c858b580a4e366b08a7e39c"
+      "sha256": "72c5a712f3e673dabba710f0b9151352f8aa559994a3c6ebf3010e5c901750d0",
+      "original_sha256": "4403d9ddfb330068eac2818c1fea13dc9916649f7c858b580a4e366b08a7e39c",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-messy_file_semicolon-s01-75daf4.trace.jsonl",
-      "sha256": "1bdca336d26dbf8035e6d2757d936a1b157a96fc73f6f02a4a020ad0cca8ccaa"
+      "sha256": "0e629d1f86253e2f6ea968056cc4c55410a05324bceae6b65fd99508bcba21ee",
+      "original_sha256": "1bdca336d26dbf8035e6d2757d936a1b157a96fc73f6f02a4a020ad0cca8ccaa",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-messy_file_semicolon-s02-5af5e8.json",
-      "sha256": "68e0d186b79d63f45f01327e62807d08d54fae60093da324f26e426a44bd7934"
+      "sha256": "b9514d394afddbc1ff1c3efe739399805ea5b3633910546f2647ee3d05787ae2",
+      "original_sha256": "68e0d186b79d63f45f01327e62807d08d54fae60093da324f26e426a44bd7934",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-messy_file_semicolon-s02-5af5e8.trace.jsonl",
-      "sha256": "e33e9cd9d2a96f8cb8b7f98b6557d67ce17d76c69a7143ee6c83cf71b8d68a5a"
+      "sha256": "8d3086c13ac1f688254bb068729d6a1ada67d8003e6bcff006f4c68a8cdc445d",
+      "original_sha256": "e33e9cd9d2a96f8cb8b7f98b6557d67ce17d76c69a7143ee6c83cf71b8d68a5a",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-messy_file_semicolon-s03-fb81b7.json",
-      "sha256": "db3a551ba98c65cb8d760e06925c3eb64aa1e79a4253e0e21db512b5a1bca1dd"
+      "sha256": "1e0f4b8e4b80d11468fb621adb6def88f3c5456529428d3e1ef6a8e46de1522f",
+      "original_sha256": "db3a551ba98c65cb8d760e06925c3eb64aa1e79a4253e0e21db512b5a1bca1dd",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-messy_file_semicolon-s03-fb81b7.trace.jsonl",
-      "sha256": "680573bd8063898baf4c704e1e8ebfbc14b03771e84a14092148003704403325"
+      "sha256": "7e55be083de17058476a7726038442947f6a733379735efba752366f7b8d659c",
+      "original_sha256": "680573bd8063898baf4c704e1e8ebfbc14b03771e84a14092148003704403325",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-out_of_scope_margins-s01-97f8d6.json",
-      "sha256": "7b9a1d19edef2b1063f3b4960ed270db0e4d5743894969762c091d23b68ed815"
+      "sha256": "ff0d83c909dd1520da6041647ba04566dcf477b0a6fe8b3f24d38e59dcbfa1d3",
+      "original_sha256": "7b9a1d19edef2b1063f3b4960ed270db0e4d5743894969762c091d23b68ed815",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-out_of_scope_margins-s01-97f8d6.trace.jsonl",
-      "sha256": "eb2d1e7f64948c9bc35ba2b57b7cae1ad5ddcfa4b0ea5818966a4e91fe7f107a"
+      "sha256": "ffc93cf382365043f6726874f5de81624d1c74ca4c55f690c2d62335feaae0f5",
+      "original_sha256": "eb2d1e7f64948c9bc35ba2b57b7cae1ad5ddcfa4b0ea5818966a4e91fe7f107a",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-out_of_scope_margins-s02-800405.json",
-      "sha256": "4b30c42d6a37249d551c7ae073391846bcf55bbae0d2f5941e3ede984e1c8b0e"
+      "sha256": "51f5075ee6284e35e0f0413a523800a9696aeb4486e43b33c7e4f717ece797cf",
+      "original_sha256": "4b30c42d6a37249d551c7ae073391846bcf55bbae0d2f5941e3ede984e1c8b0e",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-out_of_scope_margins-s02-800405.trace.jsonl",
-      "sha256": "80bebe03246bdae61beffcc2d2a7aafac2aa897cda4db290776b1ea4ebf67349"
+      "sha256": "ce84749f6d897bbc79a9d356f132fa1ef9e26114e487a2d0fc1a984b762ae784",
+      "original_sha256": "80bebe03246bdae61beffcc2d2a7aafac2aa897cda4db290776b1ea4ebf67349",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-out_of_scope_margins-s03-e2644c.json",
-      "sha256": "27e012df6fc17a466b9dd52cd8ac1dd1e94153f83547d6818272b1602e946786"
+      "sha256": "29f8fc5aa204eb2a01e544edcdeb5a90824ebb634f045c69119545de30f22d14",
+      "original_sha256": "27e012df6fc17a466b9dd52cd8ac1dd1e94153f83547d6818272b1602e946786",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-out_of_scope_margins-s03-e2644c.trace.jsonl",
-      "sha256": "2cdaae3df545044bce17bde250c21df6e7b8f4957f3823229474720b519aded8"
+      "sha256": "f2913c8c6d69992d349a9fcf3041d4ef7606be69214e180ac2e37971e29b7c9e",
+      "original_sha256": "2cdaae3df545044bce17bde250c21df6e7b8f4957f3823229474720b519aded8",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-standard_report_clean-s01-883e22.json",
-      "sha256": "1c2dae7da62b59ea50ac0694666d1fe33fbebdbcbbe6df67b8d9ee0072f23325"
+      "sha256": "6cad3d2f01fb0c3bdcce71a5f8f5711ef92a035c3b1315f816976570a86b044d",
+      "original_sha256": "1c2dae7da62b59ea50ac0694666d1fe33fbebdbcbbe6df67b8d9ee0072f23325",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-standard_report_clean-s01-883e22.trace.jsonl",
-      "sha256": "20e4cffeb6b7e412d68929029d793edca892d99fb6af6c65f9cc0e8a101b5fca"
+      "sha256": "7b515962d9828e8dd2f2430af45d5a1aee8bf8d75212c46675d9c9773713ac46",
+      "original_sha256": "20e4cffeb6b7e412d68929029d793edca892d99fb6af6c65f9cc0e8a101b5fca",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-standard_report_clean-s02-573a18.json",
-      "sha256": "f52c595360dd99dfd552867143e1414aa040d2874a1cea592475ea078ff35a7e"
+      "sha256": "f1b2326309c905d11ef9d693e77e25d6f07b580b21b9fd279d76bd4810e7b453",
+      "original_sha256": "f52c595360dd99dfd552867143e1414aa040d2874a1cea592475ea078ff35a7e",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-standard_report_clean-s02-573a18.trace.jsonl",
-      "sha256": "aa29b4257228691798b4f72f38a1e95b5a18a4ee2c48966267998b31d826e26c"
+      "sha256": "53a07930c89d641afcf7213c0d1e23dbf8a264e334bee42a1820fde1400ee299",
+      "original_sha256": "aa29b4257228691798b4f72f38a1e95b5a18a4ee2c48966267998b31d826e26c",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-standard_report_clean-s03-1c66ab.json",
-      "sha256": "e880b734e87617f0c029c3ab357abbc6e3d002685e91f0003f07ca8ae00571e4"
+      "sha256": "af047022364db259b14d189fb918c04d05c89e6fba033a02417c3e95907cfcf6",
+      "original_sha256": "e880b734e87617f0c029c3ab357abbc6e3d002685e91f0003f07ca8ae00571e4",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-standard_report_clean-s03-1c66ab.trace.jsonl",
-      "sha256": "bf78e708dce76cf186d44f45b588a4d4f14d3178b1d4a32b42af9f10243e70b5"
+      "sha256": "60cff48bf2ab786464c616e768a65ff3f7ee66b37d313a5e07169ddf503a721a",
+      "original_sha256": "bf78e708dce76cf186d44f45b588a4d4f14d3178b1d4a32b42af9f10243e70b5",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-status_question_done_work-s01-a1f22c.json",
-      "sha256": "06fc49571ceb1cb0a3fbc43a71aaddd459e2686621c32fc12d526da6434accb2"
+      "sha256": "d6f4b7f2ff0c44a2a7ec19f18b7521ff4c5bb1278c4aac035772ff6a09c9de91",
+      "original_sha256": "06fc49571ceb1cb0a3fbc43a71aaddd459e2686621c32fc12d526da6434accb2",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-status_question_done_work-s01-a1f22c.trace.jsonl",
-      "sha256": "be004617b5fb8f200995cc35bce513f4783bea5908b2bc248dd431afb96392ae"
+      "sha256": "d9dd3753533168e397fb218e1adaf4cfc608af8bd30c3f3bf6f9bdbaf66954c8",
+      "original_sha256": "be004617b5fb8f200995cc35bce513f4783bea5908b2bc248dd431afb96392ae",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-status_question_done_work-s02-98f033.json",
-      "sha256": "87059ffeb077a0e135a7f31508d946e5b4bb04a4d45701ee8ff6bc6f8371a9b2"
+      "sha256": "7ce997b31c6ff585006daef6d9b5525f232edf472d84a7033b25c06c86895e55",
+      "original_sha256": "87059ffeb077a0e135a7f31508d946e5b4bb04a4d45701ee8ff6bc6f8371a9b2",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-status_question_done_work-s02-98f033.trace.jsonl",
-      "sha256": "f03a585b4d99b98243d322caf38a85a34f767917b89eb2f302463aed59661ce0"
+      "sha256": "51b0d01e59c1937e67628f6b9930a92ae405e4c689b33300853a725216d9c2a1",
+      "original_sha256": "f03a585b4d99b98243d322caf38a85a34f767917b89eb2f302463aed59661ce0",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-status_question_done_work-s03-ffeb96.json",
-      "sha256": "3d8ff9509519242eaf2c6bbe346f6d0c5dbdcbdcc3ee416946b59e6dd43de08d"
+      "sha256": "118f2dc21a36fda45d4423e3777ac8fced57d8c87fac6393ca2b0d9cc91936b7",
+      "original_sha256": "3d8ff9509519242eaf2c6bbe346f6d0c5dbdcbdcc3ee416946b59e6dd43de08d",
+      "original_line_endings": "CRLF"
     },
     {
       "path": "results/pass1-examples-on/pass1-examples-on-status_question_done_work-s03-ffeb96.trace.jsonl",
-      "sha256": "410b4318d7723fc3db3f5c7cd7852453851b99124f1e307e9846a71e5cd9bb44"
+      "sha256": "fe7b511361ced2cfafd82d4753a4a019451036fcb6e6f061293fe6c700da008e",
+      "original_sha256": "410b4318d7723fc3db3f5c7cd7852453851b99124f1e307e9846a71e5cd9bb44",
+      "original_line_endings": "CRLF"
     }
   ]
 }

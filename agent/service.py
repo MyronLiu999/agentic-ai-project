@@ -50,7 +50,8 @@ def operator_turn(session_id: str, text: str) -> Reply:
             else:
                 raise ValueError(f"No workflow for {route.use_case!r}")
         elif route.path == "agent":
-            result = loop.run(session_id, request_id, text)
+            result = loop.run(session_id, request_id, text,
+                              comparison_required=route.use_case == "compare_check")
             reply = _agent_reply(request_id, result)
         else:
             raise ValueError(f"Unknown execution path: {route.path!r}")

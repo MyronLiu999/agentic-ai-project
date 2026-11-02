@@ -45,7 +45,7 @@ class MessyFileCheckTest(ScratchTest):
 
     def test_dev_task_check_runs_too(self):
         self.assertTrue(self.run_check(DEV, lambda run: report_and_email(
-            run, run.task["input"], body_extra="The file holds 157 units."))["passed"])
+            run, run.task["input"], extra={"file_total_units": 157}, body_extra="The file holds 157 units."))["passed"])
 
 
 class CompareCheckTest(ScratchTest):
