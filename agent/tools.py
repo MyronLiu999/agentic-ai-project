@@ -377,7 +377,7 @@ def build(request_id: str | None = None) -> Registry:
             callers=(MODEL, CODE), credential="write one request's local artifacts", writes=True,
             result_bound=f"one SVG, {CHART_BAR_CAP} bars", model_visible={"strict": _switch("strict.render_chart") == "on"},
             validate_args=lambda args: _chart_problems(args) + _text_problems(args),
-            key_fields=("title",),
+            key_fields=("labels", "values"),
             retryable=_local_retryable,
             result_schema=_object_schema({
                 "request_id": {"type": "string"}, "chart_id": {"type": "integer"},

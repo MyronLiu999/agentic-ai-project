@@ -1,0 +1,681 @@
+{
+  "definitions": {
+    "malformed_calls": "Count each recorded tool_call whose input violates the frozen historical input schema (JSON object/type/required/enum/extra-property rules, string pattern, maxItems or numeric minimum). Count attempted calls, not plan graph validation or business errors. Per-run counts sum to the arm total.",
+    "boundary_rejections": "Count recorded tool_call errors with structured protocol kind (or legacy structured metadata), including loop guards. No classification uses error prose.",
+    "semantic_wrong_arguments": "Reviewed inventory of wrong recipient plan steps and failed revisions, missing named report figures, incorrect named revenue figures/differences, and invalid report references. Each distinct argument candidate is one unit; several wrong fields in that candidate still count once. Count all model-produced plan steps including rejected/never-executed steps, revisions, and tool attempts separately by stage. Critique-approved copies are excluded. Arm totals are inventory counts, not a comprehensive narrative correctness score; narrative assertions and decoding-option choices are outside this inventory.",
+    "semantic_wrong_argument_runs": "Distinct runs containing at least one annotated candidate; historical passes/check scores are preserved even when the inventory identifies an additional semantic defect.",
+    "initial_task_false_finish": "Run check failed and the initial operator turn ended done, read from physical end events before the next operator turn. Historical endpoint false_finishes remains a separate metric.",
+    "proposal_rejections": "Plan events with accepted:false; terminal plan_rejected and replan_bound are counted separately.",
+    "hashes": "SHA-256 after replacing CRLF with LF only, without JSON reserialization; original LF or CRLF byte hashes are verified and retained as provenance."
+  },
+  "hash_policy": "sha256 of bytes after CRLF-to-LF normalization only; preserve all other bytes",
+  "argument_quality": {
+    "baseline": {
+      "runs": 18,
+      "malformed_calls": 0,
+      "malformed_call_runs": 0,
+      "boundary_rejections": 0,
+      "semantic_wrong_argument_candidates": 14,
+      "semantic_wrong_argument_runs": 7,
+      "semantic_categories": {
+        "incomplete_report_figures": 1,
+        "incorrect_report_figures": 3,
+        "wrong_recipient": 10
+      },
+      "semantic_stages": {
+        "plan": 10,
+        "tool_call": 4
+      },
+      "per_run": [
+        {
+          "run_id": "baseline-batch_reports_two-s01-b7256b",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 2,
+          "semantic_categories": {
+            "wrong_recipient": 2
+          },
+          "semantic_stages": {
+            "plan": 2
+          }
+        },
+        {
+          "run_id": "baseline-compare_check_last_quarter-s01-2a59dd",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 1,
+          "semantic_categories": {
+            "incorrect_report_figures": 1
+          },
+          "semantic_stages": {
+            "tool_call": 1
+          }
+        },
+        {
+          "run_id": "baseline-messy_file_semicolon-s01-1799cc",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 1,
+          "semantic_categories": {
+            "incomplete_report_figures": 1
+          },
+          "semantic_stages": {
+            "tool_call": 1
+          }
+        },
+        {
+          "run_id": "baseline-out_of_scope_margins-s01-5a190f",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "baseline-standard_report_clean-s01-a33d9a",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "baseline-status_question_done_work-s01-af8c22",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "baseline-batch_reports_two-s02-afc9fd",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 4,
+          "semantic_categories": {
+            "wrong_recipient": 4
+          },
+          "semantic_stages": {
+            "plan": 4
+          }
+        },
+        {
+          "run_id": "baseline-compare_check_last_quarter-s02-5b316c",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 1,
+          "semantic_categories": {
+            "incorrect_report_figures": 1
+          },
+          "semantic_stages": {
+            "tool_call": 1
+          }
+        },
+        {
+          "run_id": "baseline-messy_file_semicolon-s02-3aaee1",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "baseline-out_of_scope_margins-s02-6c9ac1",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "baseline-standard_report_clean-s02-071141",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "baseline-status_question_done_work-s02-a1cd8f",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "baseline-batch_reports_two-s03-d8c842",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 4,
+          "semantic_categories": {
+            "wrong_recipient": 4
+          },
+          "semantic_stages": {
+            "plan": 4
+          }
+        },
+        {
+          "run_id": "baseline-compare_check_last_quarter-s03-05dd3e",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 1,
+          "semantic_categories": {
+            "incorrect_report_figures": 1
+          },
+          "semantic_stages": {
+            "tool_call": 1
+          }
+        },
+        {
+          "run_id": "baseline-messy_file_semicolon-s03-3a0d53",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "baseline-out_of_scope_margins-s03-8c0d46",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "baseline-standard_report_clean-s03-cbec72",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "baseline-status_question_done_work-s03-f5eabd",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        }
+      ]
+    },
+    "pass1-examples-off": {
+      "runs": 18,
+      "malformed_calls": 0,
+      "malformed_call_runs": 0,
+      "boundary_rejections": 0,
+      "semantic_wrong_argument_candidates": 17,
+      "semantic_wrong_argument_runs": 6,
+      "semantic_categories": {
+        "incorrect_report_figures": 3,
+        "wrong_recipient": 14
+      },
+      "semantic_stages": {
+        "model_call": 2,
+        "plan": 12,
+        "tool_call": 3
+      },
+      "per_run": [
+        {
+          "run_id": "pass1-examples-off-batch_reports_two-s01-b4d71f",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 5,
+          "semantic_categories": {
+            "wrong_recipient": 5
+          },
+          "semantic_stages": {
+            "model_call": 1,
+            "plan": 4
+          }
+        },
+        {
+          "run_id": "pass1-examples-off-compare_check_last_quarter-s01-8c0d0a",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 1,
+          "semantic_categories": {
+            "incorrect_report_figures": 1
+          },
+          "semantic_stages": {
+            "tool_call": 1
+          }
+        },
+        {
+          "run_id": "pass1-examples-off-messy_file_semicolon-s01-9c7c17",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-off-out_of_scope_margins-s01-26f496",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-off-standard_report_clean-s01-472a40",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-off-status_question_done_work-s01-653aff",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-off-batch_reports_two-s02-b6501f",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 5,
+          "semantic_categories": {
+            "wrong_recipient": 5
+          },
+          "semantic_stages": {
+            "model_call": 1,
+            "plan": 4
+          }
+        },
+        {
+          "run_id": "pass1-examples-off-compare_check_last_quarter-s02-88336e",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 1,
+          "semantic_categories": {
+            "incorrect_report_figures": 1
+          },
+          "semantic_stages": {
+            "tool_call": 1
+          }
+        },
+        {
+          "run_id": "pass1-examples-off-messy_file_semicolon-s02-885308",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-off-out_of_scope_margins-s02-e08653",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-off-standard_report_clean-s02-e744ad",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-off-status_question_done_work-s02-1800ff",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-off-batch_reports_two-s03-e6fb94",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 4,
+          "semantic_categories": {
+            "wrong_recipient": 4
+          },
+          "semantic_stages": {
+            "plan": 4
+          }
+        },
+        {
+          "run_id": "pass1-examples-off-compare_check_last_quarter-s03-df171b",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 1,
+          "semantic_categories": {
+            "incorrect_report_figures": 1
+          },
+          "semantic_stages": {
+            "tool_call": 1
+          }
+        },
+        {
+          "run_id": "pass1-examples-off-messy_file_semicolon-s03-d706a1",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-off-out_of_scope_margins-s03-e26d3f",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-off-standard_report_clean-s03-64a05f",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-off-status_question_done_work-s03-1e028a",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        }
+      ]
+    },
+    "pass1-examples-on": {
+      "runs": 18,
+      "malformed_calls": 0,
+      "malformed_call_runs": 0,
+      "boundary_rejections": 1,
+      "semantic_wrong_argument_candidates": 15,
+      "semantic_wrong_argument_runs": 6,
+      "semantic_categories": {
+        "incomplete_report_figures": 3,
+        "invalid_report_reference": 1,
+        "wrong_recipient": 11
+      },
+      "semantic_stages": {
+        "model_call": 3,
+        "plan": 8,
+        "tool_call": 4
+      },
+      "per_run": [
+        {
+          "run_id": "pass1-examples-on-batch_reports_two-s01-e6bbc7",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 3,
+          "semantic_categories": {
+            "wrong_recipient": 3
+          },
+          "semantic_stages": {
+            "model_call": 1,
+            "plan": 2
+          }
+        },
+        {
+          "run_id": "pass1-examples-on-compare_check_last_quarter-s01-0e1be2",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 1,
+          "semantic_categories": {
+            "incomplete_report_figures": 1
+          },
+          "semantic_stages": {
+            "tool_call": 1
+          }
+        },
+        {
+          "run_id": "pass1-examples-on-messy_file_semicolon-s01-75daf4",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-on-out_of_scope_margins-s01-97f8d6",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-on-standard_report_clean-s01-883e22",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-on-status_question_done_work-s01-a1f22c",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-on-batch_reports_two-s02-32f1cf",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 5,
+          "semantic_categories": {
+            "wrong_recipient": 5
+          },
+          "semantic_stages": {
+            "model_call": 1,
+            "plan": 4
+          }
+        },
+        {
+          "run_id": "pass1-examples-on-compare_check_last_quarter-s02-712c70",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 1,
+          "semantic_wrong_argument_candidates": 2,
+          "semantic_categories": {
+            "incomplete_report_figures": 1,
+            "invalid_report_reference": 1
+          },
+          "semantic_stages": {
+            "tool_call": 2
+          }
+        },
+        {
+          "run_id": "pass1-examples-on-messy_file_semicolon-s02-5af5e8",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-on-out_of_scope_margins-s02-800405",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-on-standard_report_clean-s02-573a18",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-on-status_question_done_work-s02-98f033",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-on-batch_reports_two-s03-5ed0c7",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 3,
+          "semantic_categories": {
+            "wrong_recipient": 3
+          },
+          "semantic_stages": {
+            "model_call": 1,
+            "plan": 2
+          }
+        },
+        {
+          "run_id": "pass1-examples-on-compare_check_last_quarter-s03-83ec59",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 1,
+          "semantic_categories": {
+            "incomplete_report_figures": 1
+          },
+          "semantic_stages": {
+            "tool_call": 1
+          }
+        },
+        {
+          "run_id": "pass1-examples-on-messy_file_semicolon-s03-fb81b7",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-on-out_of_scope_margins-s03-e2644c",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-on-standard_report_clean-s03-1c66ab",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        },
+        {
+          "run_id": "pass1-examples-on-status_question_done_work-s03-ffeb96",
+          "malformed_calls": 0,
+          "malformed_call_details": [],
+          "boundary_rejections": 0,
+          "semantic_wrong_argument_candidates": 0,
+          "semantic_categories": {},
+          "semantic_stages": {}
+        }
+      ]
+    }
+  },
+  "target": {
+    "pass1-examples-off": {
+      "task": "messy_file_semicolon",
+      "runs": 3,
+      "passes": 3,
+      "mean_tokens": 8089.666666666667,
+      "mean_cost_usd": 0.000978
+    },
+    "pass1-examples-on": {
+      "task": "messy_file_semicolon",
+      "runs": 3,
+      "passes": 3,
+      "mean_tokens": 9847.333333333334,
+      "mean_cost_usd": 0.0011066666666666666
+    }
+  },
+  "differences_on_minus_off": {
+    "overall_passes": -1,
+    "overall_pass_percentage_points": -5.555555555555558,
+    "mean_tokens": {
+      "absolute": -78.61111111111131,
+      "percent": -2.1429653187944875
+    },
+    "mean_cost_usd": {
+      "absolute": -4.977777777777782e-05,
+      "percent": -8.925191752166562
+    },
+    "target_passes": 0,
+    "target_mean_tokens": {
+      "absolute": 1757.666666666667,
+      "percent": 21.7273064403148
+    },
+    "target_mean_cost_usd": {
+      "absolute": 0.00012866666666666669,
+      "percent": 13.156100886162235
+    },
+    "initial_task_false_finishes": 1,
+    "critique_misses": 1,
+    "proposal_rejections": -2,
+    "boundary_rejections": 1
+  }
+}

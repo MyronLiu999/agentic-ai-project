@@ -88,11 +88,14 @@
         "pass1-examples-off-compare_check_last_quarter-s01-8c0d0a",
         "pass1-examples-off-batch_reports_two-s02-b6501f"
       ],
+      "initial_task_false_finishes": 0,
+      "initial_task_false_finish_runs": [],
       "plan": {
         "diff_executed": 18,
         "diff_skipped": 12,
         "plans": 3,
         "revisions": 5,
+        "proposal_rejections": 3,
         "plan_rejected": 0,
         "replan_bound": 0,
         "off_plan_refused": 0,
@@ -495,11 +498,16 @@
         "pass1-examples-on-batch_reports_two-s03-5ed0c7",
         "pass1-examples-on-compare_check_last_quarter-s03-83ec59"
       ],
+      "initial_task_false_finishes": 1,
+      "initial_task_false_finish_runs": [
+        "pass1-examples-on-compare_check_last_quarter-s03-83ec59"
+      ],
       "plan": {
         "diff_executed": 12,
         "diff_skipped": 18,
         "plans": 3,
         "revisions": 1,
+        "proposal_rejections": 1,
         "plan_rejected": 0,
         "replan_bound": 0,
         "off_plan_refused": 0,

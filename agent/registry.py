@@ -220,7 +220,7 @@ class Registry:
         raise AssertionError("bounded retry loop exited unexpectedly")
 
     def _write_key(self, spec: ToolSpec, args: dict, step: str | None) -> str:
-        identity = {field: _nested_value(args, field) for field in spec.key_fields}
+        identity = {field: _canonical_identity(_nested_value(args, field)) for field in spec.key_fields}
         payload = {
             "v": 1,
             "scope": _scope_id(),
@@ -316,6 +316,17 @@ def _nested_value(value: dict, dotted: str):
             return None
         current = current.get(part)
     return current
+
+
+def _canonical_identity(value):
+    """Equivalent JSON numbers name the same effect, including within chart series."""
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    if isinstance(value, list):
+        return [_canonical_identity(child) for child in value]
+    if isinstance(value, dict):
+        return {key: _canonical_identity(child) for key, child in value.items()}
+    return value
 
 
 def _scope_id() -> str:

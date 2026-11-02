@@ -4,7 +4,8 @@ database. A report saved by this run with the database's revenue and the file's 
 
 from __future__ import annotations
 
-from checks.common import figures_hold, report_email_problems, run_reports
+from checks.common import report_figures, report_email_problems, run_reports
+from sandbox.report_validation import named_number_problems
 
 
 def check(run):
@@ -12,7 +13,7 @@ def check(run):
     problems, counts = report_email_problems(run, item)
     units = run.task["expect"]["file_total_units"]
     saved = run_reports(run, item["thread"])
-    decoded = bool(saved) and figures_hold(saved[-1], units, tolerance=0.5)
+    decoded = bool(saved) and not named_number_problems(report_figures(saved[-1]), "file_total_units", units)
     counts["file_units_reported"] = int(decoded)
     if saved and not decoded:
         problems.append(f"the report does not carry the file's {units} units: the file was not decoded")

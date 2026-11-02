@@ -268,11 +268,14 @@ class AgentPlanExecutionTest(ScratchTest):
         with fixed_run(TASK, "planned-revision", backend=MODEL):
             raw = sample_plan()
             raw["steps"][-1]["args"]["recipient"] = "wrong@example.test"
-            model = self.script(raw, {"recipient": "contact@brightline.example", "subject": "Revised", "body": "Checked"})
-            with mock.patch("agent.loop.critique.run", side_effect=revise_recipient):
+            model = self.script(raw, {"recipient": "still-wrong@example.test", "subject": "Revised", "body": "Checked"})
+            def revise_body(request_id, draft, revise, rounds):
+                return critique.CritiqueResult(True, revise("Correct the email body."), 2, "Checked")
+            with mock.patch("agent.loop.critique.run", side_effect=revise_body):
                 self.run_plan()
             self.assertEqual(self.reason(), "done")
             self.assertEqual(pending.all_pending()[0]["recipient"], "contact@brightline.example")
+            self.assertEqual(pending.all_pending()[0]["body"], "Checked")
             self.assertEqual(len(model.requests), 2)
             lines = runtime.trace().lines()
             amended = next(i for i, e in enumerate(lines) if e["type"] == "plan" and e.get("approved_by") == "critique")

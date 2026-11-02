@@ -2,6 +2,28 @@
 
 ## Milestone 1
 
+**Post-measurement audit fixes (2026-11-01, items 1–6):** report checks and the
+email critic now require finite named revenue/file/comparison figures, validate
+explicit revenue assertions against their periods, and preserve the operator's
+comparison requirement. Discarded or sent drafts cannot satisfy a pending-effect
+check. Planned recipients are bound to each request's trusted contact before
+execution and remain bound through email revisions. Reactive chart identity uses
+labels and numeric values, so changed data produces a new chart and a changed
+title alone does not duplicate it. Operator sends atomically claim a draft before
+delivery; ambiguous failures remain inspectable, and old sends cannot close newer
+work. Regression tests cover these failures and valid end-to-end flows.
+
+Failure analysis resolves Windows paths and relocated checkouts. The new
+`python -m experiments.analysis.recompute` command regenerates six derived evidence
+artifacts; `--check` verifies their source integrity and freshness without writing.
+It separates rejected proposals from terminal rejection, initial-task false finishes
+from later status endings, and malformed schemas from trace-annotated semantic
+argument errors; it also computes target-only metrics and arm differences. Hashes
+normalize CRLF to LF while retaining the original hashes and line-ending provenance.
+These are ordinary fixes after measurement: raw runs/traces, historical scores,
+the prospective prediction and the negative Pass 1 retention verdict are unchanged.
+No new live-model performance measurement is claimed.
+
 **Myron — live development corrections (2026-10-31, before baseline):** the first
 real sweep passed 3/6 tasks. Batch proposals repeatedly omitted write outcomes;
 the planner now explicitly requires expect on every step and includes a complete

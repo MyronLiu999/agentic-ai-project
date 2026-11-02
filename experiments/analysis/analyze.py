@@ -138,30 +138,30 @@ def _error_kind(call: dict) -> str | None:
     return LEGACY_ERROR_KINDS.get(error_type, "error") if isinstance(error_type, str) else "error"
 
 
-_use_cases: dict[str, str | None] = {}
+_use_cases: dict[Path, str | None] = {}
 
 
-def task_use_case(record: dict) -> str | None:
+def task_use_case(record: dict, repo_root: Path = ROOT) -> str | None:
     """The use case the task file names (use_case:), the route's right answer."""
     file = record.get("task_file")
     if not file:
         return None
-    if file not in _use_cases:
+    portable = Path(str(file).replace("\\", "/"))
+    path = portable if portable.is_absolute() else repo_root / portable
+    if path not in _use_cases:
         import yaml
-        portable = Path(str(file).replace("\\", "/"))
-        path = portable if portable.is_absolute() else ROOT / portable
         try:
-            _use_cases[file] = (yaml.safe_load(path.read_text(encoding="utf-8")) or {}).get("use_case")
+            _use_cases[path] = (yaml.safe_load(path.read_text(encoding="utf-8")) or {}).get("use_case")
         except (OSError, yaml.YAMLError):
-            _use_cases[file] = None
-    return _use_cases[file]
+            _use_cases[path] = None
+    return _use_cases[path]
 
 
 def _median(xs):
     return statistics.median(xs) if xs else None
 
 
-def analyze_arm(folder: Path) -> dict:
+def analyze_arm(folder: Path, *, repo_root: Path = ROOT) -> dict:
     runs = load_arm(folder)
     # the latest finished run of each (task, sweep), as the summarizer counts them
     by_pair = {}
@@ -181,7 +181,7 @@ def analyze_arm(folder: Path) -> dict:
     bound, bound_runs = Counter(), 0
     boundary = {"tool_errors": 0, "boundary_rejections": 0}
     measures = Counter()
-    false_finishes, per_run = [], []
+    false_finishes, initial_false_finishes, per_run = [], [], []
 
     for r in counted:
         calls = r.get("tool_calls") or []
@@ -205,6 +205,7 @@ def analyze_arm(folder: Path) -> dict:
         plans = _of(r, "plan")
         plan["plans"] += bool(plans)
         plan["revisions"] += max(0, len(plans) - 1)
+        plan["proposal_rejections"] += sum(line.get("accepted") is False for line in plans)
         plan["plan_rejected"] += reasons.count("plan_rejected")
         plan["replan_bound"] += reasons.count("replan_bound")
         plan["off_plan_refused"] += len(_of(r, "off_plan_refused"))
@@ -221,9 +222,13 @@ def analyze_arm(folder: Path) -> dict:
         # The task's use_case is what its first operator turn asks; later turns are follow-ups (a status
         # question after the work, say) and route elsewhere by design, so only the first turn's route is
         # scored. A first turn that ended with no route at all (the router declined) is unrouted, not misrouted.
-        expected = task_use_case(r)
+        expected = task_use_case(r, repo_root)
         routing["routes"] += len(_of(r, "route"))
         first_turn = _first_turn(r["_trace"])
+        task_end = next((x.get("terminal_reason") for x in reversed(first_turn)
+                         if x.get("type") == "end"), None)
+        if task_end == "done" and not r.get("passed"):
+            initial_false_finishes.append(r["run_id"])
         first = next((x for x in first_turn if x.get("type") == "route"), None)
         if expected and first is None:
             routing["unrouted"] += 1
@@ -267,6 +272,8 @@ def analyze_arm(folder: Path) -> dict:
         "sequences_total": len({(t, s) for t, ss in sequences.items() for s in ss}),
         "runs_with_repeat": repeat_runs, "repeat_events": repeat_events,
         "false_finishes": len(false_finishes), "false_finish_runs": false_finishes,
+        "initial_task_false_finishes": len(initial_false_finishes),
+        "initial_task_false_finish_runs": initial_false_finishes,
         "plan": dict(plan),
         "critique": {**{k: v for k, v in critique.items() if k != "verdicts"},
                      # every counted run is in the denominator, runs with no critique round included
@@ -277,6 +284,14 @@ def analyze_arm(folder: Path) -> dict:
         "routing": routing, "bound_ends": dict(bound), "bound_runs": bound_runs,
         "boundary": boundary, "measures": dict(measures), "per_run": per_run,
     }
+
+
+def task_metrics(arm: dict, task: str) -> dict:
+    """Costs and tokens with the selected task's run count as denominator."""
+    rows = [row for row in arm["per_run"] if row["task"] == task]
+    return {"task": task, "runs": len(rows), "passes": sum(row["passed"] for row in rows),
+            "mean_tokens": statistics.mean(row["tokens"] for row in rows) if rows else None,
+            "mean_cost_usd": statistics.mean(row["cost_usd"] for row in rows) if rows else None}
 
 
 def compare(agent: dict, workflow: dict) -> dict:
@@ -316,6 +331,7 @@ def report(arms: list[dict], cross: dict | None) -> str:
                 f"runs with an exact repeated call: {a['runs_with_repeat']}; repeat_call events: {a['repeat_events']}",
                 f"false finishes (ended done, check failed): {a['false_finishes']}"
                 + (f"  {', '.join(a['false_finish_runs'])}" if a["false_finish_runs"] else ""),
+                f"initial-task false finishes (initial turn ended done, check failed): {a['initial_task_false_finishes']}",
                 "plan: " + (", ".join(f"{k} {v}" for k, v in sorted(a["plan"].items())) or "none"),
                 f"critique: rounds {a['critique']['rounds']} over {a['critique']['runs_with_critique']} runs "
                 f"({_fmt(a['critique']['rounds_per_run'])} per run, "

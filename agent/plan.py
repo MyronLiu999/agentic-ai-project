@@ -415,6 +415,15 @@ class _Batch:
                     raw = json.loads(response.text)
                 except (ValueError, RecursionError) as exc:
                     raise PlanError("Planner response was not valid JSON") from exc
+                # Normalize literal contact text before comparing a replayed completed
+                # prefix. The same trusted binding applies to initial and revised plans.
+                if isinstance(raw, dict) and isinstance(raw.get("steps"), list):
+                    for proposed in raw["steps"]:
+                        if (isinstance(proposed, dict) and proposed.get("tool") == "draft_report_email"
+                                and isinstance(proposed.get("args"), dict)
+                                and isinstance(proposed["args"].get("recipient"), str)
+                                and proposed["args"]["recipient"].strip()):
+                            proposed["args"]["recipient"] = {"$fill": "request.contact_email"}
                 # A reviser need not see completed arguments, which may contain filled outside data.
                 if (completed and isinstance(raw, dict) and isinstance(raw.get("steps"), list)
                         and all(isinstance(s, dict) for s in raw["steps"])
@@ -426,6 +435,9 @@ class _Batch:
                     available = {d["name"] for d in self.registries[step["request_id"]].definitions()}
                     if step["tool"] not in available:
                         raise PlanError(f"Tool {step['tool']} is not available for this request")
+                    if (step["tool"] == "draft_report_email"
+                            and step["args"]["recipient"] != {"$fill": "request.contact_email"}):
+                        raise PlanError("Email recipient must use the request.contact_email binding")
             except PlanError as exc:
                 feedback = str(exc)
                 self.trace.plan(self.version, raw, accepted=False, reason=feedback)
@@ -477,16 +489,17 @@ class _Batch:
         if not self.guard.authorize(sid, rid, name, args):
             raise PlanError("Off-plan call refused")
         if name == "draft_report_email":
-            gate = loop.EmailGate(rid, self.model_call, self.check)
+            gate = loop.EmailGate(rid, self.model_call, self.check,
+                                  fixed_recipient=self.requests[rid]["contact_email"])
             try:
                 checked = gate.checked_email(gate.email_draft(args))
             except ValueError as exc:
                 raise PlanError(str(exc)) from exc
             if checked != args:
-                # Only critique can amend these three email fields; the report is pinned by EmailGate.
+                # Critique amends prose; recipient and report are pinned by EmailGate.
                 amended = deepcopy(self.guard.steps)
                 next(s for s in amended if s["id"] == sid)["args"].update(
-                    {key: checked[key] for key in ("recipient", "subject", "body")})
+                    {key: checked[key] for key in ("subject", "body")})
                 completed = {s["id"]: s for s in self.guard.steps if s["id"] in self.guard.outputs}
                 self.guard.steps = validate({"steps": amended}, self.requests, completed=completed)
                 self.version += 1

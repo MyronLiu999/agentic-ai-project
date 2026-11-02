@@ -111,3 +111,32 @@ class AgentFailuresTest(unittest.TestCase):
         self.record("z-last", lines=[{"type": "end", "terminal_reason": "step_limit"}])
         rendered = failures.markdown(self.collect())
         self.assertLess(rendered.index("| z-last |"), rendered.index("Evidence issue"))
+
+    def test_windows_relative_trace_path_resolves_after_checkout_relocation(self):
+        self.record(lines=[{"type": "error", "kind": "Portable", "message": "Found"}],
+                    trace=r"results\baseline\run-one.trace.jsonl")
+        row = self.collect()["failures"][0]
+        self.assertEqual(row["first_failure"]["line"], 1)
+        self.assertEqual(row["evidence_issues"], [])
+
+    def test_stale_absolute_trace_path_falls_back_to_paired_trace(self):
+        self.record(lines=["", {"type": "error", "kind": "Relocated", "message": "Found"}],
+                    trace=r"C:\old-checkout\results\baseline\run-one.trace.jsonl")
+        row = self.collect()["failures"][0]
+        self.assertEqual(row["first_failure"]["line"], 2)
+        self.assertEqual(row["evidence_issues"], [])
+
+    def test_missing_stored_relative_trace_uses_paired_trace_with_absolute_record_path(self):
+        path = self.record(lines=[{"type": "error", "kind": "Paired", "message": "Found"}],
+                           trace="moved/elsewhere.trace.jsonl")
+        row = failures.collect(path, repo_root=self.root / "different-root")["failures"][0]
+        self.assertEqual(row["first_failure"]["line"], 1)
+
+    def test_existing_old_checkout_trace_cannot_override_current_paired_evidence(self):
+        old = self.root / "old-checkout.trace.jsonl"
+        old.write_text(json.dumps({"type": "error", "kind": "Stale", "message": "Old"}) + "\n")
+        self.record(lines=["", {"type": "error", "kind": "Current", "message": "Current"}],
+                    trace=str(old))
+        row = self.collect()["failures"][0]
+        self.assertEqual(row["first_failure"]["line"], 2)
+        self.assertEqual(row["first_failure"]["kind"], "Current")

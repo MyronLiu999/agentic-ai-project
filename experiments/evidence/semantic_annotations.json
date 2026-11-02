@@ -1,0 +1,1898 @@
+{
+  "definitions": {
+    "malformed_calls": "Count each recorded tool_call whose input violates the frozen historical input schema (JSON object/type/required/enum/extra-property rules, string pattern, maxItems or numeric minimum). Count attempted calls, not plan graph validation or business errors. Per-run counts sum to the arm total.",
+    "boundary_rejections": "Count recorded tool_call errors with structured protocol kind (or legacy structured metadata), including loop guards. No classification uses error prose.",
+    "semantic_wrong_arguments": "Reviewed inventory of wrong recipient plan steps and failed revisions, missing named report figures, incorrect named revenue figures/differences, and invalid report references. Each distinct argument candidate is one unit; several wrong fields in that candidate still count once. Count all model-produced plan steps including rejected/never-executed steps, revisions, and tool attempts separately by stage. Critique-approved copies are excluded. Arm totals are inventory counts, not a comprehensive narrative correctness score; narrative assertions and decoding-option choices are outside this inventory.",
+    "semantic_wrong_argument_runs": "Distinct runs containing at least one annotated candidate; historical passes/check scores are preserved even when the inventory identifies an additional semantic defect.",
+    "initial_task_false_finish": "Run check failed and the initial operator turn ended done, read from physical end events before the next operator turn. Historical endpoint false_finishes remains a separate metric.",
+    "proposal_rejections": "Plan events with accepted:false; terminal plan_rejected and replan_bound are counted separately.",
+    "hashes": "SHA-256 after replacing CRLF with LF only, without JSON reserialization; original LF or CRLF byte hashes are verified and retained as provenance."
+  },
+  "annotations": [
+    {
+      "arm": "baseline",
+      "run_id": "baseline-batch_reports_two-s01-b7256b",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/baseline/baseline-batch_reports_two-s01-b7256b.trace.jsonl",
+      "trace_sha256_lf": "030ed3f3f0b9966c1f25838a23568246fb6ba4105b99b7f04d4ae041bec20991",
+      "line": 7,
+      "model_line": 6,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        4,
+        "args"
+      ],
+      "observed": {
+        "recipient": "$fill:request.contact_email",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r1_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            0,
+            "contact_email"
+          ],
+          "observed": "contact@delta.example"
+        }
+      ]
+    },
+    {
+      "arm": "baseline",
+      "run_id": "baseline-batch_reports_two-s01-b7256b",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/baseline/baseline-batch_reports_two-s01-b7256b.trace.jsonl",
+      "trace_sha256_lf": "030ed3f3f0b9966c1f25838a23568246fb6ba4105b99b7f04d4ae041bec20991",
+      "line": 7,
+      "model_line": 6,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        9,
+        "args"
+      ],
+      "observed": {
+        "recipient": "$fill:request.contact_email",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r2_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            1,
+            "contact_email"
+          ],
+          "observed": "contact@acme.example"
+        }
+      ]
+    },
+    {
+      "arm": "baseline",
+      "run_id": "baseline-batch_reports_two-s02-afc9fd",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/baseline/baseline-batch_reports_two-s02-afc9fd.trace.jsonl",
+      "trace_sha256_lf": "970ca2fb266fba70e9840a753c5ee23f096ace649f22cc30346d17c3c94a3eae",
+      "line": 7,
+      "model_line": 6,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        4,
+        "args"
+      ],
+      "observed": {
+        "recipient": "{$fill:request.contact_email}",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r0_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            0,
+            "contact_email"
+          ],
+          "observed": "contact@delta.example"
+        }
+      ]
+    },
+    {
+      "arm": "baseline",
+      "run_id": "baseline-batch_reports_two-s02-afc9fd",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/baseline/baseline-batch_reports_two-s02-afc9fd.trace.jsonl",
+      "trace_sha256_lf": "970ca2fb266fba70e9840a753c5ee23f096ace649f22cc30346d17c3c94a3eae",
+      "line": 7,
+      "model_line": 6,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        9,
+        "args"
+      ],
+      "observed": {
+        "recipient": "{$fill:request.contact_email}",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r1_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            1,
+            "contact_email"
+          ],
+          "observed": "contact@acme.example"
+        }
+      ]
+    },
+    {
+      "arm": "baseline",
+      "run_id": "baseline-batch_reports_two-s02-afc9fd",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/baseline/baseline-batch_reports_two-s02-afc9fd.trace.jsonl",
+      "trace_sha256_lf": "970ca2fb266fba70e9840a753c5ee23f096ace649f22cc30346d17c3c94a3eae",
+      "line": 9,
+      "model_line": 8,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        4,
+        "args"
+      ],
+      "observed": {
+        "recipient": "{$fill:request.contact_email}",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r0_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            0,
+            "contact_email"
+          ],
+          "observed": "contact@delta.example"
+        }
+      ]
+    },
+    {
+      "arm": "baseline",
+      "run_id": "baseline-batch_reports_two-s02-afc9fd",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/baseline/baseline-batch_reports_two-s02-afc9fd.trace.jsonl",
+      "trace_sha256_lf": "970ca2fb266fba70e9840a753c5ee23f096ace649f22cc30346d17c3c94a3eae",
+      "line": 9,
+      "model_line": 8,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        9,
+        "args"
+      ],
+      "observed": {
+        "recipient": "{$fill:request.contact_email}",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r1_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            1,
+            "contact_email"
+          ],
+          "observed": "contact@acme.example"
+        }
+      ]
+    },
+    {
+      "arm": "baseline",
+      "run_id": "baseline-batch_reports_two-s03-d8c842",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/baseline/baseline-batch_reports_two-s03-d8c842.trace.jsonl",
+      "trace_sha256_lf": "405fc96e9fdb79a6691ae5b252ad2b2afff7807c84896512e2a6933588b8f8a9",
+      "line": 7,
+      "model_line": 6,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        4,
+        "args"
+      ],
+      "observed": {
+        "recipient": "client@example.com",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r0_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            0,
+            "contact_email"
+          ],
+          "observed": "contact@delta.example"
+        }
+      ]
+    },
+    {
+      "arm": "baseline",
+      "run_id": "baseline-batch_reports_two-s03-d8c842",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/baseline/baseline-batch_reports_two-s03-d8c842.trace.jsonl",
+      "trace_sha256_lf": "405fc96e9fdb79a6691ae5b252ad2b2afff7807c84896512e2a6933588b8f8a9",
+      "line": 7,
+      "model_line": 6,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        9,
+        "args"
+      ],
+      "observed": {
+        "recipient": "client@example.com",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r1_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            1,
+            "contact_email"
+          ],
+          "observed": "contact@acme.example"
+        }
+      ]
+    },
+    {
+      "arm": "baseline",
+      "run_id": "baseline-batch_reports_two-s03-d8c842",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/baseline/baseline-batch_reports_two-s03-d8c842.trace.jsonl",
+      "trace_sha256_lf": "405fc96e9fdb79a6691ae5b252ad2b2afff7807c84896512e2a6933588b8f8a9",
+      "line": 9,
+      "model_line": 8,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        4,
+        "args"
+      ],
+      "observed": {
+        "recipient": "client@example.com",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r0_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            0,
+            "contact_email"
+          ],
+          "observed": "contact@delta.example"
+        }
+      ]
+    },
+    {
+      "arm": "baseline",
+      "run_id": "baseline-batch_reports_two-s03-d8c842",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/baseline/baseline-batch_reports_two-s03-d8c842.trace.jsonl",
+      "trace_sha256_lf": "405fc96e9fdb79a6691ae5b252ad2b2afff7807c84896512e2a6933588b8f8a9",
+      "line": 9,
+      "model_line": 8,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        9,
+        "args"
+      ],
+      "observed": {
+        "recipient": "client@example.com",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r1_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            1,
+            "contact_email"
+          ],
+          "observed": "contact@acme.example"
+        }
+      ]
+    },
+    {
+      "arm": "baseline",
+      "run_id": "baseline-compare_check_last_quarter-s01-2a59dd",
+      "category": "incorrect_report_figures",
+      "count_unit": "argument_candidate",
+      "trace": "results/baseline/baseline-compare_check_last_quarter-s01-2a59dd.trace.jsonl",
+      "trace_sha256_lf": "4c66778d4758ab3bdbec151b6dc0a7c6c2553a69e1b57a61a9dac11d2e093dca",
+      "line": 21,
+      "model_line": 20,
+      "event_type": "tool_call",
+      "tool": "save_report",
+      "selector": [
+        "input"
+      ],
+      "observed": {
+        "kind": "comparison",
+        "figures": {
+          "period": "2026Q3",
+          "total_revenue": 67246.55,
+          "total_units": 1286,
+          "previous_period": "2026Q2",
+          "previous_total_revenue": 62799.6,
+          "revenue_change": 446.95
+        },
+        "body": "This report compares sales performance for Q3 2026 against Q2 2026 for Cedar. \n\nIn Q3 2026, we achieved a total revenue of $67,246.55, which is an increase from the previous quarter (Q2 2026) total revenue of $62,799.60. \n\nTotal units sold in Q3 2026 were 1,286, compared to 1,299 in Q2 2026. \n\nThis indicates a decrease in sales volume by 13 units but an overall increased revenue due to likely improved pricing or sales strategy."
+      },
+      "reason": "Query-backed current/previous revenue are 67246.55/62799.6; their difference is 4446.95. At least one named revenue value/difference is wrong. Historical check scores remain unchanged.",
+      "facts": [
+        {
+          "path": "results/baseline/baseline-compare_check_last_quarter-s01-2a59dd.trace.jsonl",
+          "sha256_lf": "4c66778d4758ab3bdbec151b6dc0a7c6c2553a69e1b57a61a9dac11d2e093dca",
+          "selector": [
+            "output",
+            "output",
+            "total_revenue"
+          ],
+          "observed": 67246.55,
+          "line": 8
+        },
+        {
+          "path": "results/baseline/baseline-compare_check_last_quarter-s01-2a59dd.trace.jsonl",
+          "sha256_lf": "4c66778d4758ab3bdbec151b6dc0a7c6c2553a69e1b57a61a9dac11d2e093dca",
+          "selector": [
+            "output",
+            "output",
+            "total_revenue"
+          ],
+          "observed": 62799.6,
+          "line": 10
+        }
+      ]
+    },
+    {
+      "arm": "baseline",
+      "run_id": "baseline-compare_check_last_quarter-s02-5b316c",
+      "category": "incorrect_report_figures",
+      "count_unit": "argument_candidate",
+      "trace": "results/baseline/baseline-compare_check_last_quarter-s02-5b316c.trace.jsonl",
+      "trace_sha256_lf": "ad75a494c7be69714a861ad43473ea08e43cdd44fea885744d15c925f913a0ff",
+      "line": 15,
+      "model_line": 14,
+      "event_type": "tool_call",
+      "tool": "save_report",
+      "selector": [
+        "input"
+      ],
+      "observed": {
+        "kind": "comparison",
+        "figures": {
+          "period": "2026Q3",
+          "total_revenue": 67246.55,
+          "total_units": 1286,
+          "previous_period": "2026Q2",
+          "previous_total_revenue": 62799.6,
+          "revenue_change": 4466.95
+        },
+        "body": "Cedar report for Q3 2026. Current revenue has increased from Q2. Q2 Revenue: 62799.60; Q3 Revenue: 67246.55; Revenue Change: 4466.95."
+      },
+      "reason": "Query-backed current/previous revenue are 67246.55/62799.6; their difference is 4446.95. At least one named revenue value/difference is wrong. Historical check scores remain unchanged.",
+      "facts": [
+        {
+          "path": "results/baseline/baseline-compare_check_last_quarter-s02-5b316c.trace.jsonl",
+          "sha256_lf": "ad75a494c7be69714a861ad43473ea08e43cdd44fea885744d15c925f913a0ff",
+          "selector": [
+            "output",
+            "output",
+            "total_revenue"
+          ],
+          "observed": 67246.55,
+          "line": 8
+        },
+        {
+          "path": "results/baseline/baseline-compare_check_last_quarter-s02-5b316c.trace.jsonl",
+          "sha256_lf": "ad75a494c7be69714a861ad43473ea08e43cdd44fea885744d15c925f913a0ff",
+          "selector": [
+            "output",
+            "output",
+            "total_revenue"
+          ],
+          "observed": 62799.6,
+          "line": 10
+        }
+      ]
+    },
+    {
+      "arm": "baseline",
+      "run_id": "baseline-compare_check_last_quarter-s03-05dd3e",
+      "category": "incorrect_report_figures",
+      "count_unit": "argument_candidate",
+      "trace": "results/baseline/baseline-compare_check_last_quarter-s03-05dd3e.trace.jsonl",
+      "trace_sha256_lf": "a2fb4b239ee8b480c2a138dbbb2d303c42703d8ef9239df952ecf13b439e20b4",
+      "line": 15,
+      "model_line": 14,
+      "event_type": "tool_call",
+      "tool": "save_report",
+      "selector": [
+        "input"
+      ],
+      "observed": {
+        "kind": "comparison",
+        "figures": {
+          "period": "2026Q3",
+          "total_revenue": 67246.55,
+          "total_units": 1286,
+          "previous_period": "2026Q2",
+          "previous_total_revenue": 62799.6,
+          "revenue_change": 446.95
+        },
+        "body": "This report compares Q3 to Q2 sales figures for the Cedar request."
+      },
+      "reason": "Query-backed current/previous revenue are 67246.55/62799.6; their difference is 4446.95. At least one named revenue value/difference is wrong. Historical check scores remain unchanged.",
+      "facts": [
+        {
+          "path": "results/baseline/baseline-compare_check_last_quarter-s03-05dd3e.trace.jsonl",
+          "sha256_lf": "a2fb4b239ee8b480c2a138dbbb2d303c42703d8ef9239df952ecf13b439e20b4",
+          "selector": [
+            "output",
+            "output",
+            "total_revenue"
+          ],
+          "observed": 67246.55,
+          "line": 8
+        },
+        {
+          "path": "results/baseline/baseline-compare_check_last_quarter-s03-05dd3e.trace.jsonl",
+          "sha256_lf": "a2fb4b239ee8b480c2a138dbbb2d303c42703d8ef9239df952ecf13b439e20b4",
+          "selector": [
+            "output",
+            "output",
+            "total_revenue"
+          ],
+          "observed": 62799.6,
+          "line": 10
+        }
+      ]
+    },
+    {
+      "arm": "baseline",
+      "run_id": "baseline-messy_file_semicolon-s01-1799cc",
+      "category": "incomplete_report_figures",
+      "count_unit": "argument_candidate",
+      "trace": "results/baseline/baseline-messy_file_semicolon-s01-1799cc.trace.jsonl",
+      "trace_sha256_lf": "13d6b655ddf5681113b43d2e1fe742d840516cddabb4e141ea355b1d3a12a64f",
+      "line": 15,
+      "model_line": 14,
+      "event_type": "tool_call",
+      "tool": "save_report",
+      "selector": [
+        "input"
+      ],
+      "observed": {
+        "kind": "comparison",
+        "figures": {
+          "period": "2026Q3",
+          "total_revenue": 60854.6,
+          "total_units": 1180,
+          "previous_period": "2026Q2",
+          "previous_total_revenue": 62232.5
+        },
+        "body": "Report on Q3 performance with a comparison to Q2."
+      },
+      "reason": "The correctly parsed file has 412+388+440=1240 units, but figures omit file_total_units.",
+      "facts": [
+        {
+          "path": "results/baseline/baseline-messy_file_semicolon-s01-1799cc.trace.jsonl",
+          "sha256_lf": "13d6b655ddf5681113b43d2e1fe742d840516cddabb4e141ea355b1d3a12a64f",
+          "selector": [
+            "output",
+            "output",
+            "rows"
+          ],
+          "observed": [
+            [
+              "SYN-SKU-003",
+              "Widget L",
+              "412",
+              "12.360,00"
+            ],
+            [
+              "SYN-SKU-004",
+              "Gadget",
+              "388",
+              "17.460,00"
+            ],
+            [
+              "SYN-SKU-005",
+              "Gizmo",
+              "440",
+              "33.000,00"
+            ]
+          ],
+          "line": 7
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-off",
+      "run_id": "pass1-examples-off-batch_reports_two-s01-b4d71f",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s01-b4d71f.trace.jsonl",
+      "trace_sha256_lf": "288f65efb936ac09318d6bcf1fd887bf7170b6a6a2414e4c1ff397caf02d9e4e",
+      "line": 7,
+      "model_line": 6,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        4,
+        "args"
+      ],
+      "observed": {
+        "recipient": "recipient@example.com",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r1_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            0,
+            "contact_email"
+          ],
+          "observed": "contact@delta.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-off",
+      "run_id": "pass1-examples-off-batch_reports_two-s01-b4d71f",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s01-b4d71f.trace.jsonl",
+      "trace_sha256_lf": "288f65efb936ac09318d6bcf1fd887bf7170b6a6a2414e4c1ff397caf02d9e4e",
+      "line": 7,
+      "model_line": 6,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        9,
+        "args"
+      ],
+      "observed": {
+        "recipient": "recipient@example.com",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r2_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            1,
+            "contact_email"
+          ],
+          "observed": "contact@acme.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-off",
+      "run_id": "pass1-examples-off-batch_reports_two-s01-b4d71f",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s01-b4d71f.trace.jsonl",
+      "trace_sha256_lf": "288f65efb936ac09318d6bcf1fd887bf7170b6a6a2414e4c1ff397caf02d9e4e",
+      "line": 9,
+      "model_line": 8,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        4,
+        "args"
+      ],
+      "observed": {
+        "recipient": "recipient@example.com",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r1_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            0,
+            "contact_email"
+          ],
+          "observed": "contact@delta.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-off",
+      "run_id": "pass1-examples-off-batch_reports_two-s01-b4d71f",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s01-b4d71f.trace.jsonl",
+      "trace_sha256_lf": "288f65efb936ac09318d6bcf1fd887bf7170b6a6a2414e4c1ff397caf02d9e4e",
+      "line": 9,
+      "model_line": 8,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        9,
+        "args"
+      ],
+      "observed": {
+        "recipient": "recipient@example.com",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r2_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            1,
+            "contact_email"
+          ],
+          "observed": "contact@acme.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-off",
+      "run_id": "pass1-examples-off-batch_reports_two-s01-b4d71f",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s01-b4d71f.trace.jsonl",
+      "trace_sha256_lf": "288f65efb936ac09318d6bcf1fd887bf7170b6a6a2414e4c1ff397caf02d9e4e",
+      "line": 27,
+      "model_line": 27,
+      "event_type": "model_call",
+      "tool": "draft_report_email",
+      "selector": [],
+      "observed": {
+        "recipient": "recipient@example.com",
+        "subject": "Quarterly Sales Report for 2026Q3",
+        "body": "Your quarterly report has been prepared. The total revenue for this period is $60,771.05."
+      },
+      "reason": "Revision preserves recipient@example.com rather than the selected first request contact.",
+      "decode_text": true,
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            0,
+            "contact_email"
+          ],
+          "observed": "contact@delta.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-off",
+      "run_id": "pass1-examples-off-batch_reports_two-s02-b6501f",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s02-b6501f.trace.jsonl",
+      "trace_sha256_lf": "bf5cb64fd1ad054699268b47bce608c540d74b0d6c553e260ff7d51cf56c28b4",
+      "line": 7,
+      "model_line": 6,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        4,
+        "args"
+      ],
+      "observed": {
+        "recipient": "recipient@example.com",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r0_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            0,
+            "contact_email"
+          ],
+          "observed": "contact@delta.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-off",
+      "run_id": "pass1-examples-off-batch_reports_two-s02-b6501f",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s02-b6501f.trace.jsonl",
+      "trace_sha256_lf": "bf5cb64fd1ad054699268b47bce608c540d74b0d6c553e260ff7d51cf56c28b4",
+      "line": 7,
+      "model_line": 6,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        9,
+        "args"
+      ],
+      "observed": {
+        "recipient": "recipient@example.com",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r1_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            1,
+            "contact_email"
+          ],
+          "observed": "contact@acme.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-off",
+      "run_id": "pass1-examples-off-batch_reports_two-s02-b6501f",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s02-b6501f.trace.jsonl",
+      "trace_sha256_lf": "bf5cb64fd1ad054699268b47bce608c540d74b0d6c553e260ff7d51cf56c28b4",
+      "line": 9,
+      "model_line": 8,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        4,
+        "args"
+      ],
+      "observed": {
+        "recipient": "recipient@example.com",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r0_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            0,
+            "contact_email"
+          ],
+          "observed": "contact@delta.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-off",
+      "run_id": "pass1-examples-off-batch_reports_two-s02-b6501f",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s02-b6501f.trace.jsonl",
+      "trace_sha256_lf": "bf5cb64fd1ad054699268b47bce608c540d74b0d6c553e260ff7d51cf56c28b4",
+      "line": 9,
+      "model_line": 8,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        9,
+        "args"
+      ],
+      "observed": {
+        "recipient": "recipient@example.com",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r1_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            1,
+            "contact_email"
+          ],
+          "observed": "contact@acme.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-off",
+      "run_id": "pass1-examples-off-batch_reports_two-s02-b6501f",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s02-b6501f.trace.jsonl",
+      "trace_sha256_lf": "bf5cb64fd1ad054699268b47bce608c540d74b0d6c553e260ff7d51cf56c28b4",
+      "line": 27,
+      "model_line": 27,
+      "event_type": "model_call",
+      "tool": "draft_report_email",
+      "selector": [],
+      "observed": {
+        "recipient": "recipient@example.com",
+        "subject": "Quarterly Sales Report - 2026Q3",
+        "body": "Your quarterly report has been prepared. The total revenue for this period is $60,771.05."
+      },
+      "reason": "Revision preserves recipient@example.com rather than the selected first request contact.",
+      "decode_text": true,
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            0,
+            "contact_email"
+          ],
+          "observed": "contact@delta.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-off",
+      "run_id": "pass1-examples-off-batch_reports_two-s03-e6fb94",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s03-e6fb94.trace.jsonl",
+      "trace_sha256_lf": "b5ba1f73d5fb618a530121859f64f94ea787c1bd4f8218fa68a00f0fd8a8041a",
+      "line": 7,
+      "model_line": 6,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        4,
+        "args"
+      ],
+      "observed": {
+        "recipient": "{$fill:request.contact_email}",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r0_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            0,
+            "contact_email"
+          ],
+          "observed": "contact@delta.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-off",
+      "run_id": "pass1-examples-off-batch_reports_two-s03-e6fb94",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s03-e6fb94.trace.jsonl",
+      "trace_sha256_lf": "b5ba1f73d5fb618a530121859f64f94ea787c1bd4f8218fa68a00f0fd8a8041a",
+      "line": 7,
+      "model_line": 6,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        9,
+        "args"
+      ],
+      "observed": {
+        "recipient": "{$fill:request.contact_email}",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r1_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            1,
+            "contact_email"
+          ],
+          "observed": "contact@acme.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-off",
+      "run_id": "pass1-examples-off-batch_reports_two-s03-e6fb94",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s03-e6fb94.trace.jsonl",
+      "trace_sha256_lf": "b5ba1f73d5fb618a530121859f64f94ea787c1bd4f8218fa68a00f0fd8a8041a",
+      "line": 9,
+      "model_line": 8,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        4,
+        "args"
+      ],
+      "observed": {
+        "recipient": "{$fill:request.contact_email}",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r0_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            0,
+            "contact_email"
+          ],
+          "observed": "contact@delta.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-off",
+      "run_id": "pass1-examples-off-batch_reports_two-s03-e6fb94",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s03-e6fb94.trace.jsonl",
+      "trace_sha256_lf": "b5ba1f73d5fb618a530121859f64f94ea787c1bd4f8218fa68a00f0fd8a8041a",
+      "line": 9,
+      "model_line": 8,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        9,
+        "args"
+      ],
+      "observed": {
+        "recipient": "{$fill:request.contact_email}",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r1_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            1,
+            "contact_email"
+          ],
+          "observed": "contact@acme.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-off",
+      "run_id": "pass1-examples-off-compare_check_last_quarter-s01-8c0d0a",
+      "category": "incorrect_report_figures",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-off/pass1-examples-off-compare_check_last_quarter-s01-8c0d0a.trace.jsonl",
+      "trace_sha256_lf": "2fad65ee0392d0a796a5b52d5e2377a6fccb192fad34e6bdc8772eef6719707c",
+      "line": 15,
+      "model_line": 12,
+      "event_type": "tool_call",
+      "tool": "save_report",
+      "selector": [
+        "input"
+      ],
+      "observed": {
+        "kind": "comparison",
+        "figures": {
+          "period": "2026Q3",
+          "total_revenue": 0,
+          "total_units": 0,
+          "previous_period": "2026Q2",
+          "previous_total_revenue": 62799.6
+        },
+        "body": "This report compares Q3 sales with Q2 sales for Cedar."
+      },
+      "reason": "Query-backed current/previous revenue are 67246.55/62799.6; their difference is 4446.95. At least one named revenue value/difference is wrong. Historical check scores remain unchanged.",
+      "facts": [
+        {
+          "path": "results/pass1-examples-off/pass1-examples-off-compare_check_last_quarter-s01-8c0d0a.trace.jsonl",
+          "sha256_lf": "2fad65ee0392d0a796a5b52d5e2377a6fccb192fad34e6bdc8772eef6719707c",
+          "selector": [
+            "output",
+            "output",
+            "total_revenue"
+          ],
+          "observed": 62799.6,
+          "line": 8
+        },
+        {
+          "path": "results/pass1-examples-off/pass1-examples-off-compare_check_last_quarter-s01-8c0d0a.trace.jsonl",
+          "sha256_lf": "2fad65ee0392d0a796a5b52d5e2377a6fccb192fad34e6bdc8772eef6719707c",
+          "selector": [
+            "output",
+            "output",
+            "total_revenue"
+          ],
+          "observed": 67246.55,
+          "line": 13
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-off",
+      "run_id": "pass1-examples-off-compare_check_last_quarter-s02-88336e",
+      "category": "incorrect_report_figures",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-off/pass1-examples-off-compare_check_last_quarter-s02-88336e.trace.jsonl",
+      "trace_sha256_lf": "60843ca11f4f30ae1894a0c6e6f952ffeb2d309de821570d563f92a961bcc592",
+      "line": 15,
+      "model_line": 14,
+      "event_type": "tool_call",
+      "tool": "save_report",
+      "selector": [
+        "input"
+      ],
+      "observed": {
+        "kind": "comparison",
+        "figures": {
+          "period": "2026Q3",
+          "total_revenue": 67246.55,
+          "total_units": 1286,
+          "previous_period": "2026Q2",
+          "previous_total_revenue": 62799.6,
+          "revenue_change": 4466.95
+        },
+        "body": "This report compares Q3 2026 performance against Q2 2026 for Cedar. In Q3, the total revenue was $67,246.55, which is an increase of $4,466.95 from the previous quarter's revenue of $62,799.60. The total units sold in Q3 were 1,286, down from 1,299 in Q2."
+      },
+      "reason": "Query-backed current/previous revenue are 67246.55/62799.6; their difference is 4446.95. At least one named revenue value/difference is wrong. Historical check scores remain unchanged.",
+      "facts": [
+        {
+          "path": "results/pass1-examples-off/pass1-examples-off-compare_check_last_quarter-s02-88336e.trace.jsonl",
+          "sha256_lf": "60843ca11f4f30ae1894a0c6e6f952ffeb2d309de821570d563f92a961bcc592",
+          "selector": [
+            "output",
+            "output",
+            "total_revenue"
+          ],
+          "observed": 62799.6,
+          "line": 10
+        },
+        {
+          "path": "results/pass1-examples-off/pass1-examples-off-compare_check_last_quarter-s02-88336e.trace.jsonl",
+          "sha256_lf": "60843ca11f4f30ae1894a0c6e6f952ffeb2d309de821570d563f92a961bcc592",
+          "selector": [
+            "output",
+            "output",
+            "total_revenue"
+          ],
+          "observed": 67246.55,
+          "line": 12
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-off",
+      "run_id": "pass1-examples-off-compare_check_last_quarter-s03-df171b",
+      "category": "incorrect_report_figures",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-off/pass1-examples-off-compare_check_last_quarter-s03-df171b.trace.jsonl",
+      "trace_sha256_lf": "0c9c509a753e879573ae58b813932c67f50fb80b11327e2e47d1a331d7627709",
+      "line": 20,
+      "model_line": 19,
+      "event_type": "tool_call",
+      "tool": "save_report",
+      "selector": [
+        "input"
+      ],
+      "observed": {
+        "kind": "comparison",
+        "figures": {
+          "period": "2026Q3",
+          "total_revenue": 67246.55,
+          "total_units": 1286,
+          "previous_period": "2026Q2",
+          "previous_total_revenue": 62799.6,
+          "revenue_change": 446.95
+        },
+        "body": "This report compares the sales figures for Q3 2026 with Q2 2026."
+      },
+      "reason": "Query-backed current/previous revenue are 67246.55/62799.6; their difference is 4446.95. At least one named revenue value/difference is wrong. Historical check scores remain unchanged.",
+      "facts": [
+        {
+          "path": "results/pass1-examples-off/pass1-examples-off-compare_check_last_quarter-s03-df171b.trace.jsonl",
+          "sha256_lf": "0c9c509a753e879573ae58b813932c67f50fb80b11327e2e47d1a331d7627709",
+          "selector": [
+            "output",
+            "output",
+            "total_revenue"
+          ],
+          "observed": 67246.55,
+          "line": 8
+        },
+        {
+          "path": "results/pass1-examples-off/pass1-examples-off-compare_check_last_quarter-s03-df171b.trace.jsonl",
+          "sha256_lf": "0c9c509a753e879573ae58b813932c67f50fb80b11327e2e47d1a331d7627709",
+          "selector": [
+            "output",
+            "output",
+            "total_revenue"
+          ],
+          "observed": 62799.6,
+          "line": 10
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-on",
+      "run_id": "pass1-examples-on-batch_reports_two-s01-e6bbc7",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s01-e6bbc7.trace.jsonl",
+      "trace_sha256_lf": "975426f0176c8e840d4d2b74f29e571b1eb60886008e0c77e142e1dc68407b05",
+      "line": 7,
+      "model_line": 6,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        4,
+        "args"
+      ],
+      "observed": {
+        "recipient": "recipient@example.com",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r0_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            0,
+            "contact_email"
+          ],
+          "observed": "contact@delta.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-on",
+      "run_id": "pass1-examples-on-batch_reports_two-s01-e6bbc7",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s01-e6bbc7.trace.jsonl",
+      "trace_sha256_lf": "975426f0176c8e840d4d2b74f29e571b1eb60886008e0c77e142e1dc68407b05",
+      "line": 7,
+      "model_line": 6,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        9,
+        "args"
+      ],
+      "observed": {
+        "recipient": "recipient@example.com",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r1_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            1,
+            "contact_email"
+          ],
+          "observed": "contact@acme.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-on",
+      "run_id": "pass1-examples-on-batch_reports_two-s01-e6bbc7",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s01-e6bbc7.trace.jsonl",
+      "trace_sha256_lf": "975426f0176c8e840d4d2b74f29e571b1eb60886008e0c77e142e1dc68407b05",
+      "line": 25,
+      "model_line": 25,
+      "event_type": "model_call",
+      "tool": "draft_report_email",
+      "selector": [],
+      "observed": {
+        "recipient": "recipient@example.com",
+        "subject": "Quarterly Sales Report",
+        "body": "Your quarterly report has been prepared. The total revenue for the period 2026Q3 is $60,771.05, with a total of 1,214 units sold."
+      },
+      "reason": "Revision preserves recipient@example.com rather than the selected first request contact.",
+      "decode_text": true,
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            0,
+            "contact_email"
+          ],
+          "observed": "contact@delta.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-on",
+      "run_id": "pass1-examples-on-batch_reports_two-s02-32f1cf",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s02-32f1cf.trace.jsonl",
+      "trace_sha256_lf": "0a708291328d10b6aa169cc178ac978178fa81510ee263cc55a2b92ce54ea348",
+      "line": 7,
+      "model_line": 6,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        4,
+        "args"
+      ],
+      "observed": {
+        "recipient": "recipient@example.com",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r0_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            0,
+            "contact_email"
+          ],
+          "observed": "contact@delta.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-on",
+      "run_id": "pass1-examples-on-batch_reports_two-s02-32f1cf",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s02-32f1cf.trace.jsonl",
+      "trace_sha256_lf": "0a708291328d10b6aa169cc178ac978178fa81510ee263cc55a2b92ce54ea348",
+      "line": 7,
+      "model_line": 6,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        9,
+        "args"
+      ],
+      "observed": {
+        "recipient": "recipient@example.com",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r1_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            1,
+            "contact_email"
+          ],
+          "observed": "contact@acme.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-on",
+      "run_id": "pass1-examples-on-batch_reports_two-s02-32f1cf",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s02-32f1cf.trace.jsonl",
+      "trace_sha256_lf": "0a708291328d10b6aa169cc178ac978178fa81510ee263cc55a2b92ce54ea348",
+      "line": 9,
+      "model_line": 8,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        4,
+        "args"
+      ],
+      "observed": {
+        "recipient": "recipient@example.com",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r0_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            0,
+            "contact_email"
+          ],
+          "observed": "contact@delta.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-on",
+      "run_id": "pass1-examples-on-batch_reports_two-s02-32f1cf",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s02-32f1cf.trace.jsonl",
+      "trace_sha256_lf": "0a708291328d10b6aa169cc178ac978178fa81510ee263cc55a2b92ce54ea348",
+      "line": 9,
+      "model_line": 8,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        9,
+        "args"
+      ],
+      "observed": {
+        "recipient": "recipient@example.com",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r1_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            1,
+            "contact_email"
+          ],
+          "observed": "contact@acme.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-on",
+      "run_id": "pass1-examples-on-batch_reports_two-s02-32f1cf",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s02-32f1cf.trace.jsonl",
+      "trace_sha256_lf": "0a708291328d10b6aa169cc178ac978178fa81510ee263cc55a2b92ce54ea348",
+      "line": 27,
+      "model_line": 27,
+      "event_type": "model_call",
+      "tool": "draft_report_email",
+      "selector": [],
+      "observed": {
+        "recipient": "recipient@example.com",
+        "subject": "Quarterly Sales Report",
+        "body": "Your quarterly report has been prepared. The total revenue for the period 2026Q3 is $60,771.05."
+      },
+      "reason": "Revision preserves recipient@example.com rather than the selected first request contact.",
+      "decode_text": true,
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            0,
+            "contact_email"
+          ],
+          "observed": "contact@delta.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-on",
+      "run_id": "pass1-examples-on-batch_reports_two-s03-5ed0c7",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s03-5ed0c7.trace.jsonl",
+      "trace_sha256_lf": "d8d6ef4be0cac39702ca87c5296a8261fe67c155eecb558351fa96d4c75bdaad",
+      "line": 7,
+      "model_line": 6,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        4,
+        "args"
+      ],
+      "observed": {
+        "recipient": "recipient@example.com",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r0_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            0,
+            "contact_email"
+          ],
+          "observed": "contact@delta.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-on",
+      "run_id": "pass1-examples-on-batch_reports_two-s03-5ed0c7",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s03-5ed0c7.trace.jsonl",
+      "trace_sha256_lf": "d8d6ef4be0cac39702ca87c5296a8261fe67c155eecb558351fa96d4c75bdaad",
+      "line": 7,
+      "model_line": 6,
+      "event_type": "plan",
+      "tool": "draft_report_email",
+      "selector": [
+        "plan",
+        "steps",
+        9,
+        "args"
+      ],
+      "observed": {
+        "recipient": "recipient@example.com",
+        "subject": "Quarterly sales report",
+        "body": "Your quarterly report has been prepared.",
+        "report_id": {
+          "$fill": "r1_save.report_id"
+        }
+      },
+      "reason": "Recipient is a literal example or unresolved string placeholder, not the selected request contact. Each model-produced plan step counts once, including rejected proposals; critique-approved copies do not count again.",
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            1,
+            "contact_email"
+          ],
+          "observed": "contact@acme.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-on",
+      "run_id": "pass1-examples-on-batch_reports_two-s03-5ed0c7",
+      "category": "wrong_recipient",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s03-5ed0c7.trace.jsonl",
+      "trace_sha256_lf": "d8d6ef4be0cac39702ca87c5296a8261fe67c155eecb558351fa96d4c75bdaad",
+      "line": 25,
+      "model_line": 25,
+      "event_type": "model_call",
+      "tool": "draft_report_email",
+      "selector": [],
+      "observed": {
+        "recipient": "recipient@example.com",
+        "subject": "Quarterly Sales Report for 2026Q3",
+        "body": "Your quarterly report has been prepared. The total revenue for this period is $60,771.05."
+      },
+      "reason": "Revision preserves recipient@example.com rather than the selected first request contact.",
+      "decode_text": true,
+      "facts": [
+        {
+          "path": "tasks/batch_reports_two.yaml",
+          "sha256_lf": "15baaef4f89e030600f702cf885e17a14e2f6b91cf317368c75557357d217785",
+          "selector": [
+            "inputs",
+            0,
+            "contact_email"
+          ],
+          "observed": "contact@delta.example"
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-on",
+      "run_id": "pass1-examples-on-compare_check_last_quarter-s01-0e1be2",
+      "category": "incomplete_report_figures",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s01-0e1be2.trace.jsonl",
+      "trace_sha256_lf": "b68fd740f4e027f6ce7953497e5960e217c006336ebcc598fd2a46143f7b700f",
+      "line": 15,
+      "model_line": 14,
+      "event_type": "tool_call",
+      "tool": "save_report",
+      "selector": [
+        "input"
+      ],
+      "observed": {
+        "kind": "comparison",
+        "figures": {
+          "period": "2026Q3",
+          "total_revenue": 67246.55,
+          "total_units": 1286,
+          "file_total_units": 431
+        },
+        "body": "Revenue in Q3 is 67246.55 with units sold at 1286, while the previous quarter's revenue was 62799.60 with units sold at 1299. This reflects a revenue increase of 1446.95 and a decrease in sold units by 13."
+      },
+      "reason": "Named previous_period and previous_total_revenue are absent despite both quarter queries. Narrative numbers do not replace the named structured fields; historical check scores remain unchanged.",
+      "facts": [
+        {
+          "path": "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s01-0e1be2.trace.jsonl",
+          "sha256_lf": "b68fd740f4e027f6ce7953497e5960e217c006336ebcc598fd2a46143f7b700f",
+          "selector": [
+            "output",
+            "output",
+            "total_revenue"
+          ],
+          "observed": 67246.55,
+          "line": 8
+        },
+        {
+          "path": "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s01-0e1be2.trace.jsonl",
+          "sha256_lf": "b68fd740f4e027f6ce7953497e5960e217c006336ebcc598fd2a46143f7b700f",
+          "selector": [
+            "output",
+            "output",
+            "total_revenue"
+          ],
+          "observed": 62799.6,
+          "line": 10
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-on",
+      "run_id": "pass1-examples-on-compare_check_last_quarter-s02-712c70",
+      "category": "incomplete_report_figures",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s02-712c70.trace.jsonl",
+      "trace_sha256_lf": "a33815d91b7a05c994c848641986e2186e2387f47eb7f7ee3ab3cfef3f8b3401",
+      "line": 15,
+      "model_line": 14,
+      "event_type": "tool_call",
+      "tool": "save_report",
+      "selector": [
+        "input"
+      ],
+      "observed": {
+        "kind": "comparison",
+        "figures": {
+          "period": "2026Q3",
+          "total_revenue": 67246.55,
+          "total_units": 1286,
+          "file_total_units": 431
+        },
+        "body": "Q3 revenue of $67,246.55 has decreased in total units compared to Q2. Q2 had 1,299 units and $62,799.60 in revenue."
+      },
+      "reason": "Named previous_period and previous_total_revenue are absent despite both quarter queries. Narrative numbers do not replace the named structured fields; historical check scores remain unchanged.",
+      "facts": [
+        {
+          "path": "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s02-712c70.trace.jsonl",
+          "sha256_lf": "a33815d91b7a05c994c848641986e2186e2387f47eb7f7ee3ab3cfef3f8b3401",
+          "selector": [
+            "output",
+            "output",
+            "total_revenue"
+          ],
+          "observed": 67246.55,
+          "line": 8
+        },
+        {
+          "path": "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s02-712c70.trace.jsonl",
+          "sha256_lf": "a33815d91b7a05c994c848641986e2186e2387f47eb7f7ee3ab3cfef3f8b3401",
+          "selector": [
+            "output",
+            "output",
+            "total_revenue"
+          ],
+          "observed": 62799.6,
+          "line": 10
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-on",
+      "run_id": "pass1-examples-on-compare_check_last_quarter-s02-712c70",
+      "category": "invalid_report_reference",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s02-712c70.trace.jsonl",
+      "trace_sha256_lf": "a33815d91b7a05c994c848641986e2186e2387f47eb7f7ee3ab3cfef3f8b3401",
+      "line": 17,
+      "model_line": 14,
+      "event_type": "tool_call",
+      "tool": "draft_report_email",
+      "selector": [
+        "input"
+      ],
+      "observed": {
+        "recipient": "contact@cedar.example",
+        "report_id": 0,
+        "subject": "Quarterly Report for Q3 2026",
+        "body": "Dear Cedar Team,\n\nPlease find attached the quarterly report for Q3 2026. \n\nCurrent database revenue: $67,246.55.\n\nBest regards,\nYour Company"
+      },
+      "reason": "Model uses report_id=0 instead of the saved report ID. This satisfies the integer schema but the loop refuses the reference, so semantic and boundary counts overlap.",
+      "facts": [
+        {
+          "path": "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s02-712c70.trace.jsonl",
+          "sha256_lf": "a33815d91b7a05c994c848641986e2186e2387f47eb7f7ee3ab3cfef3f8b3401",
+          "selector": [
+            "output",
+            "output",
+            "report_id"
+          ],
+          "observed": 1,
+          "line": 15
+        }
+      ]
+    },
+    {
+      "arm": "pass1-examples-on",
+      "run_id": "pass1-examples-on-compare_check_last_quarter-s03-83ec59",
+      "category": "incomplete_report_figures",
+      "count_unit": "argument_candidate",
+      "trace": "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s03-83ec59.trace.jsonl",
+      "trace_sha256_lf": "e41d8e9a69394a4ffb9157439d333152465b66eca20e2dbd72f3b6b6f2b69154",
+      "line": 17,
+      "model_line": 14,
+      "event_type": "tool_call",
+      "tool": "save_report",
+      "selector": [
+        "input"
+      ],
+      "observed": {
+        "kind": "comparison",
+        "figures": {
+          "period": "2026Q3",
+          "total_revenue": 67246.55,
+          "total_units": 1286,
+          "file_total_units": 431
+        },
+        "body": "Comparing Q2 and Q3 totals shows a revenue increase."
+      },
+      "reason": "Named previous_period and previous_total_revenue are absent despite both quarter queries. Narrative numbers do not replace the named structured fields; historical check scores remain unchanged.",
+      "facts": [
+        {
+          "path": "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s03-83ec59.trace.jsonl",
+          "sha256_lf": "e41d8e9a69394a4ffb9157439d333152465b66eca20e2dbd72f3b6b6f2b69154",
+          "selector": [
+            "output",
+            "output",
+            "total_revenue"
+          ],
+          "observed": 67246.55,
+          "line": 10
+        },
+        {
+          "path": "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s03-83ec59.trace.jsonl",
+          "sha256_lf": "e41d8e9a69394a4ffb9157439d333152465b66eca20e2dbd72f3b6b6f2b69154",
+          "selector": [
+            "output",
+            "output",
+            "total_revenue"
+          ],
+          "observed": 62799.6,
+          "line": 12
+        }
+      ]
+    }
+  ]
+}

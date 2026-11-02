@@ -63,7 +63,7 @@ class CritiqueHeld(Exception):
 
 
 def run(session_id: str, request_id: str, text: str, *, registry=None,
-        limits: bounds.Limits | None = None, clock=None) -> LoopResult:
+        limits: bounds.Limits | None = None, clock=None, comparison_required=False) -> LoopResult:
     """Execute one code-selected request; injected dependencies must be trusted code."""
     request = inbox.get(request_id)
     if request is None:
@@ -71,12 +71,14 @@ def run(session_id: str, request_id: str, text: str, *, registry=None,
     if not isinstance(text, str) or not text.strip():
         raise ValueError("The operator instruction is empty")
     registry = tools.build(request_id) if registry is None else registry
-    return _Loop(session_id, request, text, registry, limits or bounds.Limits(), clock).execute()
+    return _Loop(session_id, request, text, registry, limits or bounds.Limits(), clock,
+                 comparison_required=comparison_required).execute()
 
 
 class _Loop:
-    def __init__(self, session_id, request, text, registry, limits, clock):
+    def __init__(self, session_id, request, text, registry, limits, clock, *, comparison_required=False):
         self.request = request
+        self.comparison_required = comparison_required
         self.registry = registry
         self.client = runtime.client(session_id)
         self.trace = runtime.trace(session_id)
@@ -168,7 +170,8 @@ class _Loop:
     def call_tool(self, call, step):
         args = deepcopy(call.input)  # Registry normalization must not rewrite assistant history.
         if call.name == "draft_report_email":
-            gate = EmailGate(self.request["id"], self.model_call, self.check)
+            gate = EmailGate(self.request["id"], self.model_call, self.check,
+                             comparison_required=self.comparison_required)
             try:
                 draft = gate.email_draft(args)
             except ValueError as exc:
@@ -182,10 +185,12 @@ class _Loop:
 
 class EmailGate:
     """The same request/report critique boundary for reactive and planned execution."""
-    def __init__(self, request_id, model_call, check):
+    def __init__(self, request_id, model_call, check, *, fixed_recipient=None, comparison_required=False):
         self.request = {"id": request_id}
         self.model_call = model_call
         self.check = check
+        self.fixed_recipient = fixed_recipient
+        self.comparison_required = comparison_required
 
     def email_draft(self, args):
         required = {"recipient", "subject", "body", "report_id"}
@@ -197,11 +202,15 @@ class EmailGate:
         report = next((r for r in reports.for_request(self.request["id"]) if r["id"] == args["report_id"]), None)
         if report is None:
             raise ValueError("Save a report for this request and use its returned report_id.")
-        return {**args, "figures": json.loads(report["figures_json"])}
+        return {**args, "figures": json.loads(report["figures_json"]),
+                "report_kind": report["kind"], "comparison_required": self.comparison_required}
 
     def checked_email(self, draft):
         # The callback cannot execute tools or change the report checked by the critic.
         current = deepcopy(draft)
+        if self.fixed_recipient is not None:
+            current["recipient"] = self.fixed_recipient
+        draft = deepcopy(current)
         editable = {"recipient", "subject", "body"}
         revision_limit = None
 
@@ -229,6 +238,8 @@ class EmailGate:
                     or any(not isinstance(v, str) or not v.strip() for v in revised.values())):
                 raise CritiqueHeld("Revision must contain only recipient, subject, and body.")
             current = {**deepcopy(draft), **revised}
+            if self.fixed_recipient is not None:
+                current["recipient"] = self.fixed_recipient
             return deepcopy(current)
 
         result = critique.run(self.request["id"], deepcopy(draft), revise, rounds=2)
@@ -240,6 +251,9 @@ class EmailGate:
         passed = result.draft
         if (not isinstance(passed, dict) or passed.get("report_id") != draft["report_id"]
                 or passed.get("figures") != draft["figures"]
+                or passed.get("report_kind") != draft.get("report_kind")
+                or passed.get("comparison_required") != draft.get("comparison_required")
+                or (self.fixed_recipient is not None and passed.get("recipient") != self.fixed_recipient)
                 or any(not isinstance(passed.get(k), str) or not passed[k].strip() for k in editable)):
             raise CritiqueHeld("Critique changed the saved report or returned an invalid email draft.")
         return {k: passed[k] for k in ("recipient", "subject", "body", "report_id")}

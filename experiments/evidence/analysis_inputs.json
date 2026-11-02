@@ -1,0 +1,636 @@
+{
+  "purpose": "Immutable analysis inputs: prospective protocol, original byte hash provenance, frozen historical schemas and archived metadata. No current agent/checker executes during regeneration.",
+  "pass1_protocol": {
+    "commit": "2e18da0dca47b211ea516fe1a0fa1e1dd49d08c2",
+    "prediction_committed_at": "2026-10-31T16:08:46-05:00",
+    "arms": {
+      "pass1-examples-off": "off",
+      "pass1-examples-on": "on"
+    },
+    "tasks": [
+      "batch_reports_two",
+      "compare_check_last_quarter",
+      "messy_file_semicolon",
+      "out_of_scope_margins",
+      "standard_report_clean",
+      "status_question_done_work"
+    ],
+    "sweeps": [
+      1,
+      2,
+      3
+    ],
+    "target_task": "messy_file_semicolon",
+    "configuration": {
+      "settings": "2a5d0a5cd26d",
+      "backend": "openai-compatible",
+      "price_sheet": "2026-06-24",
+      "model": "gpt-4o-mini"
+    }
+  },
+  "schema_source": {
+    "commit": "2e18da0dca47b211ea516fe1a0fa1e1dd49d08c2",
+    "path": "agent/tools.py",
+    "source_sha256_lf": "518e42fdf845371ef96b1199686c1f199e9b07fc40819719fb9208de74d091f1"
+  },
+  "argument_schemas": {
+    "parse_file": {
+      "type": "object",
+      "properties": {
+        "delimiter": {
+          "type": "string",
+          "enum": [
+            ",",
+            ";",
+            "\t",
+            "|"
+          ]
+        },
+        "decimal": {
+          "type": "string",
+          "enum": [
+            ".",
+            ","
+          ]
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "query_sales": {
+      "type": "object",
+      "properties": {
+        "period": {
+          "type": "string",
+          "pattern": "^[0-9]{4}Q[1-4]$",
+          "description": "Calendar quarter such as 2026Q3."
+        }
+      },
+      "required": [
+        "period"
+      ],
+      "additionalProperties": false
+    },
+    "render_chart": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "type": "string"
+          }
+        },
+        "values": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      },
+      "required": [
+        "title",
+        "labels",
+        "values"
+      ],
+      "additionalProperties": false
+    },
+    "save_report": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "standard",
+            "comparison",
+            "batch"
+          ]
+        },
+        "figures": {
+          "type": "object"
+        },
+        "body": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "figures",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    "draft_report_email": {
+      "type": "object",
+      "properties": {
+        "recipient": {
+          "type": "string"
+        },
+        "report_id": {
+          "type": "integer"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "recipient",
+        "report_id",
+        "subject",
+        "body"
+      ],
+      "additionalProperties": false
+    },
+    "draft_clarifying_question": {
+      "type": "object",
+      "properties": {
+        "question": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "question"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "original_sha256": {
+    "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s01-b4d71f.json": "84cfc1f8a438e56a69ec0ccc9300d52b758bd1ce70e6186111b25936b4a26113",
+    "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s01-b4d71f.trace.jsonl": "42d0f4b265e81b1bdc17e78e007e82db4e6f14aa301750353f1c662662ee6f9a",
+    "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s02-b6501f.json": "1d2e5ad316de53a02cd3895b7b7b9d5b770166cdede90f6d9ce355127f89e232",
+    "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s02-b6501f.trace.jsonl": "1d4aee3c059a84bb276a73103eed7b9696a2cdd4c6c09e486e372d71cb390017",
+    "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s03-e6fb94.json": "3aa791914cc3b64a162be2aead56ae52c1c940e073c1c388ee7f9b4b1b994406",
+    "results/pass1-examples-off/pass1-examples-off-batch_reports_two-s03-e6fb94.trace.jsonl": "5f1bb4b1459facb683c9ce9a7ff6cc52c7fe4a9824d2f4324c061b10418f0e0b",
+    "results/pass1-examples-off/pass1-examples-off-compare_check_last_quarter-s01-8c0d0a.json": "14bbe005afed2de8b6bca46573d3ea0d818e1ebd1c3d3f4bd7436b560b304468",
+    "results/pass1-examples-off/pass1-examples-off-compare_check_last_quarter-s01-8c0d0a.trace.jsonl": "f03e4aec6667399618365331319fce35215ba51f19aad660badacc9f24d69a25",
+    "results/pass1-examples-off/pass1-examples-off-compare_check_last_quarter-s02-88336e.json": "955ac688a8969c04e724c535f90f5357d23dcc183dca57ab890804e02c86f322",
+    "results/pass1-examples-off/pass1-examples-off-compare_check_last_quarter-s02-88336e.trace.jsonl": "b7ec9981273ecd765ac912155d8b5c337086838824366dcf342d27a8f9607681",
+    "results/pass1-examples-off/pass1-examples-off-compare_check_last_quarter-s03-df171b.json": "14844b1d9a9ed4c9ff4e58402079e4dfb9100ae28ca0085ebe31522c0fedba74",
+    "results/pass1-examples-off/pass1-examples-off-compare_check_last_quarter-s03-df171b.trace.jsonl": "2dc03549c6b0bd0fec3d818bed422948a1f0d41b5a7c42725574dc453a70ac48",
+    "results/pass1-examples-off/pass1-examples-off-messy_file_semicolon-s01-9c7c17.json": "3ebdf3a98b80a9806fd845253b00659fe6fe262a5941ccaa965892962015477d",
+    "results/pass1-examples-off/pass1-examples-off-messy_file_semicolon-s01-9c7c17.trace.jsonl": "597da4e8147bb0e60d658e90d02404445e06e6cf71c07d8dbe506d7d6e4b8daf",
+    "results/pass1-examples-off/pass1-examples-off-messy_file_semicolon-s02-885308.json": "e7364922afda9c6e0a83d45e09b3e8ba45ae87d245f49273a35edf7a53ee8b08",
+    "results/pass1-examples-off/pass1-examples-off-messy_file_semicolon-s02-885308.trace.jsonl": "a7f622281349b034256d814bebfb15d6c82f7358fbba38b09cb0782c0789eeff",
+    "results/pass1-examples-off/pass1-examples-off-messy_file_semicolon-s03-d706a1.json": "3f98f3ce6a8141ac5c474b77ae758fe719e8f9d866f6dbac644175ff4a4d5180",
+    "results/pass1-examples-off/pass1-examples-off-messy_file_semicolon-s03-d706a1.trace.jsonl": "60b2a768a2a9f273ae8d0b10dcf3db57e2fed314c6009e83c43ef4842d4490f8",
+    "results/pass1-examples-off/pass1-examples-off-out_of_scope_margins-s01-26f496.json": "b0864a061dfccd30afefe509c40f577a2d750ad9aa46e0f27549ce121a9f0c32",
+    "results/pass1-examples-off/pass1-examples-off-out_of_scope_margins-s01-26f496.trace.jsonl": "5aa61a35dd51935df070f550d580dd581b907cab4348cfd96df4680f20a0b685",
+    "results/pass1-examples-off/pass1-examples-off-out_of_scope_margins-s02-e08653.json": "763ee9358c313656c9ff9ea6dc7d6341cd0d335ac7a75b33734df824d57899a0",
+    "results/pass1-examples-off/pass1-examples-off-out_of_scope_margins-s02-e08653.trace.jsonl": "c28af265b4a9ec51ce58286cb431d99909678f50b7232746bad814cc80fb169f",
+    "results/pass1-examples-off/pass1-examples-off-out_of_scope_margins-s03-e26d3f.json": "0f1ed8c3a5efba82ac31b32b232fc0ae8f723f35397d92e8063498c193f9c4c5",
+    "results/pass1-examples-off/pass1-examples-off-out_of_scope_margins-s03-e26d3f.trace.jsonl": "964c838772826e78407a31f8161db2058fc8987095cf40a4b19f93ec77b29d89",
+    "results/pass1-examples-off/pass1-examples-off-standard_report_clean-s01-472a40.json": "ce72005411c503c8822cae0683b380172815b2e44b81e104be9b8d4c873a50e8",
+    "results/pass1-examples-off/pass1-examples-off-standard_report_clean-s01-472a40.trace.jsonl": "9b16f8af97c2aec985e1f4ac71cd33110510e47b387f95c04318850a3c3d6283",
+    "results/pass1-examples-off/pass1-examples-off-standard_report_clean-s02-e744ad.json": "cab7951ead3252140f624c04e2617a3162bb803c1a642628976228764839d5ee",
+    "results/pass1-examples-off/pass1-examples-off-standard_report_clean-s02-e744ad.trace.jsonl": "78575ca0d7e8965dcc5e0d0d57b7b8fe5cdc0618bca7c6dfd99b10d92811739d",
+    "results/pass1-examples-off/pass1-examples-off-standard_report_clean-s03-64a05f.json": "b6ecc8722838f8f5d91de6d815467be8a468bbca31952ae4f2c05a2469a08076",
+    "results/pass1-examples-off/pass1-examples-off-standard_report_clean-s03-64a05f.trace.jsonl": "0e6f86b79c0bd91c8bd945d0a37d7f6e5465d13dc1e0cc52f52bff5f1b1f3fb4",
+    "results/pass1-examples-off/pass1-examples-off-status_question_done_work-s01-653aff.json": "b134cfbaefacf0cc8b8868ce9541bcaf705792a9aefa550d781da55ca979698a",
+    "results/pass1-examples-off/pass1-examples-off-status_question_done_work-s01-653aff.trace.jsonl": "71a3a5d8c5f4d5af98266c70b636fda1c42f472003085c41505a30446aca2fae",
+    "results/pass1-examples-off/pass1-examples-off-status_question_done_work-s02-1800ff.json": "76656be49db28dee5e85ed7e12f8ede5f61e0792b368eaa3545ca5e8e31980fa",
+    "results/pass1-examples-off/pass1-examples-off-status_question_done_work-s02-1800ff.trace.jsonl": "4eecfbe8286cb92329b71776f356d4381e5e3fad13e9ef4a41bd019052a7a609",
+    "results/pass1-examples-off/pass1-examples-off-status_question_done_work-s03-1e028a.json": "ebfb457777cd01a5abb1d5bff3f92a82bb44983209251d058e0de2035688155e",
+    "results/pass1-examples-off/pass1-examples-off-status_question_done_work-s03-1e028a.trace.jsonl": "65eacc268fbe69b0a2846b95136ed418424d9d302d1bda73686faa19516d7355",
+    "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s01-e6bbc7.json": "eb462613f06878095cf13edcf06c9cde559957fb5e2daf59ddece751345ea6df",
+    "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s01-e6bbc7.trace.jsonl": "036ce61c3677840cf45f43a3628f4a5dc0b05d28a7439e833ee973c920d5f774",
+    "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s02-32f1cf.json": "33ad33b54fa8dd7996dd3ccc7b8e209b0ccee4b2403acec2784c05fa1b862d1a",
+    "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s02-32f1cf.trace.jsonl": "bbc3a98bde71573d7bce353c9b33c7d3586b3f1660aba411935b529fb6d1b078",
+    "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s03-5ed0c7.json": "00060dd5ee867920d53e85e2b51118341f2e5f52f8e6c1cc8eaab44123fa65ac",
+    "results/pass1-examples-on/pass1-examples-on-batch_reports_two-s03-5ed0c7.trace.jsonl": "4ef85c1efda20a5e9394c4092cfd16950c454b4a0ea030706d08ac450b8437f2",
+    "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s01-0e1be2.json": "a09e28dc56cbc314aeb67569e957a6a9be3c2a68dc489dc3fc90aa8cb0ee9cb5",
+    "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s01-0e1be2.trace.jsonl": "5934e82e5bc84da41dfacf448880e8264be37c596b65b384738e1792d3e31621",
+    "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s02-712c70.json": "8594326238ac894e724c24d27a12a75c3508e2822027be10671de3b4fa1a1119",
+    "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s02-712c70.trace.jsonl": "4fb1a07d4bf3aa9ebbd791f3918bdef8af58730cf01f86c692e6e49eaef02880",
+    "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s03-83ec59.json": "8f672c8228a0ab6a752f157b372cbf3cedf24fb8a7e24ff3b3240c177ab1070a",
+    "results/pass1-examples-on/pass1-examples-on-compare_check_last_quarter-s03-83ec59.trace.jsonl": "c2d2ccc3e8e803dc3bd31ca0b5af2da800bde63604a226b3186aba48f153a289",
+    "results/pass1-examples-on/pass1-examples-on-messy_file_semicolon-s01-75daf4.json": "4403d9ddfb330068eac2818c1fea13dc9916649f7c858b580a4e366b08a7e39c",
+    "results/pass1-examples-on/pass1-examples-on-messy_file_semicolon-s01-75daf4.trace.jsonl": "1bdca336d26dbf8035e6d2757d936a1b157a96fc73f6f02a4a020ad0cca8ccaa",
+    "results/pass1-examples-on/pass1-examples-on-messy_file_semicolon-s02-5af5e8.json": "68e0d186b79d63f45f01327e62807d08d54fae60093da324f26e426a44bd7934",
+    "results/pass1-examples-on/pass1-examples-on-messy_file_semicolon-s02-5af5e8.trace.jsonl": "e33e9cd9d2a96f8cb8b7f98b6557d67ce17d76c69a7143ee6c83cf71b8d68a5a",
+    "results/pass1-examples-on/pass1-examples-on-messy_file_semicolon-s03-fb81b7.json": "db3a551ba98c65cb8d760e06925c3eb64aa1e79a4253e0e21db512b5a1bca1dd",
+    "results/pass1-examples-on/pass1-examples-on-messy_file_semicolon-s03-fb81b7.trace.jsonl": "680573bd8063898baf4c704e1e8ebfbc14b03771e84a14092148003704403325",
+    "results/pass1-examples-on/pass1-examples-on-out_of_scope_margins-s01-97f8d6.json": "7b9a1d19edef2b1063f3b4960ed270db0e4d5743894969762c091d23b68ed815",
+    "results/pass1-examples-on/pass1-examples-on-out_of_scope_margins-s01-97f8d6.trace.jsonl": "eb2d1e7f64948c9bc35ba2b57b7cae1ad5ddcfa4b0ea5818966a4e91fe7f107a",
+    "results/pass1-examples-on/pass1-examples-on-out_of_scope_margins-s02-800405.json": "4b30c42d6a37249d551c7ae073391846bcf55bbae0d2f5941e3ede984e1c8b0e",
+    "results/pass1-examples-on/pass1-examples-on-out_of_scope_margins-s02-800405.trace.jsonl": "80bebe03246bdae61beffcc2d2a7aafac2aa897cda4db290776b1ea4ebf67349",
+    "results/pass1-examples-on/pass1-examples-on-out_of_scope_margins-s03-e2644c.json": "27e012df6fc17a466b9dd52cd8ac1dd1e94153f83547d6818272b1602e946786",
+    "results/pass1-examples-on/pass1-examples-on-out_of_scope_margins-s03-e2644c.trace.jsonl": "2cdaae3df545044bce17bde250c21df6e7b8f4957f3823229474720b519aded8",
+    "results/pass1-examples-on/pass1-examples-on-standard_report_clean-s01-883e22.json": "1c2dae7da62b59ea50ac0694666d1fe33fbebdbcbbe6df67b8d9ee0072f23325",
+    "results/pass1-examples-on/pass1-examples-on-standard_report_clean-s01-883e22.trace.jsonl": "20e4cffeb6b7e412d68929029d793edca892d99fb6af6c65f9cc0e8a101b5fca",
+    "results/pass1-examples-on/pass1-examples-on-standard_report_clean-s02-573a18.json": "f52c595360dd99dfd552867143e1414aa040d2874a1cea592475ea078ff35a7e",
+    "results/pass1-examples-on/pass1-examples-on-standard_report_clean-s02-573a18.trace.jsonl": "aa29b4257228691798b4f72f38a1e95b5a18a4ee2c48966267998b31d826e26c",
+    "results/pass1-examples-on/pass1-examples-on-standard_report_clean-s03-1c66ab.json": "e880b734e87617f0c029c3ab357abbc6e3d002685e91f0003f07ca8ae00571e4",
+    "results/pass1-examples-on/pass1-examples-on-standard_report_clean-s03-1c66ab.trace.jsonl": "bf78e708dce76cf186d44f45b588a4d4f14d3178b1d4a32b42af9f10243e70b5",
+    "results/pass1-examples-on/pass1-examples-on-status_question_done_work-s01-a1f22c.json": "06fc49571ceb1cb0a3fbc43a71aaddd459e2686621c32fc12d526da6434accb2",
+    "results/pass1-examples-on/pass1-examples-on-status_question_done_work-s01-a1f22c.trace.jsonl": "be004617b5fb8f200995cc35bce513f4783bea5908b2bc248dd431afb96392ae",
+    "results/pass1-examples-on/pass1-examples-on-status_question_done_work-s02-98f033.json": "87059ffeb077a0e135a7f31508d946e5b4bb04a4d45701ee8ff6bc6f8371a9b2",
+    "results/pass1-examples-on/pass1-examples-on-status_question_done_work-s02-98f033.trace.jsonl": "f03a585b4d99b98243d322caf38a85a34f767917b89eb2f302463aed59661ce0",
+    "results/pass1-examples-on/pass1-examples-on-status_question_done_work-s03-ffeb96.json": "3d8ff9509519242eaf2c6bbe346f6d0c5dbdcbdcc3ee416946b59e6dd43de08d",
+    "results/pass1-examples-on/pass1-examples-on-status_question_done_work-s03-ffeb96.trace.jsonl": "410b4318d7723fc3db3f5c7cd7852453851b99124f1e307e9846a71e5cd9bb44",
+    "traces/dev-myron-live-01-batch_reports_two-s01-07790a.trace.jsonl": "6069d6a74cf5f84e16895f55bc25f68585ce868483024a5c80e28bfe8fc4e854",
+    "traces/dev-myron-live-01-compare_check_last_quarter-s01-c88845.trace.jsonl": "f74a68e733c7b576fd887190f032473dee7ae3fe64fb8b46ee4980fed801d0cd",
+    "traces/dev-myron-live-01-messy_file_semicolon-s01-c4adcb.trace.jsonl": "8cea534452931367f5ccf44064bbbacdc149769f009550da8528330a6ba26e5d",
+    "traces/dev-myron-live-01-out_of_scope_margins-s01-767471.trace.jsonl": "29d45258810f299ee8b84cd8c96e2a2e063acfb58624936510a8e844f8b12acb",
+    "traces/dev-myron-live-01-standard_report_clean-s01-6a4696.trace.jsonl": "03e437f3c666e3d0c675a1fe274496eb0f51e2a5bb28b6bb806664a1f083d012",
+    "traces/dev-myron-live-01-status_question_done_work-s01-5f48d4.trace.jsonl": "e4c149478ce32034e66b3347c89c958b6b7d27ce21ec6656281d10d72e3f1a83",
+    "traces/dev-myron-live-02-batch_reports_two-s01-792d75.trace.jsonl": "63e26fc1eba81e8a42c2ef609564aa3216fdee4c2d9d02929c04dff0a3cc3086",
+    "traces/dev-myron-live-02-compare_check_last_quarter-s01-a6fd34.trace.jsonl": "a39f6cf978071d026e963c47fb80d40c4d9a83d0f9b42f3c408a75b2c7a2627d",
+    "traces/dev-myron-live-02-messy_file_semicolon-s01-f55d9b.trace.jsonl": "b717944087e295a305514293d7724b8599d4f95e4283d1fe164b12bd2551a7e1",
+    "traces/dev-myron-live-02-out_of_scope_margins-s01-7ece2f.trace.jsonl": "fe06ba13befae00332e49bb53695adb944055eb6dec5ccb3263c78133a8de45a",
+    "traces/dev-myron-live-02-standard_report_clean-s01-88ae36.trace.jsonl": "09d765d8496833eb2963088a77d34cef3921638cea9a6e3d97878e7b828976ca",
+    "traces/dev-myron-live-02-status_question_done_work-s01-3c83f9.trace.jsonl": "ae42c48b1324f57cc924356430eb4d5f80cef1979e9c6c4c422d56e9f1863053",
+    "results/baseline/baseline-batch_reports_two-s01-b7256b.json": "dd3fc28e5569b711557321c50e3f8359747ded679226bf719f2976eb4cef2418",
+    "results/baseline/baseline-batch_reports_two-s01-b7256b.trace.jsonl": "030ed3f3f0b9966c1f25838a23568246fb6ba4105b99b7f04d4ae041bec20991",
+    "results/baseline/baseline-batch_reports_two-s02-afc9fd.json": "6b5d43cc3a6ff6016d4fe91651b062132fa4007f6b58109175c1bf5300adefdb",
+    "results/baseline/baseline-batch_reports_two-s02-afc9fd.trace.jsonl": "970ca2fb266fba70e9840a753c5ee23f096ace649f22cc30346d17c3c94a3eae",
+    "results/baseline/baseline-batch_reports_two-s03-d8c842.json": "ce013b384aa18346aac4e1966a655d4e5b09c770133c3d70a38e743b4ee68605",
+    "results/baseline/baseline-batch_reports_two-s03-d8c842.trace.jsonl": "405fc96e9fdb79a6691ae5b252ad2b2afff7807c84896512e2a6933588b8f8a9",
+    "results/baseline/baseline-compare_check_last_quarter-s01-2a59dd.json": "ae9eea9e7fd23656f18362ce5d03e62fd9ac9419c7ec8d0b106ee98c20f081d7",
+    "results/baseline/baseline-compare_check_last_quarter-s01-2a59dd.trace.jsonl": "4c66778d4758ab3bdbec151b6dc0a7c6c2553a69e1b57a61a9dac11d2e093dca",
+    "results/baseline/baseline-compare_check_last_quarter-s02-5b316c.json": "41d85ad4592123338a954fdcfd4929f7faa3aaab1b1bc2486dac691d282cff0c",
+    "results/baseline/baseline-compare_check_last_quarter-s02-5b316c.trace.jsonl": "ad75a494c7be69714a861ad43473ea08e43cdd44fea885744d15c925f913a0ff",
+    "results/baseline/baseline-compare_check_last_quarter-s03-05dd3e.json": "471c25531915593d7c4c23931217da1c1b62fd58808e94c0d00f48241ac1e330",
+    "results/baseline/baseline-compare_check_last_quarter-s03-05dd3e.trace.jsonl": "a2fb4b239ee8b480c2a138dbbb2d303c42703d8ef9239df952ecf13b439e20b4",
+    "results/baseline/baseline-messy_file_semicolon-s01-1799cc.json": "40ec011d6cacbdfbdbaba4bf4e70eaeaac7612bf9191c353fcc39ceb7d19deca",
+    "results/baseline/baseline-messy_file_semicolon-s01-1799cc.trace.jsonl": "13d6b655ddf5681113b43d2e1fe742d840516cddabb4e141ea355b1d3a12a64f",
+    "results/baseline/baseline-messy_file_semicolon-s02-3aaee1.json": "e770486f23345ce6ede31f28d1444b79e61f1345f5c78bb5613450ce43ba2d65",
+    "results/baseline/baseline-messy_file_semicolon-s02-3aaee1.trace.jsonl": "ae922643c0186b74fc461fa4f95402a8086978854188991441951f33de2256e4",
+    "results/baseline/baseline-messy_file_semicolon-s03-3a0d53.json": "c7164ef5b245091b63f65ba2cf106b52e36dd6f6ec6174f203baf72c7c31b899",
+    "results/baseline/baseline-messy_file_semicolon-s03-3a0d53.trace.jsonl": "75a75645892518516782be921235d105b8af6d4b3f7fbf249557f231fe78f4fa",
+    "results/baseline/baseline-out_of_scope_margins-s01-5a190f.json": "4def51697bd751934937a8c44b2413338e056bcf9f1eb6b648f1b7d4de991624",
+    "results/baseline/baseline-out_of_scope_margins-s01-5a190f.trace.jsonl": "5b9c4f4c16f3633bc70d4aaf230f912a7ea154344b8c0bf1a501277856c15e82",
+    "results/baseline/baseline-out_of_scope_margins-s02-6c9ac1.json": "27700e7803a3a7411b8c34058792c6c132ff22db669f71b49e26cbba4e80bb5f",
+    "results/baseline/baseline-out_of_scope_margins-s02-6c9ac1.trace.jsonl": "c9639d0ce456f04b2676c3a4eabaa5c84c8e887117043907e50d57876f8c52b6",
+    "results/baseline/baseline-out_of_scope_margins-s03-8c0d46.json": "9cbfcc45a011380e73c3b2876e36b6406b02ee5aa225cb8e6c1e2d0e86f591bd",
+    "results/baseline/baseline-out_of_scope_margins-s03-8c0d46.trace.jsonl": "f3ef73daa27c158560fa46af82c6919b202ec572d8893704849face9228308c7",
+    "results/baseline/baseline-standard_report_clean-s01-a33d9a.json": "e1ec1b4cde7cff4ebd03a3d0b48b943c8f47c315f4332fa907943f9a4595a33c",
+    "results/baseline/baseline-standard_report_clean-s01-a33d9a.trace.jsonl": "82f61d5cbbc9964cc454ec2c11e77a45764720b2fa1c08b6501b7f8575a00466",
+    "results/baseline/baseline-standard_report_clean-s02-071141.json": "b4a5a8561143384f28168a02c395eca0d833369d2066e1ff0a3e77d83507c27e",
+    "results/baseline/baseline-standard_report_clean-s02-071141.trace.jsonl": "6d971d372b61c90de48aab09689e4f9ba920d90722cc59ec6c517a36877b364f",
+    "results/baseline/baseline-standard_report_clean-s03-cbec72.json": "32300d2675050843ce88a17837fa191372e5e9325cfef6514f0d87869756af63",
+    "results/baseline/baseline-standard_report_clean-s03-cbec72.trace.jsonl": "19af231294af54ea7e43bbea54483ff1919017a15a4c1604dc7c634eb94e2395",
+    "results/baseline/baseline-status_question_done_work-s01-af8c22.json": "59c33a5d6762e20ed2d78042884ab925152ae4cf5bfe89220f27de166b155468",
+    "results/baseline/baseline-status_question_done_work-s01-af8c22.trace.jsonl": "ab6310e4861a6cc9588d491eb41b79bf551e0da0e57254f4068c4d7a2c33060e",
+    "results/baseline/baseline-status_question_done_work-s02-a1cd8f.json": "f5b11f1bfd9c76e86afefb2951878d11e19766b04756dcd76804bb915ad54434",
+    "results/baseline/baseline-status_question_done_work-s02-a1cd8f.trace.jsonl": "59b073e44520a76b59976c939670f3a91d7dc0bcd61b37be030aaf75ab9479f2",
+    "results/baseline/baseline-status_question_done_work-s03-f5eabd.json": "1577bf137cd1eb8f1e4e3fb3bb5f785bae67ff204b4f84b3cd5c59aab02dc8e2",
+    "results/baseline/baseline-status_question_done_work-s03-f5eabd.trace.jsonl": "c4ea5bf75bcfb7f829ae35884c2d89d95b2dafb4593bd6b6a6ffb139d4242575"
+  },
+  "development_metadata_source": "Original committed development_manifest.json; source dev records were not archived; checks remain historical.",
+  "development_runs": [
+    {
+      "run_id": "dev-myron-live-01-batch_reports_two-s01-07790a",
+      "arm": "dev-myron-live-01",
+      "task": "batch_reports_two",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": false,
+      "cost_usd": 0.001796,
+      "turn_latency_s": [
+        49.043,
+        1.012
+      ],
+      "end_reasons": [
+        "replan_bound",
+        "done"
+      ],
+      "check": {
+        "function": "checks/batch_reports.py",
+        "passed": false,
+        "reason": "SYN-thread-1301: no report saved; SYN-thread-1301: no pending report email; SYN-thread-1302: no report saved; SYN-thread-1302: no pending report email"
+      },
+      "trace": "traces/dev-myron-live-01-batch_reports_two-s01-07790a.trace.jsonl",
+      "source_record": "results/dev-myron-live-01/dev-myron-live-01-batch_reports_two-s01-07790a.json"
+    },
+    {
+      "run_id": "dev-myron-live-01-compare_check_last_quarter-s01-c88845",
+      "arm": "dev-myron-live-01",
+      "task": "compare_check_last_quarter",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": false,
+      "cost_usd": 0.001233,
+      "turn_latency_s": [
+        7.873,
+        0.037
+      ],
+      "end_reasons": [
+        "critique_held",
+        "done"
+      ],
+      "check": {
+        "function": "checks/compare_check.py",
+        "passed": false,
+        "reason": "SYN-thread-1201: the last report does not carry the revenue 67,246.55; SYN-thread-1201: no pending report email"
+      },
+      "trace": "traces/dev-myron-live-01-compare_check_last_quarter-s01-c88845.trace.jsonl",
+      "source_record": "results/dev-myron-live-01/dev-myron-live-01-compare_check_last_quarter-s01-c88845.json"
+    },
+    {
+      "run_id": "dev-myron-live-01-messy_file_semicolon-s01-c4adcb",
+      "arm": "dev-myron-live-01",
+      "task": "messy_file_semicolon",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": false,
+      "cost_usd": 0.00129,
+      "turn_latency_s": [
+        9.32,
+        0.062
+      ],
+      "end_reasons": [
+        "done",
+        "done"
+      ],
+      "check": {
+        "function": "checks/messy_file.py",
+        "passed": false,
+        "reason": "the report does not carry the file's 1240 units: the file was not decoded"
+      },
+      "trace": "traces/dev-myron-live-01-messy_file_semicolon-s01-c4adcb.trace.jsonl",
+      "source_record": "results/dev-myron-live-01/dev-myron-live-01-messy_file_semicolon-s01-c4adcb.json"
+    },
+    {
+      "run_id": "dev-myron-live-01-out_of_scope_margins-s01-767471",
+      "arm": "dev-myron-live-01",
+      "task": "out_of_scope_margins",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": true,
+      "cost_usd": 0.0,
+      "turn_latency_s": [
+        0.042
+      ],
+      "end_reasons": [
+        "declined"
+      ],
+      "check": {
+        "function": "checks/out_of_scope.py",
+        "passed": true,
+        "reason": "declined with a pending reply to the contact; no private data written"
+      },
+      "trace": "traces/dev-myron-live-01-out_of_scope_margins-s01-767471.trace.jsonl",
+      "source_record": "results/dev-myron-live-01/dev-myron-live-01-out_of_scope_margins-s01-767471.json"
+    },
+    {
+      "run_id": "dev-myron-live-01-standard_report_clean-s01-6a4696",
+      "arm": "dev-myron-live-01",
+      "task": "standard_report_clean",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": true,
+      "cost_usd": 7.4e-05,
+      "turn_latency_s": [
+        1.699,
+        0.097
+      ],
+      "end_reasons": [
+        "done",
+        "done"
+      ],
+      "check": {
+        "function": "checks/standard_report.py",
+        "passed": true,
+        "reason": "report saved with the right revenue; one pending email to the right contact"
+      },
+      "trace": "traces/dev-myron-live-01-standard_report_clean-s01-6a4696.trace.jsonl",
+      "source_record": "results/dev-myron-live-01/dev-myron-live-01-standard_report_clean-s01-6a4696.json"
+    },
+    {
+      "run_id": "dev-myron-live-01-status_question_done_work-s01-5f48d4",
+      "arm": "dev-myron-live-01",
+      "task": "status_question_done_work",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": true,
+      "cost_usd": 1.4e-05,
+      "turn_latency_s": [
+        1.043
+      ],
+      "end_reasons": [
+        "done"
+      ],
+      "check": {
+        "function": "checks/status_question.py",
+        "passed": true,
+        "reason": "answered 51,264.85 from the records (0 open); nothing written"
+      },
+      "trace": "traces/dev-myron-live-01-status_question_done_work-s01-5f48d4.trace.jsonl",
+      "source_record": "results/dev-myron-live-01/dev-myron-live-01-status_question_done_work-s01-5f48d4.json"
+    },
+    {
+      "run_id": "dev-myron-live-02-batch_reports_two-s01-792d75",
+      "arm": "dev-myron-live-02",
+      "task": "batch_reports_two",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": true,
+      "cost_usd": 0.001449,
+      "turn_latency_s": [
+        24.104,
+        0.13
+      ],
+      "end_reasons": [
+        "done",
+        "done"
+      ],
+      "check": {
+        "function": "checks/batch_reports.py",
+        "passed": true,
+        "reason": "all 2 requests: report and one pending email each"
+      },
+      "trace": "traces/dev-myron-live-02-batch_reports_two-s01-792d75.trace.jsonl",
+      "source_record": "results/dev-myron-live-02/dev-myron-live-02-batch_reports_two-s01-792d75.json"
+    },
+    {
+      "run_id": "dev-myron-live-02-compare_check_last_quarter-s01-a6fd34",
+      "arm": "dev-myron-live-02",
+      "task": "compare_check_last_quarter",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": true,
+      "cost_usd": 0.001281,
+      "turn_latency_s": [
+        8.082,
+        0.038
+      ],
+      "end_reasons": [
+        "done",
+        "done"
+      ],
+      "check": {
+        "function": "checks/compare_check.py",
+        "passed": true,
+        "reason": "report with Q3 67,246.55 and Q2 62,799.60; one pending email to the contact"
+      },
+      "trace": "traces/dev-myron-live-02-compare_check_last_quarter-s01-a6fd34.trace.jsonl",
+      "source_record": "results/dev-myron-live-02/dev-myron-live-02-compare_check_last_quarter-s01-a6fd34.json"
+    },
+    {
+      "run_id": "dev-myron-live-02-messy_file_semicolon-s01-f55d9b",
+      "arm": "dev-myron-live-02",
+      "task": "messy_file_semicolon",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": false,
+      "cost_usd": 0.001134,
+      "turn_latency_s": [
+        6.475,
+        0.041
+      ],
+      "end_reasons": [
+        "done",
+        "done"
+      ],
+      "check": {
+        "function": "checks/messy_file.py",
+        "passed": false,
+        "reason": "the report does not carry the file's 1240 units: the file was not decoded"
+      },
+      "trace": "traces/dev-myron-live-02-messy_file_semicolon-s01-f55d9b.trace.jsonl",
+      "source_record": "results/dev-myron-live-02/dev-myron-live-02-messy_file_semicolon-s01-f55d9b.json"
+    },
+    {
+      "run_id": "dev-myron-live-02-out_of_scope_margins-s01-7ece2f",
+      "arm": "dev-myron-live-02",
+      "task": "out_of_scope_margins",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": true,
+      "cost_usd": 0.0,
+      "turn_latency_s": [
+        0.035
+      ],
+      "end_reasons": [
+        "declined"
+      ],
+      "check": {
+        "function": "checks/out_of_scope.py",
+        "passed": true,
+        "reason": "declined with a pending reply to the contact; no private data written"
+      },
+      "trace": "traces/dev-myron-live-02-out_of_scope_margins-s01-7ece2f.trace.jsonl",
+      "source_record": "results/dev-myron-live-02/dev-myron-live-02-out_of_scope_margins-s01-7ece2f.json"
+    },
+    {
+      "run_id": "dev-myron-live-02-standard_report_clean-s01-88ae36",
+      "arm": "dev-myron-live-02",
+      "task": "standard_report_clean",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": true,
+      "cost_usd": 6.2e-05,
+      "turn_latency_s": [
+        1.314,
+        0.039
+      ],
+      "end_reasons": [
+        "done",
+        "done"
+      ],
+      "check": {
+        "function": "checks/standard_report.py",
+        "passed": true,
+        "reason": "report saved with the right revenue; one pending email to the right contact"
+      },
+      "trace": "traces/dev-myron-live-02-standard_report_clean-s01-88ae36.trace.jsonl",
+      "source_record": "results/dev-myron-live-02/dev-myron-live-02-standard_report_clean-s01-88ae36.json"
+    },
+    {
+      "run_id": "dev-myron-live-02-status_question_done_work-s01-3c83f9",
+      "arm": "dev-myron-live-02",
+      "task": "status_question_done_work",
+      "sweep": 1,
+      "model": "gpt-4o-mini",
+      "commit": "432acc25e848b09735e992774faead35252848fa",
+      "dirty": true,
+      "passed": true,
+      "cost_usd": 1.4e-05,
+      "turn_latency_s": [
+        0.9
+      ],
+      "end_reasons": [
+        "done"
+      ],
+      "check": {
+        "function": "checks/status_question.py",
+        "passed": true,
+        "reason": "answered 51,264.85 from the records (0 open); nothing written"
+      },
+      "trace": "traces/dev-myron-live-02-status_question_done_work-s01-3c83f9.trace.jsonl",
+      "source_record": "results/dev-myron-live-02/dev-myron-live-02-status_question_done_work-s01-3c83f9.json"
+    }
+  ],
+  "baseline_provenance": {
+    "origin": "New baseline hash inventory established during the 2026-11-01 audit correction from unchanged tracked record/trace blobs at the named commit; current source bytes were verified against those blobs after CRLF-to-LF normalization. No earlier baseline hash manifest is claimed.",
+    "commit": "f3461a90c517f4e6ec4b76d50535723e0170d055",
+    "files": [
+      "results/baseline/baseline-batch_reports_two-s01-b7256b.json",
+      "results/baseline/baseline-batch_reports_two-s01-b7256b.trace.jsonl",
+      "results/baseline/baseline-batch_reports_two-s02-afc9fd.json",
+      "results/baseline/baseline-batch_reports_two-s02-afc9fd.trace.jsonl",
+      "results/baseline/baseline-batch_reports_two-s03-d8c842.json",
+      "results/baseline/baseline-batch_reports_two-s03-d8c842.trace.jsonl",
+      "results/baseline/baseline-compare_check_last_quarter-s01-2a59dd.json",
+      "results/baseline/baseline-compare_check_last_quarter-s01-2a59dd.trace.jsonl",
+      "results/baseline/baseline-compare_check_last_quarter-s02-5b316c.json",
+      "results/baseline/baseline-compare_check_last_quarter-s02-5b316c.trace.jsonl",
+      "results/baseline/baseline-compare_check_last_quarter-s03-05dd3e.json",
+      "results/baseline/baseline-compare_check_last_quarter-s03-05dd3e.trace.jsonl",
+      "results/baseline/baseline-messy_file_semicolon-s01-1799cc.json",
+      "results/baseline/baseline-messy_file_semicolon-s01-1799cc.trace.jsonl",
+      "results/baseline/baseline-messy_file_semicolon-s02-3aaee1.json",
+      "results/baseline/baseline-messy_file_semicolon-s02-3aaee1.trace.jsonl",
+      "results/baseline/baseline-messy_file_semicolon-s03-3a0d53.json",
+      "results/baseline/baseline-messy_file_semicolon-s03-3a0d53.trace.jsonl",
+      "results/baseline/baseline-out_of_scope_margins-s01-5a190f.json",
+      "results/baseline/baseline-out_of_scope_margins-s01-5a190f.trace.jsonl",
+      "results/baseline/baseline-out_of_scope_margins-s02-6c9ac1.json",
+      "results/baseline/baseline-out_of_scope_margins-s02-6c9ac1.trace.jsonl",
+      "results/baseline/baseline-out_of_scope_margins-s03-8c0d46.json",
+      "results/baseline/baseline-out_of_scope_margins-s03-8c0d46.trace.jsonl",
+      "results/baseline/baseline-standard_report_clean-s01-a33d9a.json",
+      "results/baseline/baseline-standard_report_clean-s01-a33d9a.trace.jsonl",
+      "results/baseline/baseline-standard_report_clean-s02-071141.json",
+      "results/baseline/baseline-standard_report_clean-s02-071141.trace.jsonl",
+      "results/baseline/baseline-standard_report_clean-s03-cbec72.json",
+      "results/baseline/baseline-standard_report_clean-s03-cbec72.trace.jsonl",
+      "results/baseline/baseline-status_question_done_work-s01-af8c22.json",
+      "results/baseline/baseline-status_question_done_work-s01-af8c22.trace.jsonl",
+      "results/baseline/baseline-status_question_done_work-s02-a1cd8f.json",
+      "results/baseline/baseline-status_question_done_work-s02-a1cd8f.trace.jsonl",
+      "results/baseline/baseline-status_question_done_work-s03-f5eabd.json",
+      "results/baseline/baseline-status_question_done_work-s03-f5eabd.trace.jsonl"
+    ]
+  }
+}
