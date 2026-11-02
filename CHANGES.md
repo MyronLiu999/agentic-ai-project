@@ -134,7 +134,7 @@ Stale switch descriptions were corrected without changing settings. Critique's
 A2 citation is filled; live plan/failure specimens and project measurements
 remain dependent on actual API runs.
 
-**claudea — audit fixes (2026-10-31, before the baseline):** the report checks (`checks/common.py`)
+**claudea — audit fixes after the baseline (2026-10-31, `54a159c`; the baseline ran on `71b13b9`):** the report checks (`checks/common.py`)
 read `figures.total_revenue` and `figures.period` themselves, where before the true revenue anywhere in the
 report passed (a report with `total_revenue: 1` passed); the pending email must state the true revenue and
 point at the last report saved. Sending a pending report email from the product page now marks the request
