@@ -220,6 +220,26 @@ class DisclosureInChecksTest(ScratchTest):
         self.assertTrue(any(l.get("type") == "tool_call" and l.get("outcome") == "denied" for l in lines))
 
 
+class PlanApprovalAndCompensationContractTest(ScratchTest):
+    def test_plan_approval_covers_only_the_listed_call(self):
+        from tests.fakes import FakeApprovals
+        approvals = FakeApprovals()
+        step = {"step_id": "s5", "tool": "send_report_email", "args": {"pending_id": 3},
+                "action_class": "send_report_email/own_contact"}
+        approval_id = approvals.put_up_plan("S#1", "S", {"steps": [step]}, [step])
+        self.assertFalse(approvals.plan_covers("S#1", {"name": "send_report_email", "args": {"pending_id": 3}}))
+        approvals.decide(approval_id, True)
+        self.assertTrue(approvals.plan_covers("S#1", {"name": "send_report_email", "args": {"pending_id": 3}}))
+        self.assertFalse(approvals.plan_covers("S#1", {"name": "send_report_email", "args": {"pending_id": 4}}))
+
+    def test_the_real_module_has_the_contract(self):
+        from agent import approvals, compensations
+        for name in ("put_up", "pending", "decide", "is_approved", "withdraw", "put_up_plan", "plan_covers"):
+            self.assertTrue(callable(getattr(approvals, name)), name)
+        self.assertEqual(compensations.compensate({"tool": "send_report_email"})["compensated_by"], "none")
+        self.assertIsNone(compensations.UNDO["send_report_email"])
+
+
 class ServiceDelegationTest(ScratchTest):
     def test_decide_approval_resumes_the_run(self):
         from agent import service

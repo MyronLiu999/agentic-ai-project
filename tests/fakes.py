@@ -12,7 +12,8 @@ FakeRegistry   also knows the new tools (ask_stranger, send_report_email, search
                checks their argument shapes, and offers compensate(call_record).
 FakeHook       a policy hook with scripted answers: pass it to a real Registry as pre_call_hook, or
                install() it in place of policy.hook.decide.
-FakeApprovals  an in-memory agent.approvals (put_up, pending, decide, is_approved, withdraw); install().
+FakeApprovals  an in-memory agent.approvals (put_up, pending, decide, is_approved, withdraw, put_up_plan,
+               plan_covers); install().
 FakeResume     records agent.runs.resume(run_key, event) calls instead of resuming; install().
 FakeStranger   a stranger with scripted answers per thread, delivered through harness.turns.outside_reply.
 """
@@ -139,6 +140,19 @@ class FakeApprovals:
         return any(i["run_key"] == run_key and (i["call"] or {}).get("key") == key and i["status"] == "approved"
                    for i in self.items.values())
 
+    def put_up_plan(self, run_key, session_id, plan, gated_steps):
+        approval_id = f"apr-{next(self._ids)}"
+        self.items[approval_id] = {"id": approval_id, "run_key": run_key, "session_id": session_id,
+                                   "call": None, "plan": plan, "gated_steps": list(gated_steps),
+                                   "action_class": "plan", "screen": None, "status": "waiting"}
+        return approval_id
+
+    def plan_covers(self, run_key, call):
+        return any(i["run_key"] == run_key and i.get("gated_steps") and i["status"] == "approved"
+                   and any(g.get("tool") == call.get("name") and g.get("args") == call.get("args")
+                           for g in i["gated_steps"])
+                   for i in self.items.values())
+
     def withdraw(self, run_key):
         out = [i["id"] for i in self.items.values() if i["run_key"] == run_key and i["status"] == "waiting"]
         for approval_id in out:
@@ -148,7 +162,7 @@ class FakeApprovals:
     @contextlib.contextmanager
     def install(self):
         with contextlib.ExitStack() as stack:
-            for name in ("put_up", "pending", "decide", "is_approved", "withdraw"):
+            for name in ("put_up", "pending", "decide", "is_approved", "withdraw", "put_up_plan", "plan_covers"):
                 stack.enter_context(mock.patch(f"agent.approvals.{name}", getattr(self, name)))
             yield self
 

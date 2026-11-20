@@ -39,7 +39,7 @@ built without waiting on each other. Added `agent/runs.py` (run keys, the one re
 `agent/checkpoints.py` and `sandbox/control.py` (a durable SQLite store for checkpoints, the journal, waits, run
 numbers, stop flags and stated limits; reset with the sandbox, kept by `make serve`), `policy/` (`flags.py`,
 `rules.py` working; `hook.py`, `limits.py` and `autonomy.yaml` as stubs for myron), `agent/disclosure.py` (the
-disclosure line, checked by the hook), and documented stubs for `memory`, `context`, `notes`, `approvals`,
+disclosure line, checked by the hook), `agent/compensations.py` (the one undo table for rollback; a stub for claudea), approval at the plan (`approvals.put_up_plan`, `plan_covers`), and documented stubs for `memory`, `context`, `notes`, `approvals`,
 `escalation`, `outside`, `stop`, `messages` and `code_calls`. Inserted pass-through seams into `agent/loop.py`,
 `agent/workflows.py`, `agent/critique.py`, `agent/service.py`, `agent/registry.py` (the hook's allow/ask/deny,
 the journal read only while resuming, `compensate`) and `agent/tools.py` (every registry gets the policy hook);

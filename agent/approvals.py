@@ -35,3 +35,17 @@ def is_approved(run_key, key) -> bool:
 
 def withdraw(run_key) -> list[str]:
     return []
+
+
+# Approval at the plan (approval.<use_case> = plan). abraham's plan.py puts the validated plan up once, listing
+# every gated step it will take with what each will do; myron's hook then lets a call through unasked only if
+# the approved plan covers it exactly. A gated call the plan did not list, or any revision, asks again.
+
+def put_up_plan(run_key, session_id, plan, gated_steps) -> str:
+    """gated_steps = [{"step_id", "tool", "args", "action_class"}]. Returns an approval_id (in pending())."""
+    raise NotImplementedError("approvals.put_up_plan is myron's M6")
+
+
+def plan_covers(run_key, call) -> bool:
+    """True only if an approved plan of this run lists this call: same tool, same arguments."""
+    return False

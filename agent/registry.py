@@ -262,12 +262,14 @@ class Registry:
     def compensate(self, call_record: dict) -> dict:
         """Undo one completed write for a rollback (Milestone 2; owner: myron). `call_record` is a
         checkpoint's completed call {"tool", "args", "key", "result"}. Returns {"compensated_by": name or
-        "none", "result": ...}. Compensations are registry-internal: never offered to the model."""
+        "none", "result": ...}: the spec's own compensate if it has one, else agent/compensations.py's table.
+        Compensations are registry-internal: never offered to the model."""
         spec = self._specs.get(call_record.get("tool"))
-        if spec is None or spec.compensate is None:
-            return {"compensated_by": "none", "result": None}
-        output = spec.compensate(call_record)
-        return {"compensated_by": f"compensate:{spec.name}", "result": output}
+        if spec is not None and spec.compensate is not None:
+            output = spec.compensate(call_record)
+            return {"compensated_by": f"compensate:{spec.name}", "result": output}
+        from agent import compensations      # claudea's table (C4), for every tool without its own
+        return compensations.compensate(call_record)
 
     def _write_key(self, spec: ToolSpec, args: dict, step: str | None) -> str:
         identity = {field: _canonical_identity(_nested_value(args, field)) for field in spec.key_fields}
