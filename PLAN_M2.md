@@ -26,7 +26,7 @@ Words used here: a **review pass** (Sunday's first/final pass) checks the repo i
 
 | Member | Branch | Builds (handout) | Write-up in `docs/milestones/M2.md` | Merge → submit | ≈ rubric pts |
 |---|---|---|---|---|---|
-| **claudea** | `claudea/m2` (setup on `main`) | Setup · P1 t2 checkpoints, three exits, irreversible last, recovery test · P1 t7 memory + later session (`make serve`) · P2 t8 disclosure | P1 t1 diagram + lifetimes · P1 t2 · P1 t7 · P1 t8 abstraction · P1 t9 "Which boundary lost it?" · P2 t8 the Act + two states · build table, decision table, team, AI line | **Final pass** + submit | 30 + setup + final |
+| **claudea** | `claudea-m2` (setup on `main`) | Setup · P1 t2 checkpoints, three exits, irreversible last, recovery test · P1 t7 memory + later session (`make serve`) · P2 t8 disclosure | P1 t1 diagram + lifetimes · P1 t2 · P1 t7 · P1 t8 abstraction · P1 t9 "Which boundary lost it?" · P2 t8 the Act + two states · build table, decision table, team, AI line | **Final pass** + submit | 30 + setup + final |
 | **abraham** | `abraham-m2` and `abraham-split` | P1 t5 outside exchange + wait · P1 t6 context budget, notes, compaction, long session · P2 t6 stop + cancel/resume/rollback · P2 t7 mid-task messages · P3 split on a branch | P1 t5 · P1 t6 · P2 t6 five-condition table · P2 t7 · P3 inventory, gates, sketch, benefit · `decisions/0006-topology.md` | **Merge** + P4 t1 first-failure table | 34 + merge |
 | **myron** | `myron-m2` | P1 t3 MCP server + strict-mode request · P1 t4 deferred loading + code calls · P2 t1–3 ranking, policy, hook, stated limits · P2 t4 approval gate, approvals page, queue page · P2 t5 escalation · P4 analysis-script additions | P1 t3 · P1 t4 bill · P2 t1–2 ranking + three columns · P2 t4–5 · P2 t9 "Who is going to read this?" + tiers | **First pass** + P4 passes + ledger | 36 + review |
 
@@ -168,9 +168,9 @@ and `FakeApprovals` live in `tests/fakes.py`.
 | S6 | `policy/autonomy.yaml` skeleton (three columns, action classes from 3.4 as proposals); `decisions/` folder. |
 | S7 | `docs/milestones/M2.md` skeleton: build table (one row per piece, owner filled), decision table with the new columns (checkpoint, durability mode, code calls, loading, ask stranger, notes/compaction, memory, autonomy column, approval mode, escalation signal, topology), Parts 1–4 headings each with its owner, `## The team`, `## AI assistance`, appendix "Approval screens". |
 | S8 | Add the disclosure check to every existing check (`checks.helpers.sent_by_agent` → fail a message without `LINE`). In `docs/assignment_refs.md`, add sections A4, A5, A6 from claudea's own repositories (repo URL, commit, model, source file, read date, run counts), with the numbers the handout asks each part to cite. **A4** (for P1 t1–2, t9): what the tracker held when killed at every step, with keys and with them broken; the boundary each lost fact crossed and the fix that brought it back. **A5** (for P2 t4–5): the replay's prompts per day and seconds per prompt, what one plan review would have saved, the approval rate on irreversible wide classes beside the overall rate, median seconds by class, the stop's latency over its stops. **A6** (for P3): its multiplier and what the matched-budget comparison showed. Write `not measured` where the repository has no defensible value. |
-| S9 | `make test`, `make check`, commit, push. Create and push empty branches `abraham-m2`, `abraham-split`, `myron-m2`, `claudea/m2` from this commit. Post in the chat. |
+| S9 | `make test`, `make check`, commit, push. Create and push empty branches `abraham-m2`, `abraham-split`, `myron-m2`, `claudea-m2` from this commit. Post in the chat. |
 
-## 5. claudea (after setup → Sat 8 pm, on `claudea/m2`)
+## 5. claudea (after setup → Sat 8 pm, on `claudea-m2`)
 
 | Step | What (handout) | Done when |
 |---|---|---|
@@ -227,7 +227,7 @@ app their runs stay live (B6 decides what a live run means for a new message).
 | Step | What |
 |---|---|
 | T0 | **Trial merge (Sat afternoon, before the real one):** merge whatever is pushed into a local scratch branch (`trial-m2`), run `make test`, post the conflicts and failing tests in the chat for their owners. Never push it; delete it after. |
-| T1 | `git pull`; merge `claudea/m2` → `myron-m2` → `abraham-m2` into `main`; `make test` + `make check` after each. Resolve conflicts in shared files by keeping both owners' blocks. |
+| T1 | `git pull`; merge `claudea-m2` → `myron-m2` → `abraham-m2` into `main`; `make test` + `make check` after each. Resolve conflicts in shared files by keeping both owners' blocks. |
 | T2 | **Integrate:** real hook/approvals/escalation replace stubs; real checkpoints/resume under abraham's wait and stop; real disclosure under myron's hook; real memory under abraham's context; every test task on fakes; the cross-owner tests below |
 | T2b | Re-run myron's approval/escalation resume tests and claudea's recovery test with the **real** resume (they used `FakeResume` / the minimal resume on the branches). |
 | T2c | claudea: extend the recovery test (C5) to every new task that makes a write (abraham's and myron's), with the before / after crash / after resume rows. |
@@ -313,7 +313,7 @@ for others' work. Run `make test` and `make check` before you say you are done. 
 | Who | Section | Branch | Steps | Handout parts to give it |
 |---|---|---|---|---|
 | claudea (setup) | 4 | `main` | S1–S9 | whole handout (to write the contracts) |
-| claudea | 5 | `claudea/m2` | C1–C11 | Part 1 tasks 1, 2, 7, 8, 9; Part 2 task 8 |
+| claudea | 5 | `claudea-m2` | C1–C11 | Part 1 tasks 1, 2, 7, 8, 9; Part 2 task 8 |
 | abraham | 6 | `abraham-m2`, `abraham-split` | B1–B10 | Part 1 tasks 5, 6; Part 2 tasks 6, 7; Part 3 |
 | myron | 7 | `myron-m2` | M1–M10 | Part 1 tasks 3, 4; Part 2 tasks 1–5, 9; Part 4 (prep) |
 | abraham (Sat trial merge, Sat night merge, Sun runs) | 8.1, 8.2 P3 | `trial-m2`, `main` | T0–T4, P3 | Part 4 task 1 |

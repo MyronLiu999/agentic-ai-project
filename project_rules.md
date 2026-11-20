@@ -5,7 +5,7 @@ owners, branches, contracts and the timeline (setup Fri Nov 20; branches pushed 
 night; first pass and final pass Sun Nov 22). The handout is `../milestone2_handout.md`. Milestone 1's plan is
 `PLAN.md`, kept for its history.
 
-- Work on your own branch (`claudea/m2`, `abraham-m2` and `abraham-split`, `myron-m2`) and edit only the files
+- Work on your own branch (`claudea-m2`, `abraham-m2` and `abraham-split`, `myron-m2`) and edit only the files
   your role owns (`PLAN_M2.md`, section 3.1). Shared files: `switches.yaml`, `docs/milestones/M2.md`,
   `CHANGES.md`, `app/main.py`, `requirements.txt`: edit only your own groups, sections, bullets and route block.
   `docs/assignment_refs.md` is read-only except for claudea's Milestone 2 sections.
