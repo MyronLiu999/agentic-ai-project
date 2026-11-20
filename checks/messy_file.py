@@ -4,10 +4,12 @@ database. A report saved by this run with the database's revenue and the file's 
 
 from __future__ import annotations
 
+from checks.helpers import requires_disclosure
 from checks.common import report_figures, report_email_problems, run_reports
 from sandbox.report_validation import named_number_problems
 
 
+@requires_disclosure
 def check(run):
     item = run.task["input"]
     problems, counts = report_email_problems(run, item)

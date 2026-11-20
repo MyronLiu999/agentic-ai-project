@@ -18,6 +18,24 @@ from sandbox import inbox, pending, reports, sales
 def operator_turn(session_id: str, text: str) -> Reply:
     """One message from the operator: route the case to its path, run it, reply."""
     trace = runtime.trace(session_id)
+    # Milestone 2 setup seams, in this order (PLAN_M2.md 3.3): a console command before any model sees the
+    # text; a stated limit becomes a rule the hook reads; a message to a session whose run has not finished;
+    # memory read before the session's first model call; then a new run number for this task.
+    from agent import memory, messages, runs, stop
+    from policy import limits, rules
+    command = stop.handle_command(session_id, text)
+    if command is not None:
+        return command
+    rule = limits.parse_limit(text)
+    if rule:
+        rules.add_rule(session_id, rule)
+    if runs.live(session_id):
+        taken = messages.intercept(session_id, text)
+        if taken is not None:
+            return taken
+    if runs.first_turn(session_id):
+        memory.for_session(session_id)
+    runs.new_run(session_id)
     try:
         route = router.route_operator_message(session_id, text)
     except router.RoutingError as exc:
@@ -119,14 +137,23 @@ def _agent_reply(request_id: str, result: loop.LoopResult) -> Reply:
 
 
 def on_outside_reply(thread_id: str, text: str) -> Reply:
-    """A stranger's answer on a thread. Milestone 2's: ignored until then."""
-    return Reply()
+    """A stranger's answer on a thread (agent/outside.py, abraham): the run waiting on it resumes."""
+    from agent import outside
+    return outside.on_reply(thread_id, text)
 
 
 def pending_approvals() -> list[dict]:
-    """Empty until Milestone 2: the pending records on the product page are not approvals."""
-    return []
+    """Every gated call waiting for the operator (agent/approvals.py, myron), each with its session_id."""
+    from agent import approvals
+    return approvals.pending()
 
 
 def decide_approval(approval_id: str, approved: bool, note: str = "") -> Reply | None:
-    raise NotImplementedError("decide_approval: no approval gate is built yet")
+    """The operator's answer on the approvals page; the run it held resumes (agent/runs.py)."""
+    from agent import approvals, runs
+    item = approvals.decide(approval_id, approved, note)
+    run_key = item.get("run_key") if isinstance(item, dict) else None
+    if not run_key:
+        return Reply(f"Approval {approval_id} recorded.")
+    return runs.resume(run_key, {"kind": "approval", "approval_id": approval_id, "approved": bool(approved),
+                                 "note": note})

@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
+import functools
 import sqlite3
 from pathlib import Path
 
 import channel
+
+# The disclosure line (Milestone 2, Part 2 task 8). The same text as agent/disclosure.py's LINE, copied
+# because checks never import agent/; tests/test_m2_contracts.py fails if the two ever differ.
+DISCLOSURE = ("This message was written by an automated agent for the sales analytics team. "
+              "To reach a person, reply to this thread with \"human\" and an analyst will answer.")
 
 
 def thread(run, thread_id: str, with_input: bool = False) -> list:
@@ -39,3 +45,27 @@ def connect(run, filename: str) -> sqlite3.Connection:
     if not path.exists():
         raise FileNotFoundError(f"the sandbox has no {filename}")
     return sqlite3.connect(f"file:{path}?mode=ro", uri=True, factory=_Closing)
+
+
+def undisclosed(run) -> list:
+    """Every message the agent sent during this run, on any thread, whose text lacks the disclosure line."""
+    out = []
+    for t in channel.threads():
+        thread_id = t.get("thread_id") or t.get("id")
+        out += [m for m in sent_by_agent(run, thread_id) if DISCLOSURE not in (m.text or "")]
+    return out
+
+
+def requires_disclosure(check):
+    """Wrap a task's check: it also fails a run in which the agent sent a stranger a message without the
+    disclosure line, with the count as the measure `undisclosed_messages` (present only when not zero)."""
+    @functools.wraps(check)
+    def wrapped(run):
+        result = check(run)
+        passed, reason, measures = result if len(result) == 3 else (*result, {})
+        bad = undisclosed(run)
+        if bad:      # the measure appears only when it is not zero, so earlier runs' measures are unchanged
+            return False, (f"{len(bad)} message(s) to a stranger without the disclosure line"
+                           + (f"; {reason}" if not passed else "")), {**(measures or {}), "undisclosed_messages": len(bad)}
+        return passed, reason, measures
+    return wrapped

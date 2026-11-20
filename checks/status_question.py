@@ -4,12 +4,14 @@ nothing (a status question changes no record). The open-item count is reported i
 
 from __future__ import annotations
 
+from checks.helpers import requires_disclosure
 import json
 
 from checks.common import connect, mentions, run_writes
 from sandbox import db, inbox
 
 
+@requires_disclosure
 def check(run):
     rid = inbox.request_id(run.task["input"]["thread"])
     with connect(run, db.FILENAME) as conn:

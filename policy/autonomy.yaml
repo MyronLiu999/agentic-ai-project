@@ -1,0 +1,24 @@
+# The autonomy policy: every action class in one of three columns (Milestone 2, Part 2; owner: myron).
+# A class is a tool in a circumstance: <tool>/<circumstance>. The same names go in the logs and the ledger.
+# The model never sees this file. policy/hook.py reads it. SETUP SKELETON: the classes below are
+# proposals from PLAN_M2.md section 3.4; myron's M4/M5 ranks every action and fills the reasons.
+
+independent:            # runs, nobody is asked
+  - parse_file/own_request
+  - query_sales/own_distributor
+  - render_chart/own_request
+  - save_report/own_request
+  - draft_report_email/own_contact
+  - draft_clarifying_question/template
+  - ask_stranger/template
+  - search_tools/any
+  - run_program/any
+
+requires_approval:      # the run pauses until the operator answers on the approvals page
+  - send_report_email/own_contact
+  - ask_stranger/model_written
+
+prohibited:             # never runs, nobody can approve it, the agent gets a refusal
+  - send_report_email/new_recipient
+  - query_sales/other_distributor
+  - read_margins/any

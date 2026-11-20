@@ -22,10 +22,26 @@ control:
 plan:
   batch_reports: {setting: "on", values: ["off", "on"], about: "Plan helps where the operator's request fixes the steps once read. Lecture 2."}
 
-notes:
-  setting: "off"
-  values: ["off", "on"]
-  about: Milestone 2. Stays off.
+# Milestone 2 (setup, Nov 20). Each switch carries added: so the Milestone 1 runs, made before it, stay valid.
+# Provisional settings: each owner sets the final one from the decision table (PLAN_M2.md section 3.5).
+notes:   # abraham: one per kind of session that needs notes; replaces the starter's flat switch
+  console: {setting: "off", values: ["off", "on"], added: 2026-11-20, about: "Notes in the operator's console session (long sessions). abraham, B3."}
+
+context_budget: {setting: 16000, added: 2026-11-20, about: "Most input tokens one call may carry (chars / 4, tool definitions included). abraham, B3."}
+compaction_threshold: {setting: 12000, added: 2026-11-20, about: "Past this, older turns are compacted; at most the budget less what every call carries. abraham, B3."}
+
+memory:  # claudea: one per kind of fact kept
+  preferences: {setting: "off", values: ["off", "on"], added: 2026-11-20, about: "A preference the operator states (stated, not inferred). claudea, C6."}
+  standing_rules: {setting: "off", values: ["off", "on"], added: 2026-11-20, about: "A standing rule the operator states for later sessions. claudea, C6."}
+
+tools:   # myron
+  loading: {setting: all, values: [all, deferred], added: 2026-11-20, about: "Below about ten tools every definition goes in every request (Lecture 3, slide 24). myron, M3."}
+
+code_calls:  # myron: one per use case it is built for
+  batch_reports: {setting: "off", values: ["off", "on"], added: 2026-11-20, about: "The use case closest to looping over many results. myron, M3."}
+
+approval:  # myron: one per use case with a plan
+  batch_reports: {setting: per_action, values: [per_action, plan], added: 2026-11-20, about: "Approve once at the plan, or each gated action. myron, M6."}
 
 critique:
   report_email: {setting: external, values: ["off", "external"], about: "Recompute figures, period and recipient from the sandbox before a draft email is written. Lecture 2."}

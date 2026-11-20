@@ -140,6 +140,16 @@ def _changed(old: dict, new: dict) -> list[str]:
     return [k for k in sorted(set(old) | set(new)) if old.get(k) != new.get(k)]
 
 
+def _escalate(request_id: str, reason: str) -> None:
+    """Milestone 2 setup seam: a draft still failing at the bound is the `failed_check` signal
+    (agent/escalation.py, myron)."""
+    from agent import escalation, runs
+    run_key = runs.current_key()
+    if run_key:
+        escalation.signal(run_key, "failed_check", attempted=f"the report email for {request_id}",
+                          why=reason, needs="the operator to correct or discard the draft")
+
+
 def run(request_id: str, draft: dict, revise, *, rounds: int = 2) -> CritiqueResult:
     """Check the draft; revise it with the reason while a round remains; hold it at the bound."""
     if not enabled():
@@ -155,6 +165,7 @@ def run(request_id: str, draft: dict, revise, *, rounds: int = 2) -> CritiqueRes
             return CritiqueResult(True, draft, n, reason)
         if n == rounds:
             trace.event(events.CRITIQUE, round=n, verdict="held", reason=reason, changed=changed)
+            _escalate(request_id, reason)
             break
         trace.event(events.CRITIQUE, round=n, verdict="revise", reason=reason, changed=changed)
         try:

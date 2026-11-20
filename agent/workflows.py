@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import json
 
-from agent import critique, events
+from agent import checkpoints, context, critique, events, runs
 from agent.registry import CODE
 from harness import runtime
 from harness.turns import Reply
@@ -54,9 +54,19 @@ def _registry(request_id: str, registry):
 
 
 def _call(reg, name: str, args: dict, step: str, actions: list[str]) -> dict:
+    run_key = runs.current_key()
+    # Setup seam: claudea's placement rule (checkpoints.before_step) decides what this saves.
+    checkpoints.before_step(run_key, {"path": "workflow", "workflow": "standard_report", "step": step,
+                                      "tool": name, "args": args})
     result = reg.call(name, args, CODE, step=step)
     if not result.get("ok"):
         error = result.get("error") or {}
+        if error.get("type") == "approval_required":
+            if run_key:
+                checkpoints.set_wait(run_key, "approval", str(error.get("approval_id")))
+            raise _Stop(events.AWAITING_APPROVAL, f"{name} waits for the operator's approval")
+        if error.get("type") == "stopped":
+            raise _Stop(events.STOPPED, "the operator stopped this run; its state is saved")
         raise _Stop(events.TOOL_ERROR, f"{name} failed ({error.get('kind', 'error')}): {error.get('message', '')}")
     actions.append(f"{name}: {_summary(name, result.get('output') or {})}")
     return result.get("output") or {}
@@ -110,9 +120,20 @@ def _write_email(session_id: str, step: int, figures: dict, question: str, reaso
               f"<distributor_question untrusted=\"true\">\n{question}\n</distributor_question>")
     if reason:
         prompt += f"\n\nA check rejected your last draft: {reason}\nWrite the email again, fixing that."
-    response = runtime.client(session_id).create(system=EMAIL_SYSTEM, messages=[{"role": "user", "content": prompt}])
+    response = context.create(session_id, purpose="revise_email" if reason else "draft_email",
+                              system=EMAIL_SYSTEM, messages=[{"role": "user", "content": prompt}])
     runtime.trace(session_id).model_call(step, response, purpose="revise_email" if reason else "draft_email")
     return response.text
+
+
+def _end(trace, reason, detail=None):
+    """End the run, with its last checkpoint written into the trace first (Milestone 2)."""
+    checkpoints.to_trace(trace, runs.current_key())
+    runs.end(runs.current_key(), reason)
+    if detail is None:
+        trace.end(reason)
+    else:
+        trace.end(reason, detail=detail)
 
 
 def standard_report(session_id: str, request_id: str, registry=None) -> Reply:
@@ -120,7 +141,7 @@ def standard_report(session_id: str, request_id: str, registry=None) -> Reply:
     actions: list[str] = []
     req = inbox.get(request_id)
     if req is None:
-        trace.end(events.TOOL_ERROR, detail=f"no request {request_id}")
+        _end(trace, events.TOOL_ERROR, detail=f"no request {request_id}")
         return Reply(f"There is no request {request_id}.")
     reg = _registry(request_id, registry)
     try:
@@ -153,7 +174,7 @@ def standard_report(session_id: str, request_id: str, registry=None) -> Reply:
         if not result.passed:
             inbox.set_status(request_id, "held")
             actions.append(f"critique: email held after {result.rounds} round(s), nothing written")
-            trace.end(events.CRITIQUE_HELD, detail=result.reason)
+            _end(trace, events.CRITIQUE_HELD, detail=result.reason)
             return Reply(f"Saved report {saved.get('report_id')} for {request_id}, but held the email: "
                          f"{result.reason}. Nothing is waiting to be sent.", actions)
         final = result.draft
@@ -162,13 +183,13 @@ def standard_report(session_id: str, request_id: str, registry=None) -> Reply:
                         "6-email", actions)
     except _Stop as stop:
         actions.append(f"stopped: {stop.text}")
-        trace.end(stop.reason, detail=stop.text)
+        _end(trace, stop.reason, detail=stop.text)
         if stop.reason == events.UNKNOWN_LAYOUT:
             return Reply(f"{request_id}: {stop.text}. It needs the messy-file path, not the standard report.", actions)
         return Reply(f"{request_id}: stopped, {stop.text}. Nothing more was written.", actions)
 
     inbox.set_status(request_id, "report_drafted")
-    trace.end(events.DONE)
+    _end(trace, events.DONE)
     return Reply(f"Saved report {saved.get('report_id')} for {request_id} ({period}: revenue "
                  f"{data['total_revenue']:,.2f}, {data['total_units']} units) and drafted the email to "
                  f"{req['contact_email']} as pending record {pending.get('pending_id')}. It waits for you to send "

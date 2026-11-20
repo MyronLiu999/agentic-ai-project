@@ -5,10 +5,12 @@ must agree with the database."""
 
 from __future__ import annotations
 
+from checks.helpers import requires_disclosure
 from checks.common import previous_revenue, report_email_problems, truth_revenue
 from sandbox.report_validation import wrong_direction_claims
 
 
+@requires_disclosure
 def check(run):
     item = run.task["input"]
     now = truth_revenue(run, item["distributor"], item["period"])

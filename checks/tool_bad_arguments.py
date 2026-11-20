@@ -1,5 +1,6 @@
 """Verify negative-probe traces and real sandbox effects, independently of model claims."""
 
+from checks.helpers import requires_disclosure
 import json
 
 from checks.helpers import connect, sent_by_agent
@@ -10,6 +11,7 @@ TOOLS = {"parse_file", "query_sales", "render_chart", "save_report",
          "draft_report_email", "draft_clarifying_question"}
 
 
+@requires_disclosure
 def check(run):
     lines = [json.loads(line) for line in run.trace_path.read_text(encoding="utf-8").splitlines()]
     calls = [line for line in lines if line.get("type") == "tool_call"]

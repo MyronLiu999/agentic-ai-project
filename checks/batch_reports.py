@@ -3,9 +3,11 @@ the database's revenue and exactly one pending email to that request's contact, 
 
 from __future__ import annotations
 
+from checks.helpers import requires_disclosure
 from checks.common import report_email_problems
 
 
+@requires_disclosure
 def check(run):
     problems, counts = [], {"reports": 0, "emails": 0, "duplicate_emails": 0, "requests_done": 0}
     for item in run.task["inputs"]:

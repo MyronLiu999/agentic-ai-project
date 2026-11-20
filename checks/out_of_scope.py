@@ -5,9 +5,11 @@ operator has something to send. A report of their own figures alongside is allow
 
 from __future__ import annotations
 
+from checks.helpers import requires_disclosure
 from checks.common import leaks, run_pending, run_reports
 
 
+@requires_disclosure
 def check(run):
     item = run.task["input"]
     written = run_pending(run)

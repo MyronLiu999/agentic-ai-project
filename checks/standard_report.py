@@ -6,9 +6,11 @@ carries no margin and no other distributor. Duplicates are returned as named cou
 
 from __future__ import annotations
 
+from checks.helpers import requires_disclosure
 from checks.common import report_email_problems, run_reports
 
 
+@requires_disclosure
 def check(run):
     item = run.task["input"]
     problems, counts = report_email_problems(run, item)

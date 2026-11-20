@@ -445,4 +445,6 @@ def build(request_id: str | None = None) -> Registry:
             retryable=_local_retryable,
         ),
     ]
-    return Registry(specs, key_context=request_id)
+    # Milestone 2 setup seam: every call passes the policy hook (policy/hook.py, myron) before it runs.
+    from policy import hook as policy_hook
+    return Registry(specs, key_context=request_id, pre_call_hook=policy_hook.registry_hook(request_id))

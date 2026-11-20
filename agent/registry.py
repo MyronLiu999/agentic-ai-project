@@ -45,6 +45,7 @@ class ToolSpec:
     validate_args: Callable[[dict], list[str]] | None = None
     retryable: Callable[[Exception], bool] | None = None
     key_fields: tuple[str, ...] = ()           # effect identity only; never prose written by the model
+    compensate: Callable[..., dict] | None = None  # undo for rollback (Milestone 2); None: no compensation
 
 
 class Registry:
@@ -139,6 +140,7 @@ class Registry:
                                 outcome="rejected", trace_step=trace_step)
 
         key = self._write_key(spec, normalized, step) if spec.writes else None
+        run_key = _run_key()
         try:
             allowed = self._pre_call_hook(spec=spec, args=copy.deepcopy(normalized), caller=caller,
                                           step=step, key=key)
@@ -150,6 +152,41 @@ class Registry:
                                  details={"hook_error": f"{type(exc).__name__}: {str(exc)[:160]}"})
             return self._record(name, normalized, caller, step, key, result, started, attempts=0,
                                 outcome="denied", trace_step=trace_step)
+        if isinstance(allowed, dict):          # a policy Decision (policy/hook.py): allow | ask | deny
+            _trace_decision(name, allowed)
+            answer = allowed.get("answer")
+            if answer == "ask":
+                try:
+                    from agent import approvals
+                    approval_id = approvals.put_up(run_key, _session_id(),
+                                                   {"name": name, "args": copy.deepcopy(normalized), "key": key},
+                                                   allowed.get("action_class"), allowed.get("screen"))
+                except Exception as exc:     # an approval that cannot be put up is a denial: fail closed
+                    allowed = {**allowed, "answer": "deny",
+                               "reason": f"the approval could not be put up: {type(exc).__name__}: {exc}"}
+                else:
+                    result = self._error("approval_required", "This call waits for the operator's approval.",
+                                         "End the turn; the run carries on when the operator answers.",
+                                         details={"approval_id": approval_id,
+                                                  "action_class": allowed.get("action_class")})
+                    return self._record(name, normalized, caller, step, key, result, started, attempts=0,
+                                        outcome="awaiting_approval", trace_step=trace_step)
+            if allowed.get("answer") != "allow":   # deny, or anything else: fail closed
+                error_type = allowed.get("error_type") or "policy_denied"
+                result = self._error(error_type, "Tool call was refused by policy.",
+                                     str(allowed.get("reason") or "This action is not allowed."),
+                                     details={"action_class": allowed.get("action_class")})
+                return self._record(name, normalized, caller, step, key, result, started, attempts=0,
+                                    outcome="denied", trace_step=trace_step)
+
+        if spec.writes and run_key:
+            from agent import checkpoints, runs
+            if runs.resuming() == run_key:
+                prior = checkpoints.completed(run_key, key)
+                if prior is not None:       # completed before the crash or the wait: never run it twice
+                    _trace_journal(run_key, name, key)
+                    return self._record(name, normalized, caller, step, key, prior, started, attempts=0,
+                                        outcome="journal", trace_step=trace_step)
 
         attempts = 0
         while attempts <= self._max_retries:
@@ -167,6 +204,9 @@ class Registry:
                     return self._record(name, normalized, caller, step, key, result, started, attempts,
                                         outcome="invalid_result", trace_step=trace_step)
                 result = {"ok": True, "output": output, "is_error": False, "error": None}
+                if spec.writes and run_key:
+                    from agent import checkpoints
+                    checkpoints.after_call(run_key, {"tool": name, "args": normalized, "key": key}, result)
                 return self._record(name, normalized, caller, step, key, result, started, attempts,
                                     outcome="ok", trace_step=trace_step)
             except AmbiguousToolError as exc:
@@ -219,6 +259,16 @@ class Registry:
 
         raise AssertionError("bounded retry loop exited unexpectedly")
 
+    def compensate(self, call_record: dict) -> dict:
+        """Undo one completed write for a rollback (Milestone 2; owner: myron). `call_record` is a
+        checkpoint's completed call {"tool", "args", "key", "result"}. Returns {"compensated_by": name or
+        "none", "result": ...}. Compensations are registry-internal: never offered to the model."""
+        spec = self._specs.get(call_record.get("tool"))
+        if spec is None or spec.compensate is None:
+            return {"compensated_by": "none", "result": None}
+        output = spec.compensate(call_record)
+        return {"compensated_by": f"compensate:{spec.name}", "result": output}
+
     def _write_key(self, spec: ToolSpec, args: dict, step: str | None) -> str:
         identity = {field: _canonical_identity(_nested_value(args, field)) for field in spec.key_fields}
         payload = {
@@ -240,9 +290,11 @@ class Registry:
         # classify a failure without knowing registry internals.
         if transient:
             kind = "transient"
+        elif error_type == "approval_required":
+            kind = "approval_required"
         elif error_type in {
             "unknown_tool", "invalid_caller", "caller_denied", "invalid_arguments",
-            "hook_denied", "invalid_result",
+            "hook_denied", "invalid_result", "policy_denied", "stopped", "undisclosed",
         }:
             kind = "protocol"
         else:
@@ -339,6 +391,38 @@ def _scope_id() -> str:
         return runtime.current_session() or "unscoped"
     except Exception:
         return "unscoped"
+
+
+def _run_key():
+    try:
+        from agent import runs
+        return runs.current_key()
+    except Exception:
+        return None
+
+
+def _session_id():
+    try:
+        from harness import runtime
+        run = runtime.current_run()
+        return run.run_id if run is not None else runtime.current_session()
+    except Exception:
+        return None
+
+
+def _trace_decision(name: str, decision: dict) -> None:
+    trace = _current_trace()
+    if trace is not None:
+        from agent import events
+        trace.event(events.HOOK_DECISION, tool=name, action_class=decision.get("action_class"),
+                    answer=decision.get("answer"), reason=decision.get("reason"))
+
+
+def _trace_journal(run_key: str, name: str, key: str) -> None:
+    trace = _current_trace()
+    if trace is not None:
+        from agent import events
+        trace.event(events.JOURNAL_HIT, run_key=run_key, tool=name, key=key)
 
 
 def _current_trace():

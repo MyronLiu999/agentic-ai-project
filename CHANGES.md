@@ -29,6 +29,27 @@ and added Claudea's Claude disclosure. Shortened the main report and preserved
 supporting specimens and individual failure diagnoses in
 `docs/milestones/M1-evidence.md`. The simulated email channel remains unchanged.
 
+## Milestone 2
+
+Each owner adds their own bullets here: what it added, what it removed, what it limited (such as a tool's
+reach), and a line for any assignment or course code reused (which assignment, whose repository).
+
+**Setup (claudea, 2026-11-20):** the shared contracts of `PLAN_M2.md` section 3, so the three branches can be
+built without waiting on each other. Added `agent/runs.py` (run keys, the one resume entry),
+`agent/checkpoints.py` and `sandbox/control.py` (a durable SQLite store for checkpoints, the journal, waits, run
+numbers, stop flags and stated limits; reset with the sandbox, kept by `make serve`), `policy/` (`flags.py`,
+`rules.py` working; `hook.py`, `limits.py` and `autonomy.yaml` as stubs for myron), `agent/disclosure.py` (the
+disclosure line, checked by the hook), and documented stubs for `memory`, `context`, `notes`, `approvals`,
+`escalation`, `outside`, `stop`, `messages` and `code_calls`. Inserted pass-through seams into `agent/loop.py`,
+`agent/workflows.py`, `agent/critique.py`, `agent/service.py`, `agent/registry.py` (the hook's allow/ask/deny,
+the journal read only while resuming, `compensate`) and `agent/tools.py` (every registry gets the policy hook);
+a minimal `loop.resume_from`. New trace event names in `agent/events.py`. Every task check now also fails an
+agent message without the disclosure line (`checks/helpers.requires_disclosure`), adding the measure only when it
+is not zero, so Milestone 1's results are unchanged. New switches, each `added: 2026-11-20`, with provisional
+settings; the flat `notes` switch became the `notes` group. Fakes for the new contracts in `tests/fakes.py` and
+their pinning tests in `tests/test_m2_contracts.py`. Assignment 2 (Part G), 4, 5 and 6 numbers from claudea's
+repositories in `docs/assignment_refs.md`. Milestone 1 behaviour is unchanged: the 384 existing tests pass.
+
 ## Milestone 1
 
 **Post-measurement audit fixes (2026-11-01, items 1–6):** report checks and the
