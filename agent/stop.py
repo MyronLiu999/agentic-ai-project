@@ -155,6 +155,10 @@ def _resume(run_key, session_id):
             saved = plan_state["pending_approval"]
             saved["id"] = replaced[saved["id"]]
             fields["plan_state"] = plan_state
+        split_state = deepcopy(state.get("split_state"))
+        if split_state and split_state.get("approval_id") in replaced:
+            split_state["approval_id"] = replaced[split_state["approval_id"]]
+            fields["split_state"] = split_state
         checkpoints.update(run_key, **fields)
         checkpoints.set_wait(run_key, "approval", ids[0])
         return Reply(f"Resumed {run_key}; the withdrawn approval must be answered again ({', '.join(ids)}).")

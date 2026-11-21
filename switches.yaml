@@ -65,3 +65,6 @@ strict:
   save_report: {setting: "off", values: ["off", "on"], about: "The program normally chooses this write and the registry validates it."}
   draft_report_email: {setting: "off", values: ["off", "on"], about: "External critique supplies the important factual boundary."}
   draft_clarifying_question: {setting: "off", values: ["off", "on"], about: "A plain bounded pending-record write."}
+
+# Experimental branch only; single remains the default.
+topology: {setting: single, values: [single, split], added: 2026-11-20, about: "Analyst/writer experiment on abraham-split; single until a matched-budget pass favors split."}
