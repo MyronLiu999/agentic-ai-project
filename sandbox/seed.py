@@ -45,6 +45,8 @@ def reset() -> None:
     db.reset()
     from sandbox import control as state_store     # checkpoints, waits, stops, rules: reset with the sandbox (make serve keeps them)
     state_store.reset()
+    from sandbox import memory                     # the memory store: reset with the sandbox (make serve keeps it)
+    memory.reset()
 
 
 def _base_data() -> None:
@@ -107,3 +109,15 @@ def seed(task: dict | None) -> None:
     items = DEMO if task is None else (task["inputs"] if "inputs" in task else [task["input"]])
     for item in items:
         _ingest(item)
+    for record in (task or {}).get("memory") or []:
+        _remember(record)
+
+
+def _remember(record: dict) -> None:
+    """A test task that is a later session seeds the earlier session's memory records, with their provenance
+    (Milestone 2, Part 4: run.py plays each task from a reset sandbox)."""
+    from sandbox import memory
+    memory.insert({"kind": record["kind"], "name": record["name"], "fact": record["fact"],
+                   "value": record.get("value"), "source": record["source"], "written_at": record["written_at"],
+                   "derived_or_ingested": record["derived_or_ingested"], "confirmed": bool(record["confirmed"]),
+                   "session_id": record.get("session_id", "seed")})

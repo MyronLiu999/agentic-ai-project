@@ -42,3 +42,15 @@ def latest(request_id: str, kind: str | None = None) -> dict | None:
 
 def figures(report: dict) -> dict:
     return json.loads(report["figures_json"])
+
+
+def withdraw(report_id: int) -> bool:
+    """The undo of a save (Milestone 2 rollback): remove this version, so the previous one is the latest again,
+    or none if it was the first. Refused while a report email for it is being sent or was sent: a sent email
+    cannot be undone, so the report it points at stays. Returns whether it was withdrawn."""
+    with db.connect() as conn:
+        busy = conn.execute("SELECT 1 FROM pending WHERE report_id = ? AND status IN ('sending', 'sent')",
+                            (report_id,)).fetchone()
+        if busy:
+            return False
+        return conn.execute("DELETE FROM reports WHERE id = ?", (report_id,)).rowcount == 1
