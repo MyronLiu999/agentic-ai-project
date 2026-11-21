@@ -140,7 +140,7 @@ class DisclosureAndHookTest(ScratchTest):
         self.assertEqual(sent, [])
         from agent import disclosure
         self.assertTrue(reg.call("ask_stranger", {"question": disclosure.with_disclosure("Which column?")},
-                                 "model")["ok"])
+                                 "code")["ok"])
 
     def test_registry_ask_puts_up_an_approval_and_runs_nothing(self):
         from tests.fakes import FakeApprovals, FakeHook
