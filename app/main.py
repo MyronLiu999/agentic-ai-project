@@ -169,12 +169,15 @@ def queue(request: Request):
 
 @app.get("/threads", response_class=HTMLResponse)
 def threads(request: Request, thread: str | None = None):
+    from agent import service
     messages = product.thread_messages(thread) if thread else []
-    return page(request, "threads.html", threads=channel.threads(), thread=thread, messages=messages, notice=None)
+    return page(request, "threads.html", threads=channel.threads(), thread=thread, messages=messages, notice=None,
+                exchange_status=service.outside_statuses())
 
 
 @app.post("/threads/reply", response_class=HTMLResponse)
 def thread_reply(request: Request, thread_id: str = Form(...), text: str = Form(...), sender: str = Form("outside")):
+    from agent import service
     notice = None
     try:
         reply = turns.outside_reply(thread_id, text, sender=(sender.strip() or "outside"))
@@ -185,7 +188,7 @@ def thread_reply(request: Request, thread_id: str = Form(...), text: str = Form(
     except Exception as exc:
         notice = _agent_error(exc)
     return page(request, "threads.html", threads=channel.threads(), thread=thread_id,
-                messages=product.thread_messages(thread_id), notice=notice)
+                messages=product.thread_messages(thread_id), notice=notice, exchange_status=service.outside_statuses())
 
 
 # -- approvals -------------------------------------------------------------------------------

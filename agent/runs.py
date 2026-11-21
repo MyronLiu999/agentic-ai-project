@@ -65,6 +65,8 @@ def _ensure(run_key: str, session_id: str, run_no: int) -> None:
 
 def current_key(session_id: str | None = None) -> str | None:
     """The run in scope: the run.py run, or the session's latest run; None outside any run or session."""
+    if _resuming.get() is not None:
+        return _resuming.get()
     run = runtime.current_run()
     if run is not None:
         return run.run_id

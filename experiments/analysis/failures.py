@@ -11,7 +11,8 @@ import json
 from pathlib import Path, PureWindowsPath
 
 ROOT = Path(__file__).resolve().parents[2]
-BOUNDS = {"step_limit", "wall_clock", "agent_budget", "token_budget", "plan_rejected", "replan_bound", "critique_held"}
+BOUNDS = {"step_limit", "wall_clock", "agent_budget", "token_budget", "plan_rejected", "replan_bound", "critique_held",
+          "stopped", "cancelled", "held", "unsettled_write"}
 
 
 def _first_signal(line, check_reason):
@@ -67,7 +68,7 @@ def resolve_trace(record, path: Path, repo_root: Path = ROOT) -> Path:
 
 def inspect_record(record, path: Path, repo_root: Path):
     trace = resolve_trace(record, path, repo_root)
-    issues, first = [], None
+    issues, first, controls = [], None, {}
     check_reason = str((record.get("check") or {}).get("reason") or "")
     try:
         with trace.open(encoding="utf-8") as stream:
@@ -81,6 +82,9 @@ def inspect_record(record, path: Path, repo_root: Path):
                 except ValueError:
                     issues.append(f"Malformed trace JSON at line {number}")
                     continue
+                if line.get('type') in ('wait', 'stop', 'escalation', 'compaction', 'midtask_message'):
+                    kind = line['type']
+                    controls[kind] = controls.get(kind, 0) + 1
                 signal = _first_signal(line, check_reason)
                 if signal and first is None:
                     first = {"line": number, "kind": signal[0], "message": signal[1]}
@@ -94,7 +98,8 @@ def inspect_record(record, path: Path, repo_root: Path):
     return {"run_id": record["run_id"], "arm": record.get("arm"), "task": record.get("task"),
             "outcome": record.get("outcome"), "end_reasons": record.get("end_reasons") or [record.get("end_reason")],
             "check_reason": check_reason, "record": str(path), "trace": str(trace), "first_failure": first,
-            "evidence_issues": issues, "synthetic": bool(record.get("free") or "_free" in path.parts)}
+            "evidence_issues": issues, "control_events": controls,
+            "synthetic": bool(record.get("free") or "_free" in path.parts)}
 
 
 def collect(target: Path, *, repo_root: Path = ROOT, include_free=False, include_discarded=False):

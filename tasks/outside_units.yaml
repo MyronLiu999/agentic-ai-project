@@ -1,0 +1,25 @@
+id: outside_units
+title: Missing units header requires one factual clarification
+use_case: messy_file
+input:
+  thread: SYN-thread-outside
+  from: SYN-contact-brightline
+  distributor: SYN-DIST-002
+  contact_email: contact@brightline.example
+  period: 2026Q3
+  text: 'SYNTHETIC. Please reconcile the attached quantities with our quarter.'
+  file:
+    name: ambiguous.csv
+    content: |
+      sku,measure_a,measure_b
+      SYN-SKU-003,412,12360
+      SYN-SKU-004,388,17460
+operator:
+  - Handle the new request on the outside channel; save only the report.
+outside:
+  - thread: SYN-thread-outside
+    replies: ['units_column=measure_a']
+    asked_again: 'I already answered: units_column=measure_a'
+    never_asked: null
+expect: {file_total_units: 800}
+check: checks/outside_units.py

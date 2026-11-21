@@ -6,7 +6,8 @@
   <section>
     {% for t in threads %}
       <p><a href="/threads?thread={{ t.thread_id | urlencode }}">{{ t.thread_id }}</a><br>
-      <span class="muted">{{ t.messages }} messages{% if t.waiting_for_outside %} · waiting for a reply{% endif %}</span></p>
+      {% set exchange = (exchange_status or {}).get(t.thread_id) %}
+      <span class="muted">{{ t.messages }} messages{% if exchange %} · {{ exchange.status }}{% elif t.waiting_for_outside %} · waiting for a reply{% endif %}</span></p>
     {% else %}
       <p class="muted">No conversations yet.</p>
     {% endfor %}
@@ -15,6 +16,8 @@
     {% if notice %}<div class="notice">{{ notice }}</div>{% endif %}
     {% if thread %}
       <h2>{{ thread }}</h2>
+      {% set exchange = (exchange_status or {}).get(thread) %}
+      {% if exchange %}<p class="muted">Exchange: {{ exchange.status }}{% if exchange.status == 'waiting' %} · reply deadline {{ exchange.deadline }}{% endif %}</p>{% endif %}
       {% for m in messages %}
         <div class="line {{ 'reply' if m.sender in ('agent', 'operator') else 'outside' }}"><div class="who">{{ m.sender }} · {{ m.at[:19] }}{% if m.seeded %} · seeded input{% endif %}{% if m.handled_by %} · to {{ m.handled_by }}{% endif %}</div>{{ m.text }}
         {% for c in m.email_charts %}<figure><figcaption>{{ c.title }}</figcaption><a href="{{ c.url }}"><img src="{{ c.url }}" alt="{{ c.title }}" style="max-width:100%;height:auto"></a></figure>{% endfor %}</div>

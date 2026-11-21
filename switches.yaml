@@ -25,7 +25,8 @@ plan:
 # Milestone 2 (setup, Nov 20). Each switch carries added: so the Milestone 1 runs, made before it, stay valid.
 # Provisional settings: each owner sets the final one from the decision table (PLAN_M2.md section 3.5).
 notes:   # abraham: one per kind of session that needs notes; replaces the starter's flat switch
-  console: {setting: "off", values: ["off", "on"], added: 2026-11-20, about: "Notes in the operator's console session (long sessions). abraham, B3."}
+  console: {setting: "on", values: ["off", "on"], added: 2026-11-20, about: "Structured status and IDs for long console sessions; short one-run calls leave notes off."}
+  task: {setting: "off", values: ["off", "on"], added: 2026-11-20, about: "Short single-case runs use their current request and bounded tool results."}
 
 context_budget: {setting: 16000, added: 2026-11-20, about: "Most input tokens one call may carry (chars / 4, tool definitions included). abraham, B3."}
 compaction_threshold: {setting: 12000, added: 2026-11-20, about: "Past this, older turns are compacted; at most the budget less what every call carries. abraham, B3."}

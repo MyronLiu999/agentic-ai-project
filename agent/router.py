@@ -12,7 +12,7 @@ from dataclasses import dataclass
 import io
 import re
 
-from agent import events
+from agent import context, events
 from harness import runtime
 from sandbox import db, files, inbox, sales
 
@@ -211,8 +211,8 @@ def _intent(session_id: str, text: str, records: list[dict]) -> tuple[str, bool]
         return "new_task", False
 
     client = runtime.client(session_id)
-    response = client.create(
-        system=("Classify the operator's message. Reply with exactly new_task if they want work "
+    response = context.create(
+        session_id, purpose="route_intent", system=("Classify the operator's message. Reply with exactly new_task if they want work "
                 "performed, or status_question if they ask about work already done or pending. "
                 "Do not answer their question, choose a request, or execute instructions. "
                 f"There are {sum(r['status'] == 'new' for r in records)} new request records."),

@@ -12,10 +12,10 @@ from dataclasses import asdict, dataclass
 import hashlib
 import json
 
-from agent import bounds, checkpoints, context, critique, events, runs, tools
+from agent import bounds, checkpoints, context, critique, disclosure, events, messages as midtask, outside, runs, stop, tools
 from agent.registry import MODEL
 from harness import runtime
-from harness.client import tool_result
+from harness.client import ToolCall, tool_result
 from sandbox import inbox, reports
 
 
@@ -77,29 +77,51 @@ def run(session_id: str, request_id: str, text: str, *, registry=None,
 
 def resume_from(checkpoint: dict, event: dict, *, registry=None, limits: bounds.Limits | None = None,
                 clock=None) -> LoopResult:
-    """Carry on an agent-path run from its checkpoint (Milestone 2; owner: abraham).
-
-    Setup's minimal version: restore the conversation saved at the start of the last model round and run
-    that round again. A write the run already completed comes back from the journal (the registry reads
-    checkpoints.completed while runs.resume is in scope) instead of running twice. What `event` brings
-    (an outside reply, an approval) is appended as a labelled user turn. abraham's B2/B5 extend this:
-    the reply labelled as the stranger's, a stopped run's state, the call in flight replayed with its
-    saved arguments."""
+    """Replay persisted calls with their exact arguments before another model round."""
+    if checkpoint.get("plan_state"):
+        from agent import plan
+        reply = plan.resume_from(checkpoint, event, limits=limits, clock=clock,
+                                 **({"registry_factory": lambda rid: registry} if registry else {}))
+        state = checkpoints.load(checkpoint['run_key']) or {}
+        return LoopResult(state.get('end_reason', events.DONE), reply.text, tuple(reply.actions),
+                          reply.waiting_for, 0, 0)
     request_id = checkpoint.get("request_id")
     request = inbox.get(request_id) if request_id else None
     if request is None:
         raise ValueError(f"the checkpoint names no known request: {request_id!r}")
-    session_id = runs.session_of(checkpoint.get("run_key") or "")
+    run_key = checkpoint.get('run_key')
+    session_id = runs.session_of(run_key or "")
     registry = tools.build(request_id) if registry is None else registry
-    loop = _Loop(session_id, request, checkpoint.get("operator_text") or "Carry on with the request.",
-                 registry, limits or bounds.Limits(), clock,
-                 comparison_required=bool(checkpoint.get("comparison_required")))
+    executor = _Loop(session_id, request, checkpoint.get("operator_text") or "Carry on with the request.",
+                     registry, limits or bounds.Limits(), clock,
+                     comparison_required=bool(checkpoint.get("comparison_required")))
+    executor.run_key = run_key
     if checkpoint.get("conversation"):
-        loop.messages = deepcopy(checkpoint["conversation"])
-    note = _event_note(event)
-    if note:
-        loop.messages.append({"role": "user", "content": note})
-    return loop.execute()
+        executor.messages = deepcopy(checkpoint["conversation"])
+    state = checkpoint.get('loop_state') or {}
+    executor.actions = list(state.get('actions', []))
+    executor.repeats = dict(state.get('repeats', {}))
+    executor.budget.steps = int(state.get('steps', 0))
+    executor.previous_tokens = int(state.get('tokens', 0))
+    executor.budget.token_ceiling -= executor.previous_tokens
+    executor.pending_calls = deepcopy(checkpoint.get('pending_calls') or [])
+    executor.pending_results = deepcopy(checkpoint.get('pending_results') or [])
+    executor.pending_step = checkpoint.get('pending_step', executor.budget.steps)
+    executor.prepared = deepcopy(checkpoint.get('prepared_call'))
+    exchange = checkpoint.get('outside_exchange') or {}
+    if exchange.get('status') != 'answered':
+        executor.sent_question = deepcopy(checkpoint.get('sent_question'))
+    if checkpoint.get('clarification_needed') and exchange.get('status') != 'answered':
+        executor.clarification = deepcopy(checkpoint.get('outside_parsed'))
+    if event.get('kind') == 'approval' and not event.get('approved'):
+        executor.pending_calls = []
+        return executor.finish(events.DECLINED, 'The operator rejected the pending action.')
+    actual_event = checkpoint.get('outside_reply') if event.get('kind') in ('stop_resume', 'crash') else event
+    executor.resume_note = _event_note(actual_event or event)
+    if actual_event and actual_event.get('kind') == 'outside_reply':
+        exchange = checkpoint.get('outside_exchange') or {}
+        checkpoints.update(run_key, outside_exchange={**exchange, 'status': 'answered'})
+    return executor.execute()
 
 
 def _event_note(event: dict) -> str | None:
@@ -120,7 +142,7 @@ class _Loop:
         self.request = request
         self.session_id = session_id
         self.text = text
-        self.run_key = runs.current_key(session_id)
+        self.run_key = runs.resuming() or runs.current_key(session_id)
         self.comparison_required = comparison_required
         self.registry = registry
         self.client = runtime.client(session_id)
@@ -130,6 +152,14 @@ class _Loop:
         self.actions = []
         self.repeats = {}
         self.waiting_for = None
+        self.pending_calls = []
+        self.pending_results = []
+        self.pending_step = 0
+        self.prepared = None
+        self.resume_note = None
+        self.previous_tokens = 0
+        self.clarification = None
+        self.sent_question = None
         self.messages = [{"role": "user", "content": json.dumps({
             "operator_instruction": text,
             "request_scope": {k: request[k] for k in ("id", "period", "contact_email")},
@@ -140,6 +170,7 @@ class _Loop:
                          effective_token_budget=max(0, self.budget.token_ceiling - self.client.total_tokens))
 
     def check(self):
+        stop.check(self.run_key)
         self.budget.check(self.client.total_tokens)
 
     def model_call(self, *, system, messages, definitions, purpose):
@@ -151,77 +182,156 @@ class _Loop:
         return response
 
     def finish(self, reason, text, waiting_for=None):
+        self.save_state(end_reason=reason)
         checkpoints.to_trace(self.trace, self.run_key)
         runs.end(self.run_key, reason)
         self.trace.end(reason, detail=text)
         return LoopResult(reason, text, tuple(self.actions), waiting_for or self.waiting_for, self.budget.steps,
                           self.budget.tokens_used(self.client.total_tokens))
 
+    def save_state(self, **fields):
+        if self.run_key:
+            checkpoints.update(self.run_key, path='agent', request_id=self.request['id'],
+                               operator_text=self.text, comparison_required=self.comparison_required,
+                               conversation=self.messages, pending_calls=self.pending_calls,
+                               pending_results=self.pending_results, pending_step=self.pending_step,
+                               prepared_call=self.prepared, sent_question=self.sent_question, clarification_needed=self.clarification is not None,
+                               **({'outside_parsed': self.clarification} if self.clarification else {}),
+                               loop_state={'steps': self.budget.steps, 'actions': self.actions,
+                                           'repeats': self.repeats,
+                                           'tokens': self.previous_tokens + self.budget.tokens_used(self.client.total_tokens)},
+                               **fields)
+
+    def wait_for_question(self):
+        sent = self.sent_question
+        outside.record_wait(self.run_key, sent['result'], sent['question'])
+        return self.finish(events.NEEDS_ANSWER, 'A disclosed question was sent; waiting for the stranger.',
+                           self.request['thread_id'])
+
     def execute(self):
         definitions = self.registry.definitions()
         try:
             while True:
-                # Setup seam (claudea's placement rule decides what is saved): the conversation as it stands
-                # before this round, so a resume replays the round rather than trusting the model's memory.
-                checkpoints.before_step(self.run_key, {
-                    "path": "agent", "request_id": self.request["id"], "operator_text": self.text,
-                    "comparison_required": self.comparison_required, "step": f"round-{self.budget.steps + 1}",
-                    "conversation": self.messages})
-                response = self.model_call(system=SYSTEM, messages=self.messages, definitions=definitions,
-                                           purpose="agent_step")
-                step = self.budget.steps  # Revisions consume steps without changing this response's origin.
-                self.messages.append(response.assistant_message())
-                if response.stop_reason == "refusal":
-                    return self.finish(events.DECLINED, response.text or "The model declined the request.")
-                calls = response.tool_calls
-                if not calls:
-                    if response.stop_reason == "end_turn":
-                        return self.finish(events.DONE, response.text)
-                    self.messages.append({"role": "user", "content":
-                                          "Your response did not finish. Continue the task or explain what is unresolved."})
-                    continue
-                results = []
-                for call in calls:
+                self.check()
+                if not self.pending_calls:
+                    if self.pending_results:
+                        self.messages.append({'role': 'user', 'content': self.pending_results})
+                        self.pending_results = []
+                        self.save_state()
+                    if self.sent_question:
+                        return self.wait_for_question()
+                    if self.clarification:
+                        reply = outside.ask(self.run_key, '', template='units_column')
+                        self.actions.extend(reply.actions)
+                        return self.finish(events.NEEDS_ANSWER if reply.waiting_for else events.HELD,
+                                           reply.text, reply.waiting_for)
+                    if self.resume_note:
+                        self.messages.append({'role': 'user', 'content': self.resume_note})
+                        self.resume_note = None
+                    for addition in midtask.consume(self.run_key):
+                        self.messages.append({'role': 'user', 'content': json.dumps(
+                            {'operator_instruction': addition['text'] if isinstance(addition, dict) else addition})})
+                    self.save_state()
+                    checkpoints.before_step(self.run_key, {
+                        'path': 'agent', 'request_id': self.request['id'], 'operator_text': self.text,
+                        'comparison_required': self.comparison_required, 'conversation': self.messages,
+                        'step': f'round-{self.budget.steps + 1}'})
+                    response = self.model_call(system=SYSTEM, messages=self.messages, definitions=definitions,
+                                               purpose="agent_step")
+                    self.messages.append(response.assistant_message())
+                    if response.stop_reason == 'refusal':
+                        return self.finish(events.DECLINED, response.text or 'The model declined the request.')
+                    calls = response.tool_calls
+                    if not calls:
+                        if response.stop_reason == 'end_turn':
+                            return self.finish(events.DONE, response.text)
+                        self.messages.append({'role': 'user', 'content': 'Continue or explain what is unresolved.'})
+                        continue
+                    if response.stop_reason != 'tool_use':
+                        results = [tool_result(call, json.dumps(self.reject(call, self.budget.steps,
+                            'The tool response was incomplete. Return a complete tool call.')), is_error=True)
+                                   for call in calls]
+                        self.messages.append({'role': 'user', 'content': results})
+                        continue
+                    self.pending_calls = [asdict(call) for call in calls]
+                    self.pending_results = []
+                    self.pending_step = self.budget.steps
+                    self.save_state()
+                ask_parsed = self.clarification
+                pending_question = False
+                while self.pending_calls:
                     self.check()
-                    digest = hashlib.sha256(json.dumps([self.request["id"], call.name, call.input],
+                    call = ToolCall(**self.pending_calls[0])
+                    step = self.pending_step
+                    digest = hashlib.sha256(json.dumps([self.request['id'], call.name, call.input],
                                                        sort_keys=True).encode()).hexdigest()
                     count = self.repeats[digest] = self.repeats.get(digest, 0) + 1
                     if count > 1:
-                        self.trace.event(events.REPEAT_CALL, request_id=self.request["id"], tool=call.name,
+                        self.trace.event(events.REPEAT_CALL, request_id=self.request['id'], tool=call.name,
                                          args_hash=digest, count=count, step=step)
-                    if response.stop_reason != "tool_use":
-                        result = self.reject(call, step, "The tool response was incomplete. Return a complete tool call to execute it.")
-                        executed_input = None
+                    if ask_parsed is not None or self.sent_question:
+                        result, executed_input = self.reject(call, step, 'Wait for the units-column clarification.'), None
                     else:
                         result, executed_input = self.call_tool(call, step)
+                    error_type = (result.get('error') or {}).get('type')
+                    if error_type == 'approval_required':
+                        approval_id = result['error'].get('approval_id')
+                        self.save_state()
+                        if self.run_key:
+                            checkpoints.set_wait(self.run_key, 'approval', str(approval_id))
+                        return self.finish(events.AWAITING_APPROVAL, f'A call waits for approval ({approval_id}).')
+                    if error_type == 'stopped':
+                        return self.finish(events.STOPPED, 'The operator stopped this run; its state is saved.')
                     feedback = dict(result)
                     if executed_input is not None and executed_input != call.input:
-                        feedback["executed_input"] = executed_input
-                    results.append(tool_result(call, json.dumps(feedback), is_error=result["is_error"]))
-                    error_type = (result.get("error") or {}).get("type")
-                    if error_type == "approval_required":
-                        approval_id = result["error"].get("approval_id")
-                        if self.run_key:
-                            checkpoints.set_wait(self.run_key, "approval", str(approval_id))
-                        return self.finish(events.AWAITING_APPROVAL,
-                                           f"A call waits for the operator's approval ({approval_id}).")
-                    if error_type == "stopped":
-                        return self.finish(events.STOPPED, "The operator stopped this run; its state is saved.")
-                    if result["ok"] and not result["is_error"]:
-                        action = _action(call.name, result["output"])
+                        feedback['executed_input'] = executed_input
+                    self.pending_results.append(tool_result(call, json.dumps(feedback), is_error=result['is_error']))
+                    self.pending_calls.pop(0)
+                    self.prepared = None
+                    if result['ok'] and not result['is_error']:
+                        action = _action(call.name, result['output'])
                         self.actions.append(action)
                         self.trace.progress(action)
-                        if call.name == "draft_clarifying_question":
-                            self.waiting_for = self.request["thread_id"]
+                        if call.name == 'ask_stranger':
+                            self.sent_question = {'result': result, 'question': (executed_input or call.input)['question']}
+                        if call.name == 'draft_clarifying_question':
+                            pending_question = True
+                            self.waiting_for = self.request['thread_id']
+                        if call.name == 'parse_file' and self.run_key:
+                            exchange = (checkpoints.load(self.run_key) or {}).get('outside_exchange') or {}
+                            if not exchange and outside.needs_clarification(result['output']):
+                                ask_parsed = self.clarification = result['output']
+                    self.save_state()
+                    stop.after_call(self.run_key)
                     self.check()
-                    if call.name == "draft_clarifying_question" and result["ok"] and not result["is_error"]:
-                        return self.finish(events.NEEDS_ANSWER, "A clarifying question is pending for the operator.",
-                                           self.request["thread_id"])
-                self.messages.append({"role": "user", "content": results})
+                    if pending_question:
+                        return self.finish(events.NEEDS_ANSWER, 'A clarifying question is pending for the operator.',
+                                           self.request['thread_id'])
+                self.messages.append({'role': 'user', 'content': self.pending_results})
+                self.pending_results = []
+                self.save_state()
+                if self.sent_question:
+                    return self.wait_for_question()
+                if ask_parsed is not None:
+                    checkpoints.update(self.run_key, outside_parsed=ask_parsed)
+                    reply = outside.ask(self.run_key, '', template='units_column')
+                    self.actions.extend(reply.actions)
+                    return self.finish(events.NEEDS_ANSWER if reply.waiting_for else events.HELD,
+                                       reply.text, reply.waiting_for)
+                # M1's operator-reviewed pending question remains supported.
+                if pending_question:
+                    return self.finish(events.NEEDS_ANSWER, 'A clarifying question is pending for the operator.',
+                                       self.request['thread_id'])
+        except stop.ControlStopped as exc:
+            if self.run_key:
+                checkpoints.update(self.run_key, stopped=True)
+            return self.finish(exc.reason, 'The operator stopped this run; its state is saved.')
+        except context.ContextBudgetError as exc:
+            return self.finish(events.AGENT_BUDGET, str(exc))
         except bounds.LimitReached as exc:
-            return self.finish(exc.reason, f"Stopped at the {exc.reason} bound; work may remain unfinished.")
+            return self.finish(exc.reason, f'Stopped at the {exc.reason} bound; work may remain unfinished.')
         except CritiqueHeld as exc:
-            return self.finish(events.CRITIQUE_HELD, f"Email draft held: {exc}")
+            return self.finish(events.CRITIQUE_HELD, f'Email draft held: {exc}')
 
     def reject(self, call, step, message):
         result = _error(message)
@@ -229,19 +339,27 @@ class _Loop:
         return result
 
     def call_tool(self, call, step):
-        args = deepcopy(call.input)  # Registry normalization must not rewrite assistant history.
-        if call.name == "draft_report_email":
-            gate = EmailGate(self.request["id"], self.model_call, self.check,
-                             comparison_required=self.comparison_required)
-            try:
-                draft = gate.email_draft(args)
-            except ValueError as exc:
-                return self.reject(call, step, str(exc)), None
-            args = gate.checked_email(draft)
+        if self.prepared and self.prepared.get('id') == call.id:
+            args = deepcopy(self.prepared['args'])
+        else:
+            args = deepcopy(call.input)
+            if call.name == 'draft_report_email':
+                gate = EmailGate(self.request['id'], self.model_call, self.check,
+                                 comparison_required=self.comparison_required)
+                try:
+                    draft = gate.email_draft(args)
+                except ValueError as exc:
+                    return self.reject(call, step, str(exc)), None
+                args = gate.checked_email(draft)
+            if call.name == 'ask_stranger' and isinstance(args.get('question'), str):
+                args['question'] = disclosure.with_disclosure(args['question'])
+            self.prepared = {'id': call.id, 'name': call.name, 'args': args}
+            self.save_state()
         self.check()
-        # A model round is trace attribution, never a stable logical write step.
+        if call.name not in ('parse_file', 'query_sales', 'search_tools'):
+            stop.notice(self.run_key)
         result = self.registry.call(call.name, args, MODEL, trace_step=step)
-        return result, args if result["ok"] and not result["is_error"] else None
+        return result, args if result['ok'] and not result['is_error'] else None
 
 
 class EmailGate:

@@ -140,7 +140,7 @@ class DisclosureAndHookTest(ScratchTest):
         self.assertEqual(sent, [])
         from agent import disclosure
         self.assertTrue(reg.call("ask_stranger", {"question": disclosure.with_disclosure("Which column?")},
-                                 "model")["ok"])
+                                 "code")["ok"])
 
     def test_registry_ask_puts_up_an_approval_and_runs_nothing(self):
         from tests.fakes import FakeApprovals, FakeHook
@@ -242,11 +242,13 @@ class PlanApprovalAndCompensationContractTest(ScratchTest):
 
 class ServiceDelegationTest(ScratchTest):
     def test_decide_approval_resumes_the_run(self):
-        from agent import service
+        from agent import checkpoints, runs, service
         from tests.fakes import FakeApprovals, FakeResume
         with FakeApprovals().install() as approvals, FakeResume().install() as resume:
+            runs.new_run('S')
             approval_id = approvals.put_up("S#1", "S", {"name": "send_report_email", "args": {}, "key": "k"},
                                            "send_report_email/own_contact", {})
+            checkpoints.set_wait('S#1', 'approval', approval_id)
             self.assertEqual([i["id"] for i in service.pending_approvals()], [approval_id])
             service.decide_approval(approval_id, True, "ok")
         self.assertEqual(resume.calls, [("S#1", {"kind": "approval", "approval_id": approval_id,
