@@ -38,6 +38,8 @@ Removed pass-through context/control stubs. Limited current requests to the inpu
 Each owner adds their own bullets here: what it added, what it removed, what it limited (such as a tool's
 reach), and a line for any assignment or course code reused (which assignment, whose repository).
 
+**Abraham, split experiment (2026-11-21):** Added a read-only analyst and artifact writer for batch reports on `abraham-split`, with validated returns, observed call ledgers, run-specific effect keys, a shared task budget and a combined sandbox check. Saved model responses, pending actions and operator additions survive stop/resume. The combined check rechecks persisted drafts, reports, chart values and SVGs. Twenty-one fake-model tests include all eight official tasks and the review regressions. The switch defaults to single; no live-model benefit is claimed. No assignment code was copied.
+
 **Setup (claudea, 2026-11-20):** the shared contracts of `PLAN_M2.md` section 3, so the three branches can be
 built without waiting on each other. Added `agent/runs.py` (run keys, the one resume entry),
 `agent/checkpoints.py` and `sandbox/control.py` (a durable SQLite store for checkpoints, the journal, waits, run
