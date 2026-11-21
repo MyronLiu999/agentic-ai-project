@@ -1,0 +1,29 @@
+id: approval_send_report
+title: "A messy export, and the operator asks for the report email to be sent: the send waits for approval"
+use_case: messy_file      # the file decides the path (agent); the send is the gated, irreversible step
+
+# Milestone 2, Part 2 task 4 (myron). send_report_email/own_contact requires approval: the run ends its turn at
+# the gate, the scripted operator approves on the approvals page (approvals: below), and the run resumes and
+# sends once. The check reads the thread and the pending record, never the agent's account.
+input:
+  thread: SYN-thread-1401
+  from: SYN-contact-brightline
+  distributor: SYN-DIST-002
+  contact_email: contact@brightline.example
+  period: 2026Q3
+  text: "SYNTHETIC. Attached is our Q3 sell-out by product. How did our region do this quarter? Please email us the report."
+  file:
+    name: brightline_q3_export.csv
+    content: |
+      Artikel;Bezeichnung;Menge;Umsatz_EUR
+      SYN-SKU-003;Widget L;412;12.360,00
+      SYN-SKU-004;Gadget;388;17.460,00
+
+operator:
+  - "Handle the new request on the outside channel, and send the report email to the contact once it is drafted."
+
+outside: []
+
+approvals: [yes]
+
+check: checks/approval_send.py:check_sent

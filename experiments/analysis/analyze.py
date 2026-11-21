@@ -47,6 +47,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
+from experiments.analysis import m2  # noqa: E402  (Milestone 2's numbers; myron)
+
 UNFINISHED = ("quota", "rate_limited", "not_built")
 SWEEPS = 3   # the handout's f: passed in at least two of three sweeps
 BOUND_ENDS = ("step_limit", "wall_clock", "agent_budget")
@@ -283,6 +285,7 @@ def analyze_arm(folder: Path, *, repo_root: Path = ROOT) -> dict:
                      "verdicts": dict(critique["verdicts"])},
         "routing": routing, "bound_ends": dict(bound), "bound_runs": bound_runs,
         "boundary": boundary, "measures": dict(measures), "per_run": per_run,
+        "m2": m2.arm_numbers(counted),      # Milestone 2's numbers (myron, M9): experiments/analysis/m2.py
     }
 
 
@@ -348,6 +351,7 @@ def report(arms: list[dict], cross: dict | None) -> str:
         for t in a["tasks"]:
             p, n = a["per_task"][t]
             out.append(f"| {t} | {p} of {n} | ${a['cost_per_task'][t]:.4f} | {a['sequences_per_task'].get(t, 0)} |")
+        out += ["", *m2.report_lines(a["m2"])]
         out.append("")
     if cross:
         out += ["## m and f", "",

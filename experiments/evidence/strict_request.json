@@ -1,0 +1,132 @@
+{
+  "checked_at": "2026-11-21T03:13:13.647396+00:00",
+  "model": "gpt-4o-mini",
+  "provider": "openai-compatible",
+  "request": {
+    "max_tokens": 5,
+    "messages": [
+      {
+        "content": "Reply with exactly OK. Do not call a tool.",
+        "role": "user"
+      }
+    ],
+    "model": "gpt-4o-mini",
+    "tools": [
+      {
+        "function": {
+          "description": "Read sales for the distributor bound by trusted request metadata; distributor_id is deliberately not an argument. Returns at most 50 product rows and explicit totals/truncation. Example calls: {\"period\":\"2026Q3\"} or {\"period\":\"2026Q2\"}.",
+          "name": "query_sales",
+          "parameters": {
+            "additionalProperties": false,
+            "properties": {
+              "period": {
+                "description": "Calendar quarter such as 2026Q3.",
+                "pattern": "^[0-9]{4}Q[1-4]$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "period"
+            ],
+            "type": "object"
+          },
+          "strict": true
+        },
+        "type": "function"
+      },
+      {
+        "function": {
+          "description": "Ask the distributor one question on this request's own thread, then end your turn: their answer comes back later as the stranger's text. Only for a fact the request needs and only they have. The thread is bound from the request. A question you write waits for the operator's approval before it goes out; code adds the line saying an agent wrote it.",
+          "name": "ask_stranger",
+          "parameters": {
+            "additionalProperties": false,
+            "properties": {
+              "question": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "question"
+            ],
+            "type": "object"
+          },
+          "strict": true
+        },
+        "type": "function"
+      },
+      {
+        "function": {
+          "description": "Send a drafted report email (its pending_id from draft_report_email) to this request's own contact. Irreversible: it waits for the operator's approval, and only a draft for this request's contact can be sent. Call it only when the operator asked for the email to be sent.",
+          "name": "send_report_email",
+          "parameters": {
+            "additionalProperties": false,
+            "properties": {
+              "pending_id": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "pending_id"
+            ],
+            "type": "object"
+          },
+          "strict": true
+        },
+        "type": "function"
+      },
+      {
+        "function": {
+          "description": "Search the tool catalogue by what you need to do (for example \"chart\" or \"ask the distributor\"). Returns up to 3 tool names; their definitions join your next request. Says when nothing matched.",
+          "name": "search_tools",
+          "parameters": {
+            "additionalProperties": false,
+            "properties": {
+              "query": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "query"
+            ],
+            "type": "object"
+          },
+          "strict": true
+        },
+        "type": "function"
+      },
+      {
+        "function": {
+          "description": "Run a short Python program for a step that loops over many results. Inside it, call(name, args) calls one of this request's tools and returns its result envelope ({ok, output, is_error, error}); assign the one value you need to `result`. Only `result` comes back, with the count of calls. No network and no files. At most 8000 characters.",
+          "name": "run_program",
+          "parameters": {
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code"
+            ],
+            "type": "object"
+          },
+          "strict": true
+        },
+        "type": "function"
+      }
+    ]
+  },
+  "strict_tools": [
+    "query_sales",
+    "ask_stranger",
+    "send_report_email",
+    "search_tools",
+    "run_program"
+  ],
+  "vendor": {
+    "answer": "accepted",
+    "finish_reason": "stop",
+    "response_id": "chatcmpl-EmVpM7SYEdurzJhkkNCHqCQWXZ3ac",
+    "response_model": "gpt-4o-mini-2024-07-18"
+  }
+}

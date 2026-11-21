@@ -139,8 +139,10 @@ class DisclosureAndHookTest(ScratchTest):
         self.assertEqual((result["ok"], result["error"]["type"]), (False, "undisclosed"))
         self.assertEqual(sent, [])
         from agent import disclosure
+        # a fixed-template question from code runs unasked (ask_stranger/template); a model-written one asks
+        # (PLAN_M2.md 3.4; caller changed from "model" with the team's agreement, 2026-11-20)
         self.assertTrue(reg.call("ask_stranger", {"question": disclosure.with_disclosure("Which column?")},
-                                 "model")["ok"])
+                                 "code")["ok"])
 
     def test_registry_ask_puts_up_an_approval_and_runs_nothing(self):
         from tests.fakes import FakeApprovals, FakeHook

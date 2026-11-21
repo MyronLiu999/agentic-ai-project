@@ -15,14 +15,20 @@ class ToolsTest(ScratchTest):
         self.request_id = inbox.request_id("SYN-thread-2001")
         self.registry = build(self.request_id)
 
-    def test_surface_has_six_tools_and_no_send_tool(self):
+    def test_surface_has_eight_tools_and_the_send_only_behind_the_gate(self):
+        # Milestone 2 (PLAN_M2.md 3.4) adds ask_stranger and send_report_email; with tools.loading = all,
+        # search_tools is left out, and run_program only joins where a code_calls switch is on.
+        from policy import hook
         definitions = self.registry.definitions()
         names = [item["name"] for item in definitions]
-        self.assertEqual(len(names), 6)
-        self.assertFalse(any("send" in name for name in names))
+        self.assertEqual(len(names), 8)
+        self.assertEqual([n for n in names if "send" in n], ["send_report_email"])
+        self.assertEqual(hook.column_of("send_report_email/own_contact"), "requires_approval")
+        self.assertEqual(hook.column_of("send_report_email/new_recipient"), "prohibited")
         strict = {item["name"]: item.get("strict") for item in definitions}
         self.assertTrue(strict["query_sales"])
         self.assertFalse(strict["save_report"])
+        self.assertTrue(strict["send_report_email"])
 
     def test_parse_file_returns_a_bounded_untrusted_shape(self):
         result = self.registry.call("parse_file", {}, MODEL, step="parse")

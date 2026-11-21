@@ -30,6 +30,14 @@ class AmbiguousToolError(RuntimeError):
     """A write may have committed, so the registry must not retry it blindly."""
 
 
+class ProtocolToolError(RuntimeError):
+    """The tool server answered with a JSON-RPC error, not a result: the call was not executed as sent."""
+
+
+LOADING = ("all", "deferred")
+SEARCH_TOOL = "search_tools"
+
+
 @dataclass(frozen=True)
 class ToolSpec:
     name: str
@@ -59,12 +67,16 @@ class Registry:
         sleep: Callable[[float], None] = time.sleep,
         key_context: str | None = None,
         trace=None,
+        loading: str = "all",
+        always_loaded: tuple[str, ...] = (),
     ):
         names = [s.name for s in specs]
         if len(names) != len(set(names)):
             raise ValueError("tool names must be unique")
         if max_retries < 0:
             raise ValueError("max_retries must be zero or greater")
+        if loading not in LOADING:
+            raise ValueError(f"loading must be one of {LOADING}")
         self._ordered = tuple(specs)
         self._specs = {s.name: s for s in specs}
         self._pre_call_hook = pre_call_hook or (lambda **_: True)
@@ -73,12 +85,36 @@ class Registry:
         self._sleep = sleep
         self._key_context = key_context or "unbound"
         self._trace = trace
+        # Deferred loading (Milestone 2, Lecture 3 slides 24-25). With "all", every model-visible definition goes
+        # in every request and search_tools is left out (it would find nothing new). With "deferred", a request
+        # carries search_tools and the always-loaded tools, and a tool joins once a search has found it.
+        self.loading = loading
+        self._always = tuple(always_loaded)
+        self._found: list[str] = []
+        self._offered: list[dict] = []
+
+    @property
+    def loaded(self) -> tuple[str, ...]:
+        """The names a search has added so far (deferred loading)."""
+        return tuple(self._found)
+
+    def _visible(self, spec: ToolSpec) -> bool:
+        if MODEL not in spec.callers:
+            return False
+        if self.loading == "all":
+            return spec.name != SEARCH_TOOL
+        return spec.name in self._always or spec.name in self._found
 
     def definitions(self) -> list[dict]:
-        """What the model sees, in the same order on every request (slide 28)."""
+        """What the model sees, in the same order on every request (slide 28).
+
+        With deferred loading the same list object is returned on every call and grows in place when a search
+        finds a tool, so a caller that keeps the list (the loop takes it once per turn) still sends the found
+        definitions in its next request. MERGE-CHECK (abraham): the loop and context assembly may also call
+        definitions() each round; both ways give the same list."""
         definitions = []
         for spec in self._ordered:
-            if MODEL not in spec.callers:
+            if not self._visible(spec):
                 continue
             definition = {
                 "name": spec.name,
@@ -87,7 +123,25 @@ class Registry:
             }
             definition.update(copy.deepcopy(spec.model_visible))
             definitions.append(definition)
-        return definitions
+        if self.loading == "all":
+            return definitions
+        self._offered[:] = definitions
+        return self._offered
+
+    def _record_search(self, result: dict) -> None:
+        """A search's matches join the next request; every search is traced, so a miss can be counted."""
+        output = result.get("output") or {}
+        matches = [m for m in output.get("matches") or [] if m in self._specs]
+        if self.loading == "deferred":
+            for name in matches:
+                if name not in self._found and name not in self._always:
+                    self._found.append(name)
+        offered = len(self.definitions())
+        trace = self._trace or _current_trace()
+        if trace is not None:
+            from agent import events
+            trace.event(events.SEARCH_TOOLS, query=output.get("query"), matches=matches,
+                        loading=self.loading, offered=offered)
 
     def call(self, name: str, args: dict, caller: str, *, step: str | None = None,
              trace_step: int | None = None) -> dict:
@@ -207,8 +261,21 @@ class Registry:
                 if spec.writes and run_key:
                     from agent import checkpoints
                     checkpoints.after_call(run_key, {"tool": name, "args": normalized, "key": key}, result)
+                if name == SEARCH_TOOL:
+                    self._record_search(result)
                 return self._record(name, normalized, caller, step, key, result, started, attempts,
                                     outcome="ok", trace_step=trace_step)
+            except ProtocolToolError as exc:
+                # The server refused the request itself (a JSON-RPC error): nothing ran, so this is the
+                # caller's to repair, never a retry and never an unknown outcome (Lecture 3, slide 34).
+                result = self._error(
+                    "protocol_error",
+                    "The tool server rejected the request.",
+                    "Correct the call; the server did not execute it.",
+                    details={"exception": str(exc)[:300]},
+                )
+                return self._record(name, normalized, caller, step, key, result, started, attempts,
+                                    outcome="protocol_error", trace_step=trace_step)
             except AmbiguousToolError as exc:
                 result = self._error(
                     "ambiguous_write",
@@ -296,7 +363,7 @@ class Registry:
             kind = "approval_required"
         elif error_type in {
             "unknown_tool", "invalid_caller", "caller_denied", "invalid_arguments",
-            "hook_denied", "invalid_result", "policy_denied", "stopped", "undisclosed",
+            "hook_denied", "invalid_result", "policy_denied", "stopped", "undisclosed", "protocol_error",
         }:
             kind = "protocol"
         else:

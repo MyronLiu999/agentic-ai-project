@@ -4,12 +4,26 @@
 <h1>Approvals</h1>
 {% if notice %}<div class="notice">{{ notice }}</div>{% endif %}
 {% if error %}<p class="error">{{ error }}</p>{% endif %}
+<p class="muted">Each screen shows the effect exactly as it will be applied, then facts code computed from the
+sandbox, then the stranger's own words. Lines marked <em>asserted</em> are someone's claim, not a fact code checked.
+Only you answer here; nothing on the outside channel approves anything.</p>
 {% for item in items %}
   <div class="line">
-    <div class="who">Approval {{ item.id }}</div>
+    <div class="who">Approval {{ item.id }}: <strong>{{ item.action_class }}</strong>
+      <span class="muted">({{ item.kind }}; run {{ item.run_key }}{% if item.session_id %}, session {{ item.session_id }}{% endif %}; put up {{ item.put_up_at }})</span></div>
+    {% if item.screen %}
     <div class="scroll"><table>
-      {% for k, v in item.items() if k != 'id' %}<tr><th>{{ k }}</th><td>{{ v }}</td></tr>{% endfor %}
+      <tr><th>What</th><th>Value</th><th>Source</th></tr>
+      {% for line in item.screen %}
+        <tr><th>{{ line.label }}</th><td style="white-space: pre-wrap">{{ line.value }}</td>
+            <td class="muted">{{ line.source }}</td></tr>
+      {% endfor %}
     </table></div>
+    {% else %}
+    <div class="scroll"><table>
+      {% for k, v in item.items() if k not in ('id', 'screen') %}<tr><th>{{ k }}</th><td>{{ v }}</td></tr>{% endfor %}
+    </table></div>
+    {% endif %}
     <form method="post" action="/approvals">
       <input type="hidden" name="approval_id" value="{{ item.id }}">
       <p><input type="text" name="note" placeholder="A note (optional)"></p>
@@ -19,9 +33,8 @@
   </div>
 {% else %}
   {% if not error %}
-  <p class="muted">Nothing waits for approval. Your approval gate fills this page. Your
-  agent lists what waits here through <code>pending_approvals()</code> in
-  <code>agent/service.py</code>, and the answer goes back through <code>decide_approval()</code>.</p>
+  <p class="muted">Nothing waits for approval. A call the policy gates (policy/autonomy.yaml, requires approval)
+  appears here with its screen, and the run it came from waits until you answer.</p>
   {% endif %}
 {% endfor %}
 {% endblock %}

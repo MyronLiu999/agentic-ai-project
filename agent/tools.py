@@ -7,23 +7,36 @@ Draft tool set, one row each in the tool table (docs/milestones/M1.md):
   render_chart              write  a chart artifact; undoable
   save_report               write  a report version; replaceable
   draft_report_email        write  a PENDING record; the emailed report itself is below the approval line
-  draft_clarifying_question write  a PENDING record; asking and waiting is Milestone 2
-There is deliberately no send_report tool. The operator sends from the product page.
+  draft_clarifying_question write  a PENDING record for the operator to send by hand
+Milestone 2 (PLAN_M2.md 3.4; owner: myron):
+  ask_stranger              write  a question on the request's thread, keyed; the disclosure line is added by
+                                   code before the registry (agent/disclosure.py) and required by the hook
+  send_report_email         write  IRREVERSIBLE: sends a drafted report email; only behind the approval gate
+  search_tools              read   search the tool catalogue (deferred loading, tools.loading = deferred)
+  run_program               code   a short program that calls the tools through the registry (code_calls.*)
+
+Every tool runs in the MCP server (mcp_server/), which the registry starts as a child process: specs() holds
+the tools as the server executes them, build() the registry whose calls reach the server. run_program is the
+exception: it runs in the registry's process, and every call its program makes goes through the registry, so
+through the hook and on to the server.
 """
 
 from __future__ import annotations
 
 import csv
+import dataclasses
 import html
 import io
 import json
+import re
 import sqlite3
 from pathlib import Path
 
-from agent.registry import CODE, MODEL, Registry, ToolSpec
+import channel
+from agent.registry import CODE, MODEL, AmbiguousToolError, Registry, ToolSpec
 from harness import runtime
 from harness.paths import state_dir
-from sandbox import files, inbox, pending, reports, sales
+from sandbox import email_packages, files, inbox, pending, reports, sales
 
 
 ROW_CAP = 50
@@ -255,6 +268,11 @@ def _draft_email(request_id: str | None, recipient: str, report_id: int,
     if recipient.casefold() != str(request["contact_email"]).casefold():
         raise ValueError("recipient must match the trusted contact for this request")
     _report_for_request(request["id"], report_id)
+    # The draft is what send_report_email sends, and the hook refuses that send unless this body carries the
+    # disclosure line (disclosure.check reads it). The body is stored exactly as given, because callers check
+    # the stored record against what they sent (plan.observe). MERGE-CHECK (abraham: loop EmailGate and plan;
+    # claudea: workflows): pass the email body through disclosure.with_disclosure() before draft_report_email,
+    # so every draft that may be sent carries the line from code.
     record, created = pending.add(
         "report_email", request["id"], request["thread_id"], request["contact_email"],
         subject, body, key=key, report_id=report_id,
@@ -288,9 +306,113 @@ def _draft_question(request_id: str | None, question: str, key: str) -> dict:
     }
 
 
-def build(request_id: str | None = None) -> Registry:
-    """The registry for one case. `request_id` binds the case: query_sales reads only that request's
-    distributor, which code takes from the request record (gate 2), never from the model."""
+# -- Milestone 2 tools (PLAN_M2.md 3.4; owner: myron) ------------------------------------------------
+
+def _send_once(record: dict, text: str) -> tuple[int, bool]:
+    """Deliver one pending record on its thread, once. The record is the write key's target (pending.add
+    returns the first record for a key), so a retried key gets the first message back. A send whose outcome
+    cannot be told is never retried here: it is ambiguous, and the three exits settle it."""
+    status = record["status"]
+    if status == "sent":
+        mine = [m for m in channel.messages(record["thread_id"]) if m.sender == channel.AGENT]
+        same = [m for m in mine if m.text == text]
+        if same or mine:
+            return (same or mine)[-1].id, False
+        raise AmbiguousToolError(f"pending record {record['id']} is sent, but its message cannot be found")
+    if status in ("sending", "send_failed"):
+        raise AmbiguousToolError(f"pending record {record['id']} is {status}: the send may have happened")
+    if status != "pending":
+        raise ValueError(f"pending record {record['id']} is {status} and cannot be sent")
+    if pending.claim_send(record["id"]) is None:
+        raise AmbiguousToolError(f"pending record {record['id']} was claimed by another send")
+    try:
+        message = channel.send(record["thread_id"], text)
+    except Exception as exc:
+        pending.fail_send(record["id"])
+        raise AmbiguousToolError(f"the channel failed during the send: {type(exc).__name__}") from exc
+    if not pending.complete_send(record["id"]):
+        raise AmbiguousToolError(f"the send of pending record {record['id']} could not be recorded")
+    return message.id, True
+
+
+def _ask_stranger(request_id: str | None, question: str, key: str) -> dict:
+    """A question on the request's own thread. Its text arrives with the disclosure line already on it
+    (disclosure.with_disclosure, before the registry); the hook refuses it otherwise."""
+    request = _request(request_id)
+    record, _ = pending.add("clarifying_question", request["id"], request["thread_id"], request["contact_email"],
+                            "About your request", question, key=key)
+    message_id, created = _send_once(record, question)
+    return {"request_id": request["id"], "thread_id": request["thread_id"], "message_id": message_id,
+            "pending_id": record["id"], "created": created}
+
+
+def _email_text(record: dict, package: dict | None) -> str:
+    """The message as it goes out: the draft's body (with its disclosure line) and its frozen charts."""
+    text = record["body"]
+    attached = (package or {}).get("charts") or []
+    if attached:
+        text += "\n\nCharts included:\n" + "\n".join(
+            f"{c['title']}: /pending/{record['id']}/charts/{i}.png" for i, c in enumerate(attached))
+    return text
+
+
+def email_preview(record: dict) -> str:
+    """The exact text send_report_email would send for this draft (the approval screen's dry run)."""
+    package = email_packages.saved(record["id"]) or email_packages.prepare({**record, "status": "pending"})
+    return _email_text(record, package)
+
+
+def _send_report_email(request_id: str | None, pending_id: int, key: str) -> dict:
+    """Irreversible: the drafted report email goes to the request's own contact. Only behind the gate."""
+    request = _request(request_id)
+    record = pending.get(int(pending_id))
+    if record is None or record["request_id"] != request["id"] or record["kind"] != "report_email":
+        raise ValueError(f"pending_id {pending_id} is not a report email drafted for request {request['id']}")
+    if str(record["recipient"]).casefold() != str(request["contact_email"]).casefold():
+        raise ValueError("the draft's recipient is not this request's contact; it cannot be sent")
+    package = email_packages.freeze(record) if record["status"] == "pending" else email_packages.saved(record["id"])
+    message_id, created = _send_once(record, _email_text(record, package))
+    if created:
+        email_packages.link_message(record["id"], message_id)
+    return {"request_id": request["id"], "pending_id": record["id"], "thread_id": record["thread_id"],
+            "sent_id": message_id, "recipient": record["recipient"], "created": created}
+
+
+# The catalogue search_tools reads (deferred loading). Matching is on names and these words, not on the
+# descriptions, so a match is a tool the words name rather than one whose prose happens to share a word.
+SEARCH_WORDS = {
+    "parse_file": "file upload csv spreadsheet decode columns rows parse read attachment",
+    "query_sales": "sales revenue units orders quarter period database figures totals query",
+    "render_chart": "chart graph plot bar visual svg picture image",
+    "save_report": "report save store version figures",
+    "draft_report_email": "email draft pending report message reply",
+    "draft_clarifying_question": "question clarify clarifying pending missing operator",
+    "ask_stranger": "ask question distributor stranger thread missing clarify contact wait",
+    "send_report_email": "send deliver email report distributor contact mail",
+}
+STOP_WORDS = {"the", "and", "for", "with", "this", "that", "from", "into", "tool", "tools", "want", "need"}
+MAX_MATCHES = 3
+
+
+def _search_tools(query: str) -> dict:
+    """Names of up to three catalogue tools the query's words name; "nothing matched" when none."""
+    words = {w for w in re.findall(r"[a-z0-9]+", str(query).casefold()) if len(w) > 2 and w not in STOP_WORDS}
+    scored = []
+    for index, spec in enumerate(s for s in specs(None) if s.name != "search_tools"):
+        vocabulary = set(spec.name.split("_")) | set(SEARCH_WORDS.get(spec.name, "").split())
+        score = len(words & vocabulary)
+        if score:
+            scored.append((-score, index, spec.name))
+    matches = [name for _, _, name in sorted(scored)[:MAX_MATCHES]]
+    note = ("nothing matched: try other words, such as what the tool acts on" if not matches
+            else f"{len(matches)} matched; their definitions join your next request")
+    return {"query": str(query), "matches": matches, "note": note}
+
+
+def specs(request_id: str | None = None) -> list[ToolSpec]:
+    """The tools for one case, as the MCP server executes them. `request_id` binds the case: query_sales reads
+    only that request's distributor, which code takes from the request record (gate 2), never from the model.
+    build() wraps each one so that its call reaches the server."""
     period = {"type": "string", "pattern": r"^[0-9]{4}Q[1-4]$",
               "description": "Calendar quarter such as 2026Q3."}
     parse_examples = (
@@ -444,7 +566,122 @@ def build(request_id: str | None = None) -> Registry:
             key_fields=(), result_schema=simple_result,
             retryable=_local_retryable,
         ),
+        ToolSpec(
+            "ask_stranger",
+            "Ask the distributor one question on this request's own thread, then end your turn: their answer "
+            "comes back later as the stranger's text. Only for a fact the request needs and only they have. "
+            "The thread is bound from the request. A question you write waits for the operator's approval "
+            "before it goes out; code adds the line saying an agent wrote it.",
+            _object_schema({"question": {"type": "string"}}),
+            lambda question, key: _ask_stranger(request_id, question, key),
+            callers=(MODEL, CODE), credential="write one question on the request's own thread", writes=True,
+            result_bound="one message", model_visible={"strict": _switch("strict.ask_stranger", "on") == "on"},
+            validate_args=lambda args: _text_problems({"body": args.get("question", "")}),
+            key_fields=("question",), retryable=_local_retryable,
+            result_schema=_object_schema({
+                "request_id": {"type": "string"}, "thread_id": {"type": "string"},
+                "message_id": {"type": "integer"}, "pending_id": {"type": "integer"},
+                "created": {"type": "boolean"},
+            }),
+        ),
+        ToolSpec(
+            "send_report_email",
+            "Send a drafted report email (its pending_id from draft_report_email) to this request's own contact. "
+            "Irreversible: it waits for the operator's approval, and only a draft for this request's contact can "
+            "be sent. Call it only when the operator asked for the email to be sent.",
+            _object_schema({"pending_id": {"type": "integer"}}),
+            lambda pending_id, key: _send_report_email(request_id, pending_id, key),
+            callers=(MODEL, CODE), credential="send one drafted email to the request's own contact", writes=True,
+            result_bound="one message", model_visible={"strict": _switch("strict.send_report_email", "on") == "on"},
+            key_fields=("pending_id",), retryable=_local_retryable,
+            result_schema=_object_schema({
+                "request_id": {"type": "string"}, "pending_id": {"type": "integer"},
+                "thread_id": {"type": "string"}, "sent_id": {"type": "integer"},
+                "recipient": {"type": "string"}, "created": {"type": "boolean"},
+            }),
+        ),
+        ToolSpec(
+            "search_tools",
+            f"Search the tool catalogue by what you need to do (for example \"chart\" or \"ask the distributor\"). "
+            f"Returns up to {MAX_MATCHES} tool names; their definitions join your next request. Says when nothing "
+            "matched.",
+            _object_schema({"query": {"type": "string"}}),
+            _search_tools,
+            callers=(MODEL,), credential="none: reads the tool catalogue", result_bound=f"{MAX_MATCHES} names",
+            model_visible={"strict": _switch("strict.search_tools", "on") == "on"},
+            validate_args=lambda args: (["query must be 1 to 200 characters"]
+                                        if not 0 < len(str(args.get("query", "")).strip()) <= 200 else []),
+            result_schema=_object_schema({
+                "query": {"type": "string"}, "matches": {"type": "array", "items": {"type": "string"}},
+                "note": {"type": "string"},
+            }),
+        ),
     ]
-    # Milestone 2 setup seam: every call passes the policy hook (policy/hook.py, myron) before it runs.
+    return specs
+
+
+# The tools every case needs (Lecture 3, slide 24): with tools.loading = deferred, a request starts with these
+# and search_tools; the rest join once a search finds them. Every agent-path case reads its file, queries,
+# saves a report and drafts its email; a chart, a question and a send are needed only by some.
+ALWAYS_LOADED = ("search_tools", "parse_file", "query_sales", "save_report", "draft_report_email", "run_program")
+
+PROGRAM_CAP = 8000      # characters of program text
+
+
+def code_calls_on(use_case: str | None = None) -> bool:
+    """code_calls.<use_case> for a known use case; with none named, whether any use case has it on."""
+    current = runtime.switches()
+    if use_case:
+        return str(current.get(f"code_calls.{use_case}", "off")) == "on"
+    return any(str(v) == "on" for k, v in current.items() if k.startswith("code_calls."))
+
+
+def _program_spec(holder: dict) -> ToolSpec:
+    from agent import code_calls, runs
+
+    def run(code: str) -> dict:
+        out = code_calls.run_program(runs.current_key(), code, holder["registry"])
+        if "error" in out:      # a failed call whose repair text lets the model fix the program
+            where = f" at line {out['line']}" if out.get("line") else ""
+            raise ValueError(f"the program failed{where}: {out['error']} ({out['calls']} calls made)")
+        return {"result": out["result"], "calls": out["calls"]}
+
+    return ToolSpec(
+        "run_program",
+        "Run a short Python program for a step that loops over many results. Inside it, "
+        "call(name, args) calls one of this request's tools and returns its result envelope "
+        "({ok, output, is_error, error}); assign the one value you need to `result`. Only `result` comes back, "
+        f"with the count of calls. No network and no files. At most {PROGRAM_CAP} characters.",
+        _object_schema({"code": {"type": "string"}}),
+        run,
+        callers=(MODEL,), credential="none of its own: every call it makes goes through the registry",
+        result_bound="the program's final result", model_visible={"strict": _switch("strict.run_program", "on") == "on"},
+        validate_args=lambda args: ([f"code must be 1 to {PROGRAM_CAP} characters"]
+                                    if not 0 < len(str(args.get("code", ""))) <= PROGRAM_CAP else []),
+        result_schema={"type": "object", "properties": {"result": {}, "calls": {"type": "integer"}},
+                       "required": ["result", "calls"], "additionalProperties": False},
+    )
+
+
+def _loading() -> str:
+    """tools.loading; anything but "deferred" offers every definition (switches.yaml checks the values)."""
+    return "deferred" if _switch("tools.loading", "all") == "deferred" else "all"
+
+
+def build(request_id: str | None = None, use_case: str | None = None) -> Registry:
+    """The registry for one case. Each tool's call reaches the MCP server (mcp_server/), which the registry's
+    process starts as a child; the registry keeps the validation, the keys, the hook and the call record.
+    run_program is offered where code_calls.<use_case> is on (with no use case named: where any is on)."""
+    from mcp_server import client as mcp_client
     from policy import hook as policy_hook
-    return Registry(specs, key_context=request_id, pre_call_hook=policy_hook.registry_hook(request_id))
+
+    served = [dataclasses.replace(spec, fn=mcp_client.remote(spec.name, request_id, writes=spec.writes))
+              for spec in specs(request_id)]
+    holder: dict = {}
+    if code_calls_on(use_case):
+        served.append(_program_spec(holder))
+    # Milestone 2 setup seam: every call passes the policy hook (policy/hook.py, myron) before it runs.
+    registry = Registry(served, key_context=request_id, pre_call_hook=policy_hook.registry_hook(request_id),
+                        loading=_loading(), always_loaded=ALWAYS_LOADED)
+    holder["registry"] = registry
+    return registry

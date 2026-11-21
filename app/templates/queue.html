@@ -6,14 +6,16 @@
 {% if item_error %}<p class="error">{{ item_error }}</p>{% endif %}
 {% if items %}
   <div class="scroll"><table>
-    <tr><th>ID</th><th>Summary</th><th>Status</th><th>Since</th><th>More</th></tr>
+    <tr><th>Kind</th><th>ID</th><th>Summary</th><th>Status</th><th>Since</th><th>More</th></tr>
     {% for i in items %}
-      <tr><td>{{ i.id }}</td><td>{{ i.summary }}</td><td>{{ i.status }}</td><td>{{ i.since }}</td>
-          <td class="muted">{% for k, v in i.items() if k not in ('id', 'summary', 'status', 'since') %}{{ k }}: {{ v }}{% if not loop.last %}; {% endif %}{% endfor %}</td></tr>
+      <tr><td>{{ i.kind or 'request' }}</td><td>{{ i.id }}</td><td>{{ i.summary }}</td><td>{{ i.status }}</td><td>{{ i.since }}</td>
+          <td class="muted">{% for k, v in i.items() if k not in ('id', 'summary', 'status', 'since', 'kind') and v is not none %}{{ k }}: {{ v }}{% if not loop.last %}; {% endif %}{% endfor %}</td></tr>
     {% endfor %}
   </table></div>
+  <p class="muted">A held run waits for your answer in the console; one marked over the cap sent no packet today.
+  An unanswered hold ends held, never approved, at its deadline.</p>
 {% elif not item_error %}
-  <p class="muted">Nothing is waiting. <code>sandbox/queue.py</code> says what goes here.</p>
+  <p class="muted">Nothing is waiting.</p>
 {% endif %}
 <h2>Waiting for an outside reply</h2>
 {% for t in waiting %}

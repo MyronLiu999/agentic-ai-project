@@ -160,7 +160,7 @@ class RegistryTest(ScratchTest):
     def test_definition_order_is_fixed_for_every_request(self):
         expected = [
             "parse_file", "query_sales", "render_chart", "save_report",
-            "draft_report_email", "draft_clarifying_question",
+            "draft_report_email", "draft_clarifying_question", "ask_stranger", "send_report_email",
         ]
         first = [item["name"] for item in build(self.request_id).definitions()]
         second = [item["name"] for item in build(inbox.request_id("SYN-thread-2002")).definitions()]

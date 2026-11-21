@@ -45,13 +45,39 @@ SYSTEM = "You are measuring prompt size. Do not call a tool."
 MESSAGES = [{"role": "user", "content": "Reply with exactly OK and no other text."}]
 
 
+M1_TOOLS = [d["name"] for d in FIRST_DRAFT]
+
+
 def surfaces() -> dict[str, list[dict]]:
-    return {"first_draft": FIRST_DRAFT, "rewrite": build(None).definitions()}
+    """Milestone 1's two surfaces: the scaffold and the rewrite of the same six tools."""
+    return {"first_draft": FIRST_DRAFT,
+            "rewrite": [d for d in build(None).definitions() if d["name"] in M1_TOOLS]}
 
 
-def measure(client_factory) -> dict:
+def m2_surfaces() -> dict[str, list[dict]]:
+    """Milestone 2's tool list (myron, M3): every definition a request carries with tools.loading = all, the
+    first request with deferred (the search tool and the always-loaded tools), and all with run_program."""
+    from harness import runtime
+    out = {}
+    for name, overrides in (("m2_all", ["tools.loading=all"]),
+                            ("m2_deferred_first", ["tools.loading=deferred"]),
+                            ("m2_all_with_run_program", ["tools.loading=all", "code_calls.batch_reports=on"])):
+        runtime.configure(overrides=overrides)
+        try:
+            out[name] = build(None).definitions()
+        finally:
+            runtime.configure()
+    return out
+
+
+def estimate(definitions: list[dict]) -> int:
+    """Tokens a list of definitions adds to a request, estimated as characters / 4 (no API call)."""
+    return len(json.dumps(definitions, sort_keys=True)) // 4
+
+
+def measure(client_factory, which=None) -> dict:
     rows = {}
-    for name, definitions in surfaces().items():
+    for name, definitions in (which if which is not None else surfaces()).items():
         without = client_factory().create(system=SYSTEM, messages=MESSAGES, tools=None)
         with_definitions = client_factory().create(system=SYSTEM, messages=MESSAGES, tools=definitions)
         rows[name] = {
@@ -70,9 +96,18 @@ def main(argv: list[str] | None = None) -> int:
                         help="print both surfaces without making an API call")
     parser.add_argument("--output", type=Path,
                         help="save the real measurement as UTF-8 JSON as well as printing it")
+    parser.add_argument("--milestone", type=int, choices=(1, 2), default=1,
+                        help="1: Milestone 1's two surfaces (default); 2: the Milestone 2 tool list")
+    parser.add_argument("--estimate", action="store_true",
+                        help="print each surface's characters / 4 estimate without making an API call")
     args = parser.parse_args(argv)
+    chosen = surfaces() if args.milestone == 1 else m2_surfaces()
     if args.show_definitions:
-        print(json.dumps(surfaces(), indent=2, sort_keys=True))
+        print(json.dumps(chosen, indent=2, sort_keys=True))
+        return 0
+    if args.estimate:
+        print(json.dumps({name: {"definition_count": len(d), "estimated_tokens": estimate(d)}
+                          for name, d in chosen.items()}, indent=2, sort_keys=True))
         return 0
 
     settings = load_settings(ROOT / "settings.yaml")
@@ -85,14 +120,14 @@ def main(argv: list[str] | None = None) -> int:
         return ModelClient(make_backend(settings.provider, settings), prices)
 
     try:
-        rows = measure(client_factory)
+        rows = measure(client_factory, chosen)
     except Exception as exc:
         print(f"definition-cost measurement failed: {type(exc).__name__}: {str(exc)[:500]}", file=sys.stderr)
         return 1
     report = {"measured_at": datetime.now(timezone.utc).isoformat(),
               "provider": settings.provider, "requested_model": settings.model,
               "method": "with prompt tokens minus without prompt tokens", "surfaces": rows,
-              "definitions": surfaces()}
+              "definitions": chosen}
     rendered = json.dumps(report, indent=2, sort_keys=True)
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)

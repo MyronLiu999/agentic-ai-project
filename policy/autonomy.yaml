@@ -1,24 +1,42 @@
-# The autonomy policy: every action class in one of three columns (Milestone 2, Part 2; owner: myron).
-# A class is a tool in a circumstance: <tool>/<circumstance>. The same names go in the logs and the ledger.
-# The model never sees this file. policy/hook.py reads it. SETUP SKELETON: the classes below are
-# proposals from PLAN_M2.md section 3.4; myron's M4/M5 ranks every action and fills the reasons.
+# The autonomy policy: every action class in one of three columns (Milestone 2, Part 2; owner: myron, M4-M5).
+# A class is a tool in a circumstance: <tool>/<circumstance>. The same names go in the logs (hook_decision,
+# approval_decision) and the ledger. The model never sees this file: policy/hook.py reads it.
+# Each class's reason is the ranking's answer (docs/milestones/M2.md, "Rank every action"): undo path, would
+# anyone notice, blast radius. Only what is irreversible and reaches outside the company is gated.
+# A class in no column is denied: the hook fails closed.
 
 independent:            # runs, nobody is asked
-  - parse_file/own_request
-  - query_sales/own_distributor
-  - render_chart/own_request
-  - save_report/own_request
-  - draft_report_email/own_contact
-  - draft_clarifying_question/template
-  - ask_stranger/template
-  - search_tools/any
-  - run_program/any
+  parse_file/own_request: "read of the upload bound to this request; nothing changes"
+  query_sales/own_distributor: "read; the distributor is bound by code from the request, never an argument"
+  render_chart/own_request: "local artifact the agent created; compensated by deleting the chart"
+  save_report/own_request: "internal, versioned; reverted to the previous version"
+  draft_report_email/own_contact: "a pending record only; discarded by rollback. Narrowed: the tool refuses any recipient but the request's contact"
+  draft_clarifying_question/own_thread: "a pending record only; the operator sends it by hand"
+  ask_stranger/template: "our code's fixed question to the request's own contact; one person, text known in advance"
+  search_tools/any: "reads the tool catalogue"
+  run_program/any: "no effect of its own; each call it makes is hooked again"
 
 requires_approval:      # the run pauses until the operator answers on the approvals page
-  - send_report_email/own_contact
-  - ask_stranger/model_written
+  send_report_email/own_contact: "irreversible, reaches a person outside the company; content known only when drafted"
+  ask_stranger/model_written: "irreversible, outside the company, and its text is the model's"
 
 prohibited:             # never runs, nobody can approve it, the agent gets a refusal
-  - send_report_email/new_recipient
-  - query_sales/other_distributor
-  - read_margins/any
+  send_report_email/new_recipient: "a send to anyone but the request's contact is never a yes"
+  send_report_email/unknown_draft: "a send of a record that is not this request's drafted report email"
+  query_sales/other_distributor: "another distributor's figures never reach this request"
+  read_margins/any: "margins are private data (sandbox/margins.py is never imported by a tool)"
+
+# Escalation signals, named in advance (Part 2, task 5); never "low confidence". The packet goes to the
+# console and the held run to the queue; nothing proceeds by default.
+escalate:
+  failed_check: "the critique still fails a report email at its bound (agent/critique.py)"
+  unsettled_write: "a write whose outcome the three exits cannot settle (claudea's three exits)"
+# Considered and not built: "the same step blocked three times". The loop's step bound already ends a run that
+# repeats itself (agent/bounds.py), and a third refusal of a reversible, visible action is not worth a reviewer's
+# minute (Lecture 5, slide 38).
+
+# The reviewer's budget: approvals and escalation packets count together against one cap a day. Past it, a
+# signal still holds its run but sends no packet: the run waits in the queue, marked over the cap.
+budget:
+  daily_asks: 20            # Lecture 5, slide 62: over about twenty a day, a step is only for show
+  hold_timeout_hours: 24    # an unanswered hold ends held, never approved

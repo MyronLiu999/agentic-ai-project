@@ -50,6 +50,35 @@ settings; the flat `notes` switch became the `notes` group. Fakes for the new co
 their pinning tests in `tests/test_m2_contracts.py`. Assignment 2 (Part G), 4, 5 and 6 numbers from claudea's
 repositories in `docs/assignment_refs.md`. Milestone 1 behaviour is unchanged: the 384 existing tests pass.
 
+**Tools, MCP, policy, approvals and escalation (myron, 2026-11-20, branch `myron-m2`):**
+- *Added*:
+  - `mcp_server/`, a stateless MCP server on the official SDK (`mcp==2.3.0`, revision 2026-07-28), started
+    by the registry as a child process. Every tool call now reaches it through the registry, with its
+    context in `_meta`.
+  - Four tools (`ask_stranger`, `send_report_email`, `search_tools`, `run_program`).
+  - Deferred loading behind `tools.loading` (set `all`).
+  - Code calls behind `code_calls.batch_reports` (set `off`), run as `python -I` under an audit hook.
+  - The three-column policy (`policy/autonomy.yaml`), the hook (`policy/hook.py`) and stated limits as rules
+    (`policy/limits.py`, `rules.matches`).
+  - The approval gate with computed screens, the decision log and approval at the plan
+    (`agent/approvals.py`).
+  - The durable queue store and queue page (`sandbox/queue.py`, `queue.html`, `approvals.html`).
+  - The escalation's packet, hold, timeout and daily cap (`agent/escalation.py`).
+  - Three test tasks with checks (`approval_send_report`, `approval_send_declined`,
+    `escalation_conflicting_figure`).
+  - `experiments/analysis/m2.py` (analyze.py's Milestone 2 numbers), `scripts/strict_request.py`,
+    `definition_cost.py --milestone 2`, and ledger drafts in `docs/drafts/`.
+  - Strict switches for the four new tools (`added: 2026-11-20`).
+- *Limited*:
+  - `send_report_email` sends only a draft of the request's own contact, and only after approval.
+  - A send to anyone else, another distributor's sales and margins are prohibited.
+  - `ask_stranger` writes only on the request's own thread, and asks for approval when the model wrote the
+    text.
+  - Programs reach nothing but the registry.
+- *Removed*: nothing.
+- *Changed tests*: `tests/test_tools.py` and `tests/test_registry.py` (myron's own) now pin the eight-tool
+  surface of PLAN_M2.md 3.4 instead of M1's six.
+
 ## Milestone 1
 
 **Post-measurement audit fixes (2026-11-01, items 1–6):** report checks and the

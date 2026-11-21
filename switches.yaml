@@ -35,13 +35,13 @@ memory:  # claudea: one per kind of fact kept
   standing_rules: {setting: "off", values: ["off", "on"], added: 2026-11-20, about: "A standing rule the operator states for later sessions. claudea, C6."}
 
 tools:   # myron
-  loading: {setting: all, values: [all, deferred], added: 2026-11-20, about: "Below about ten tools every definition goes in every request (Lecture 3, slide 24). myron, M3."}
+  loading: {setting: all, values: [all, deferred], added: 2026-11-20, about: "all: 8 definitions a request (9 with run_program), under Lecture 3 slide 24's ~10; deferred is built and tested for a pass. myron, M3."}
 
 code_calls:  # myron: one per use case it is built for
-  batch_reports: {setting: "off", values: ["off", "on"], added: 2026-11-20, about: "The use case closest to looping over many results. myron, M3."}
+  batch_reports: {setting: "off", values: ["off", "on"], added: 2026-11-20, about: "Closest use case to looping over many results, but each request's registry reads one distributor in a few calls: off until a run shows the loop. myron, M3."}
 
 approval:  # myron: one per use case with a plan
-  batch_reports: {setting: per_action, values: [per_action, plan], added: 2026-11-20, about: "Approve once at the plan, or each gated action. myron, M6."}
+  batch_reports: {setting: per_action, values: [per_action, plan], added: 2026-11-20, about: "per_action: the plan cannot fix a send's pending_id or text, known only after each draft passes the critique (Lecture 5, slide 18). myron, M6."}
 
 critique:
   report_email: {setting: external, values: ["off", "external"], about: "Recompute figures, period and recipient from the sandbox before a draft email is written. Lecture 2."}
@@ -64,3 +64,7 @@ strict:
   save_report: {setting: "off", values: ["off", "on"], about: "The program normally chooses this write and the registry validates it."}
   draft_report_email: {setting: "off", values: ["off", "on"], about: "External critique supplies the important factual boundary."}
   draft_clarifying_question: {setting: "off", values: ["off", "on"], about: "A plain bounded pending-record write."}
+  ask_stranger: {setting: "on", values: ["off", "on"], added: 2026-11-20, about: "One required string in a closed object: strict-compatible, and the send must not carry stray fields. myron, M2."}
+  send_report_email: {setting: "on", values: ["off", "on"], added: 2026-11-20, about: "One required integer pending_id: an irreversible call gets the vendor's grammar too. myron, M2."}
+  search_tools: {setting: "on", values: ["off", "on"], added: 2026-11-20, about: "One required query string in a closed object. myron, M3."}
+  run_program: {setting: "on", values: ["off", "on"], added: 2026-11-20, about: "One required code string; the registry caps its length. myron, M3."}
