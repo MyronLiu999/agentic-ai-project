@@ -31,8 +31,14 @@ supporting specimens and individual failure diagnoses in
 
 ## Milestone 2
 
+**Abraham (2026-11-20):** Added durable outside waits and first-reply handling, a fixed disclosed units-column question, exact pending-call replay, context budgets, notes and searchable session history, compaction, persistent session token accounting, stop/cancel/resume/rollback commands, bounded mid-task messages and plan-side approval/recovery. Thread status comes from checkpoints. Added restart, second-thread, malformed-return, independent-check and long-session fixtures; updated failure analysis for control events. The experimental analyst/writer split remains on `abraham-split`, with single-agent behavior retained here. Corrected the shared run-key lookup to honor its active resume scope, and initialized a genuine waiting run in the approval-delegation contract test. Myron's disclosure-test caller correction is included.
+
+Removed pass-through context/control stubs. Limited current requests to the input budget, queues to eight messages, templates to code-owned text and outside answers to untrusted data. Real MCP/send, approvals and compensation integration remains T2/T2c work. No assignment code was copied; A2/A6 results are cited from the team's existing assignment reference file. The harness and existing M1 measured evidence are unchanged.
+
 Each owner adds their own bullets here: what it added, what it removed, what it limited (such as a tool's
 reach), and a line for any assignment or course code reused (which assignment, whose repository).
+
+**Abraham, split experiment (2026-11-21):** Added a read-only analyst and artifact writer for batch reports on `abraham-split`, with validated returns, observed call ledgers, run-specific effect keys, a shared task budget and a combined sandbox check. Saved model responses, pending actions and operator additions survive stop/resume. The combined check rechecks persisted drafts, reports, chart values and SVGs. Twenty-one fake-model tests include all eight official tasks and the review regressions. The switch defaults to single; no live-model benefit is claimed. No assignment code was copied.
 
 **Setup (claudea, 2026-11-20):** the shared contracts of `PLAN_M2.md` section 3, so the three branches can be
 built without waiting on each other. Added `agent/runs.py` (run keys, the one resume entry),

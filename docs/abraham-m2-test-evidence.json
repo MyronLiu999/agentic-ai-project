@@ -1,0 +1,39 @@
+{
+  "read_date": "2026-11-20",
+  "kind": "synthetic mechanism tests; not measured improvement arms",
+  "long_session": {
+    "task": "tasks/sessions/long_campaign.yaml",
+    "runs": 1,
+    "passed": true,
+    "tokens": {
+      "input": 308961,
+      "output": 2100,
+      "cache_read": 0,
+      "cache_write": 0,
+      "total": 311061
+    },
+    "measures": {
+      "facts_used": 4,
+      "questions_answered": 1,
+      "reports_expected": 4
+    },
+    "model_calls": 21,
+    "max_context_tokens": 15850,
+    "compactions": 20
+  },
+  "stop_test": {
+    "test": "tests.test_stop.StopTest.test_five_stops_refuse_the_next_registry_write",
+    "read_date": "2026-11-20",
+    "samples": 5,
+    "seconds": [
+      0.005597125040367246,
+      0.005659584072418511,
+      0.005084958975203335,
+      0.005549291963689029,
+      0.005307957995682955
+    ],
+    "maximum_seconds": 0.005659584072418511,
+    "writes_after_stop": 0,
+    "kind": "local fake-model test, not a measured improvement arm"
+  }
+}
