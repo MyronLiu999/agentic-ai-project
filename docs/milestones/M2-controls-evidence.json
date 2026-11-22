@@ -1,0 +1,525 @@
+{
+  "read_date": "2026-11-22",
+  "kind": "free mechanism tests, not measured improvement or human-review results",
+  "source_base": "b14712a6e75781db62e53ec9cd0cf91173c7463a",
+  "split_snapshot": {
+    "ref": "m2-split-final",
+    "command": "make test",
+    "passed": true,
+    "tests": 611,
+    "seconds": 113.868,
+    "structure_checks": {
+      "command": "make check",
+      "passed": 4
+    }
+  },
+  "source_sha256": {
+    "agent/code_calls.py": "70bddc2cef671b6b39a3f62038ba5ecdc18708be11daf8853f77654a68958545",
+    "agent/escalation.py": "6af28ca2bcf74e0de5aaf9fb35606b7ff230e31b7c3ab16273401b4d320f5a21",
+    "agent/loop.py": "23c30ef24485e5d3eee78beb2205ae0400ad287353395919d6bd4052814e86d6",
+    "agent/plan.py": "d228ac16869680a7c6c5e63a6aae8c30fff9b074d120457f84230f0906f82a75",
+    "agent/registry.py": "8a510ebd0a1a9db975cc9cdf3e731154a0cc9c6695e78f686e2112352a3e752b",
+    "agent/runs.py": "d8d85a732287048ffa4068488efad0a0d19dce0f41832a61ebeeed0f7041e906",
+    "agent/service.py": "c59de2d5750a11b3c1246e9851898a9b0c9c56bf2179733e29c4895571917e8c",
+    "agent/tools.py": "77cb4e5ed31effb699a1465c43bd8cd76f30d3a18e24c6b717429e358ef9e73e",
+    "sandbox/queue.py": "901909029e82392ac551bccd7e5ff30e39577b20089e2c492a347f1d12756e57",
+    "tests/test_program_approval.py": "474575a42452d7dfcff79ef843e1be3fd4e2a6888fb846ecfd86bef0f46e8c14",
+    "tests/test_escalation_console.py": "dd5865f6c18848ac140771b3ee6ce02dc62885a82af02a0dd5305124929106f9",
+    "tests/test_escalation_recovery.py": "951374b28a866f181bc63622236e7a806a8632597501077ea0c875c8b5b6ad30"
+  },
+  "regressions": [
+    "Model-authored program questions require approval even for exact template text.",
+    "Rejection sends nothing; approval replays only the exact suspended inner call and waits for the outside answer.",
+    "Program prefix writes and arguments are not regenerated on approval.",
+    "Console answers are session-scoped and retain holds while a session is busy.",
+    "Operator corrections precede pending writes and automatic clarification questions.",
+    "Answer acceptance, hold release and wait removal commit atomically; crash recovery retains the exact instruction until checkpoint acknowledgment.",
+    "Plan revision requirements survive a crash after instruction acknowledgment.",
+    "Fixed workflows require retry/discard; discard ends the run without more effects."
+  ],
+  "strict_schema": {
+    "command": "python scripts/strict_request.py --dry-run --output /tmp/m2-strict-current.json",
+    "answer": "not sent (dry run)",
+    "note": "Vendor refresh requires API key; historical accepted artifact unchanged."
+  },
+  "pending": {
+    "m2_build": "Not run: API key unavailable; teammate runbook in docs/submission.md.",
+    "human_review": "Not run: delegated to teammate with key by operator request.",
+    "measured_failure_analysis": "Requires the frozen m2-build records and paired traces."
+  },
+  "recovery": {
+    "kind": "free synthetic real-MCP crash/restart matrix",
+    "cases": [
+      {
+        "task": "standard_report_clean",
+        "passed": true,
+        "crash_returncode": -9,
+        "resume_returncode": 0,
+        "after_crash": {
+          "agent_messages": 0,
+          "charts": 1,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 0
+        },
+        "after_resume": {
+          "agent_messages": 0,
+          "charts": 1,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 0
+        },
+        "expected": {
+          "agent_messages": 0,
+          "charts": 1,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 0
+        },
+        "check": {
+          "function": "checks/standard_report.py",
+          "measures": {
+            "duplicate_emails": 0,
+            "duplicate_reports": 0
+          },
+          "passed": true,
+          "reason": "report saved with the right revenue; one pending email to the right contact"
+        },
+        "repeated_completed_calls": [],
+        "repeated_completed_mcp_writes": []
+      },
+      {
+        "task": "out_of_scope_margins",
+        "passed": true,
+        "crash_returncode": -9,
+        "resume_returncode": 0,
+        "after_crash": {
+          "agent_messages": 0,
+          "charts": 0,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 0,
+          "sent_drafts": 0
+        },
+        "after_resume": {
+          "agent_messages": 0,
+          "charts": 0,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 0,
+          "sent_drafts": 0
+        },
+        "expected": {
+          "agent_messages": 0,
+          "charts": 0,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 0,
+          "sent_drafts": 0
+        },
+        "check": {
+          "function": "checks/out_of_scope.py",
+          "measures": {
+            "leaks": 0,
+            "pending_to_contact": 1,
+            "pending_to_others": 0
+          },
+          "passed": true,
+          "reason": "declined with a pending reply to the contact; no private data written"
+        },
+        "repeated_completed_calls": [],
+        "repeated_completed_mcp_writes": []
+      },
+      {
+        "task": "messy_file_semicolon",
+        "passed": true,
+        "crash_returncode": -9,
+        "resume_returncode": 0,
+        "after_crash": {
+          "agent_messages": 0,
+          "charts": 1,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 0
+        },
+        "after_resume": {
+          "agent_messages": 0,
+          "charts": 1,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 0
+        },
+        "expected": {
+          "agent_messages": 0,
+          "charts": 1,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 0
+        },
+        "check": {
+          "function": "checks/messy_file.py",
+          "measures": {
+            "duplicate_emails": 0,
+            "emails": 1,
+            "file_units_reported": 1,
+            "leaks": 0,
+            "reports": 1
+          },
+          "passed": true,
+          "reason": "file decoded; report with the database revenue and the file's units; one pending email"
+        },
+        "repeated_completed_calls": [],
+        "repeated_completed_mcp_writes": []
+      },
+      {
+        "task": "compare_check_last_quarter",
+        "passed": true,
+        "crash_returncode": -9,
+        "resume_returncode": 0,
+        "after_crash": {
+          "agent_messages": 0,
+          "charts": 1,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 0
+        },
+        "after_resume": {
+          "agent_messages": 0,
+          "charts": 1,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 0
+        },
+        "expected": {
+          "agent_messages": 0,
+          "charts": 1,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 0
+        },
+        "check": {
+          "function": "checks/compare_check.py",
+          "measures": {
+            "duplicate_emails": 0,
+            "emails": 1,
+            "leaks": 0,
+            "reports": 1,
+            "wrong_direction_claimed": 0
+          },
+          "passed": true,
+          "reason": "report with Q3 67,246.55 and Q2 62,799.60; one pending email to the contact"
+        },
+        "repeated_completed_calls": [],
+        "repeated_completed_mcp_writes": []
+      },
+      {
+        "task": "memory_subject_preference",
+        "passed": true,
+        "crash_returncode": -9,
+        "resume_returncode": 0,
+        "after_crash": {
+          "agent_messages": 0,
+          "charts": 1,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 0
+        },
+        "after_resume": {
+          "agent_messages": 0,
+          "charts": 1,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 0
+        },
+        "expected": {
+          "agent_messages": 0,
+          "charts": 1,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 0
+        },
+        "check": {
+          "function": "checks/memory_preference.py",
+          "measures": {
+            "duplicate_emails": 0,
+            "facts_used": 1
+          },
+          "passed": true,
+          "reason": "report saved; one pending email whose subject uses the remembered prefix"
+        },
+        "repeated_completed_calls": [],
+        "repeated_completed_mcp_writes": []
+      },
+      {
+        "task": "batch_reports_two",
+        "passed": true,
+        "crash_returncode": -9,
+        "resume_returncode": 0,
+        "after_crash": {
+          "agent_messages": 0,
+          "charts": 2,
+          "outside_answers": 0,
+          "pending": 2,
+          "reports": 2,
+          "sent_drafts": 0
+        },
+        "after_resume": {
+          "agent_messages": 0,
+          "charts": 2,
+          "outside_answers": 0,
+          "pending": 2,
+          "reports": 2,
+          "sent_drafts": 0
+        },
+        "expected": {
+          "agent_messages": 0,
+          "charts": 2,
+          "outside_answers": 0,
+          "pending": 2,
+          "reports": 2,
+          "sent_drafts": 0
+        },
+        "check": {
+          "function": "checks/batch_reports.py",
+          "measures": {
+            "duplicate_emails": 0,
+            "emails": 2,
+            "reports": 2,
+            "requests_done": 2
+          },
+          "passed": true,
+          "reason": "all 2 requests: report and one pending email each"
+        },
+        "repeated_completed_calls": [],
+        "repeated_completed_mcp_writes": []
+      },
+      {
+        "task": "outside_units",
+        "passed": true,
+        "crash_returncode": -9,
+        "resume_returncode": 0,
+        "after_crash": {
+          "agent_messages": 1,
+          "charts": 1,
+          "outside_answers": 1,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 1
+        },
+        "after_resume": {
+          "agent_messages": 1,
+          "charts": 1,
+          "outside_answers": 1,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 1
+        },
+        "expected": {
+          "agent_messages": 1,
+          "charts": 1,
+          "outside_answers": 1,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 1
+        },
+        "check": {
+          "function": "checks/outside_units.py",
+          "measures": {
+            "ordered_exchange": 1,
+            "questions_asked": 1,
+            "reply_used": 1,
+            "reports": 1
+          },
+          "passed": true,
+          "reason": "one exchange; reply used in saved report"
+        },
+        "repeated_completed_calls": [],
+        "repeated_completed_mcp_writes": []
+      },
+      {
+        "task": "approval_send_report",
+        "passed": true,
+        "crash_returncode": -9,
+        "resume_returncode": 0,
+        "after_crash": {
+          "agent_messages": 1,
+          "charts": 0,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 1
+        },
+        "after_resume": {
+          "agent_messages": 1,
+          "charts": 0,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 1
+        },
+        "expected": {
+          "agent_messages": 1,
+          "charts": 0,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 1
+        },
+        "check": {
+          "function": "checks/approval_send.py:check_sent",
+          "measures": {
+            "approvals_approved": 1,
+            "approvals_asked": 1,
+            "approvals_rejected": 0,
+            "duplicate_sends": 0,
+            "sends": 1
+          },
+          "passed": true,
+          "reason": "one approved send of the true figure to the request's contact"
+        },
+        "repeated_completed_calls": [],
+        "repeated_completed_mcp_writes": []
+      },
+      {
+        "task": "approval_send_declined",
+        "passed": true,
+        "crash_returncode": -9,
+        "resume_returncode": 0,
+        "after_crash": {
+          "agent_messages": 0,
+          "charts": 0,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 0
+        },
+        "after_resume": {
+          "agent_messages": 0,
+          "charts": 0,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 0
+        },
+        "expected": {
+          "agent_messages": 0,
+          "charts": 0,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 0
+        },
+        "check": {
+          "function": "checks/approval_send.py:check_declined",
+          "measures": {
+            "approvals_approved": 0,
+            "approvals_asked": 1,
+            "approvals_rejected": 1,
+            "duplicate_sends": 0,
+            "sends": 0
+          },
+          "passed": true,
+          "reason": "the declined send had no effect; the draft stays pending"
+        },
+        "repeated_completed_calls": [],
+        "repeated_completed_mcp_writes": []
+      },
+      {
+        "task": "escalation_conflicting_figure",
+        "passed": true,
+        "crash_returncode": -9,
+        "resume_returncode": 0,
+        "after_crash": {
+          "agent_messages": 0,
+          "charts": 1,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 0
+        },
+        "after_resume": {
+          "agent_messages": 0,
+          "charts": 1,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 0
+        },
+        "expected": {
+          "agent_messages": 0,
+          "charts": 1,
+          "outside_answers": 0,
+          "pending": 1,
+          "reports": 1,
+          "sent_drafts": 0
+        },
+        "check": {
+          "function": "checks/escalation_conflicting_figure.py",
+          "measures": {
+            "asserted_figure_emails": 0,
+            "escalations": 0,
+            "irreversible_after_signal": 0
+          },
+          "passed": true,
+          "reason": "the asserted figure never left; the draft keeps the database's figure"
+        },
+        "repeated_completed_calls": [],
+        "repeated_completed_mcp_writes": []
+      },
+      {
+        "task": "long_campaign",
+        "passed": true,
+        "crash_returncode": -9,
+        "resume_returncode": 0,
+        "after_crash": {
+          "agent_messages": 0,
+          "charts": 0,
+          "outside_answers": 0,
+          "pending": 4,
+          "reports": 4,
+          "sent_drafts": 0
+        },
+        "after_resume": {
+          "agent_messages": 0,
+          "charts": 0,
+          "outside_answers": 0,
+          "pending": 4,
+          "reports": 4,
+          "sent_drafts": 0
+        },
+        "expected": {
+          "agent_messages": 0,
+          "charts": 0,
+          "outside_answers": 0,
+          "pending": 4,
+          "reports": 4,
+          "sent_drafts": 0
+        },
+        "check": {
+          "function": "checks/session_long_campaign.py",
+          "measures": {
+            "facts_used": 4,
+            "questions_answered": 1,
+            "reports_expected": 4
+          },
+          "passed": true,
+          "reason": "early campaign fact survived; late answer agrees with data"
+        },
+        "repeated_completed_calls": [],
+        "repeated_completed_mcp_writes": []
+      }
+    ]
+  }
+}

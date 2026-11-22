@@ -125,6 +125,26 @@ def resume_from(checkpoint: dict, event: dict, *, registry=None, limits: bounds.
         return executor.finish(events.DECLINED, 'The operator rejected the pending action.')
     actual_event = checkpoint.get('outside_reply') if event.get('kind') in ('stop_resume', 'crash') else event
     executor.resume_note = _event_note(actual_event or event)
+    if event.get('kind') == 'operator_turn' and event.get('escalation'):
+        # An answer is a new instruction, not permission to replay the old
+        # proposal. Close its tool-result protocol before asking for a new step.
+        for pending in executor.pending_calls:
+            executor.pending_results.append(tool_result(ToolCall(**pending), json.dumps({
+                'ok': False, 'error': {'type': 'operator_interrupted',
+                'message': 'The operator answered the escalation. This pending call was not retried. '
+                           'Earlier effects are retained; an uncertain write may already have happened. '
+                           'Check recorded state and follow the new operator instruction.'}}), is_error=True))
+        executor.pending_calls = []
+        executor.prepared = None
+        executor.clarification = None
+        executor.sent_question = None
+        if executor.pending_results:
+            executor.messages.append({'role': 'user', 'content': executor.pending_results})
+            executor.pending_results = []
+        if executor.resume_note:
+            executor.messages.append({'role': 'user', 'content': executor.resume_note})
+            executor.resume_note = None
+        executor.save_state(pending_operator_answer=None, accepted_operator_answer=event)
     if actual_event and actual_event.get('kind') == 'outside_reply':
         exchange = checkpoint.get('outside_exchange') or {}
         checkpoints.update(run_key, outside_exchange={**exchange, 'status': 'answered'})
@@ -301,6 +321,8 @@ class _Loop:
                         self.trace.progress(action)
                         if call.name == 'ask_stranger':
                             self.sent_question = {'result': result, 'question': (executed_input or call.input)['question']}
+                        if call.name == 'run_program' and result['output'].get('outside_question'):
+                            self.sent_question = deepcopy(result['output']['outside_question'])
                         if call.name == 'draft_clarifying_question':
                             pending_question = True
                             self.waiting_for = self.request['thread_id']
@@ -370,7 +392,15 @@ class _Loop:
                                               "request_id": self.request["id"]})
         if call.name not in ('parse_file', 'query_sales', 'search_tools'):
             stop.notice(self.run_key)
-        result = self.registry.call(call.name, args, MODEL, trace_step=step)
+        if call.name == 'run_program' and self.prepared.get('program_call'):
+            from agent import code_calls
+            result = code_calls.resume_call(self.run_key, self.prepared['program_call'], self.registry,
+                                           request_id=self.request['id'])
+        else:
+            result = self.registry.call(call.name, args, MODEL, trace_step=step)
+        if call.name == 'run_program' and result.get('program_call'):
+            self.prepared['program_call'] = deepcopy(result['program_call'])
+            self.save_state()
         result = exits.resolve(self.registry, call.name, args, MODEL, result, request_id=self.request["id"],
                                run_key=self.run_key, trace_step=step)
         return result, args if result['ok'] and not result['is_error'] else None

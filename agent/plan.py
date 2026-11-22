@@ -397,6 +397,8 @@ def resume_from(checkpoint, event, *, registry_factory=None, limits=None, clock=
     if event.get("kind") == "operator_turn" and event.get("text"):
         batch.messages.append({"role": "user", "content": _encoded({"operator_instruction": event["text"]})})
         batch.revision_feedback = "The operator added an instruction; revise remaining steps."
+        if event.get("escalation"):
+            batch.save(pending_operator_answer=None, accepted_operator_answer=event)
     actual_event = checkpoint.get("outside_reply") if event.get("kind") in {"stop_resume", "crash"} else event
     if actual_event and actual_event.get("kind") == "outside_reply":
         # The planner sees only status/counts. A raw stranger reply belongs in
@@ -462,6 +464,7 @@ class _Batch:
                  "messages": self.messages, "actions": self.actions, "observations": self.observations,
                  "attempts": self.attempts, "version": self.version, "approved_version": self.approved_version,
                  "pending_approval": self.pending_approval, "pending_call": self.pending_call,
+                 "revision_feedback": self.revision_feedback,
                  "applied_additions": self.applied_additions,
                  "executor_messages": self.executor_messages,
                  "model_steps": self.budget.steps,
@@ -478,6 +481,7 @@ class _Batch:
         self.approved_version = state.get("approved_version")
         self.pending_approval = deepcopy(state.get("pending_approval"))
         self.pending_call = deepcopy(state.get("pending_call"))
+        self.revision_feedback = state.get("revision_feedback")
         self.applied_additions = state.get("applied_additions", 0)
         self.executor_messages = deepcopy(state.get("executor_messages", []))
         self.budget.steps = state.get("model_steps", 0)

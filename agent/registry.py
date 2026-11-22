@@ -18,6 +18,7 @@ from typing import Callable
 
 from harness.schema import errors as schema_errors
 from agent.exits import UnsettledWrite
+from agent.code_calls import ProgramInterrupted
 
 MODEL, CODE, OPERATOR = "model", "code", "operator"
 CALLERS = (MODEL, CODE, OPERATOR)
@@ -287,6 +288,12 @@ class Registry:
                 )
                 return self._record(name, normalized, caller, step, key, result, started, attempts,
                                     outcome="ambiguous", trace_step=trace_step)
+            except ProgramInterrupted as exc:
+                result = copy.deepcopy(exc.result)
+                result["program_call"] = copy.deepcopy(exc.call)
+                return self._record(name, normalized, caller, step, key, result, started, attempts,
+                                    outcome=(result.get("error") or {}).get("type", "interrupted"),
+                                    trace_step=trace_step)
             except UnsettledWrite:
                 # A nested program raised a durable operator hold, not a repairable tool error.
                 raise

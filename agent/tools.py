@@ -648,21 +648,28 @@ def _program_spec(holder: dict, request_id: str | None = None) -> ToolSpec:
         if "error" in out:      # a failed call whose repair text lets the model fix the program
             where = f" at line {out['line']}" if out.get("line") else ""
             raise ValueError(f"the program failed{where}: {out['error']} ({out['calls']} calls made)")
-        return {"result": out["result"], "calls": out["calls"]}
+        return {"result": out["result"], "calls": out["calls"],
+                **({"program_stopped": True} if out.get("program_stopped") else {}),
+                **({"outside_question": out["outside_question"]} if out.get("outside_question") else {})}
 
     return ToolSpec(
         "run_program",
         "Run a short Python program for a step that loops over many results. Inside it, "
         "call(name, args) calls one of this request's tools and returns its result envelope "
         "({ok, output, is_error, error}); assign the one value you need to `result`. Only `result` comes back, "
-        f"with the count of calls. No network and no files. At most {PROGRAM_CAP} characters.",
+        f"with the count of calls. Approval or outside-reply waits stop the program; after approval only the "
+        f"saved call runs, and a later program continues the work. No network and no files. At most {PROGRAM_CAP} characters.",
         _object_schema({"code": {"type": "string"}}),
         run,
         callers=(MODEL,), credential="none of its own: every call it makes goes through the registry",
         result_bound="the program's final result", model_visible={"strict": _switch("strict.run_program", "on") == "on"},
         validate_args=lambda args: ([f"code must be 1 to {PROGRAM_CAP} characters"]
                                     if not 0 < len(str(args.get("code", ""))) <= PROGRAM_CAP else []),
-        result_schema={"type": "object", "properties": {"result": {}, "calls": {"type": "integer"}},
+        result_schema={"type": "object", "properties": {"result": {}, "calls": {"type": "integer"},
+                       "program_stopped": {"type": "boolean"},
+                       "outside_question": {"type": "object", "properties": {
+                           "result": {"type": "object"}, "question": {"type": "string"}},
+                           "required": ["result", "question"], "additionalProperties": False}},
                        "required": ["result", "calls"], "additionalProperties": False},
     )
 

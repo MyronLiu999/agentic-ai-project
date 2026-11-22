@@ -147,8 +147,25 @@ def resume(run_key: str, event: dict) -> Reply:
     state = checkpoints.load(run_key)
     if state is None:
         return Reply(f"Nothing to resume for {run_key}: it has no checkpoint.")
+    accepted = state.get("pending_operator_answer")
+    if accepted:
+        # Acceptance and wait release commit together. Keep this instruction
+        # until its executor checkpoints consuming it, even across another crash.
+        event = dict(accepted)
     runtime.trace().event(events.RESUME, run_key=run_key, event_kind=str(event.get("kind")),
                           from_checkpoint=state.get("current_step"))
+    if accepted and str(event.get("text", "")).strip().casefold() == "discard":
+        # Persist the terminal decision first: a crash must never turn discard
+        # into a replay of the pending domain effects.
+        end(run_key, events.CANCELLED)
+        checkpoints.update(run_key, cancelled=True, end_reason=events.CANCELLED,
+                           accepted_operator_answer=event, pending_operator_answer=None)
+        runtime.trace().end(events.CANCELLED, detail="The operator discarded the held run.")
+        return Reply("The operator discarded this run. Its earlier completed effects remain.")
+    if accepted and (state.get("path") == "workflow" or state.get("split_state")):
+        # These fixed executors accept only explicit retry/discard. Retrying the
+        # saved work has the same crash semantics after this acknowledgment.
+        state = checkpoints.update(run_key, accepted_operator_answer=event, pending_operator_answer=None)
     checkpoints.clear_wait(run_key)
     with _resume_scope(run_key):
         if state.get("path") == "agent":

@@ -35,5 +35,52 @@
     "maximum_seconds": 0.005659584072418511,
     "writes_after_stop": 0,
     "kind": "local fake-model test, not a measured improvement arm"
+  },
+  "split_role_definition_estimates": {
+    "read_date": "2026-11-22",
+    "kind": "local serialization estimate; no model calls or metered bill",
+    "source": "agent/split.py SURFACES and agent.tools.build(None).definitions(), tools.loading=all; preserved at m2-split-final",
+    "method": "ceil(len(json.dumps(definitions, sort_keys=True)) / 4)",
+    "samples_per_surface": 1,
+    "roles": {
+      "analyst": {
+        "definitions": [
+          "parse_file",
+          "query_sales"
+        ],
+        "definition_count": 2,
+        "serialized_characters": 1237,
+        "estimated_tokens_per_call": 310,
+        "definitions_sha256": "651c3bd9cded6b5d35072b4c6f14488867b45bc25639958ce97401a314f76855"
+      },
+      "writer": {
+        "definitions": [
+          "render_chart",
+          "save_report",
+          "draft_report_email"
+        ],
+        "definition_count": 3,
+        "serialized_characters": 1891,
+        "estimated_tokens_per_call": 473,
+        "definitions_sha256": "4a2277e3db5b289781c293b90f5a2207123dad5f2d4d7a95bac6cc8ba07a0d22"
+      }
+    }
+  },
+  "integrated_free_verification": {
+    "read_date": "2026-11-22",
+    "kind": "free mechanism tests; no measured improvement arm or human-review evidence",
+    "commands": [
+      {
+        "command": ".venv/bin/python -m unittest tests.test_outside tests.test_context tests.test_stop tests.test_midtask tests.test_midtask_plan tests.test_crash_resume tests.test_recovery tests.test_analysis -q",
+        "tests": 70,
+        "passed": true,
+        "recovery_cases": 11
+      },
+      {
+        "command": ".venv/bin/python -m unittest tests.test_checkpoints -q",
+        "tests": 8,
+        "passed": true
+      }
+    ]
   }
 }

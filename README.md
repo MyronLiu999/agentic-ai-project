@@ -29,6 +29,26 @@ Repository demo contacts stay synthetic. Use `--contact "SYN-DIST-001=Name <emai
 (repeat for 002/003) to apply local contacts; the matching personal manifest/ZIP stays in
 ignored `state/ui-demo/`. See the demo guide before reloading.
 
+**M2 handoff:** the measured build and a person's approval review are still pending.
+The teammate with the API key should follow the [M2 runbook](docs/submission.md#m2-pending-work-and-key-holder-runbook):
+pull the final clean `main`, run `make setup`, `make test` and `make check`, then freeze that
+source revision for the measurement. `main` uses the single-agent path; `m2-split` and
+`m2-split-final` preserve the separate topology experiment. The build command is:
+
+```bash
+python run.py --tasks tasks/ tasks/sessions/ --sweeps 3 --arm m2-build --jobs 1
+python -m harness.summarize results/m2-build
+python experiments/analysis/analyze.py results/m2-build
+python -m experiments.analysis.failures results/m2-build
+```
+
+Use the runbook's fresh-arm and source checks before spending tokens. `tasks/` alone omits
+the long session. Keep every record and paired trace, including failures. Scripted task
+approvals do not measure human review: the runbook separately seeds isolated synthetic app
+cases and asks a person to read and answer `/approvals`. `make serve` preserves that state;
+`make app` resets it. Myron's two measured improvement passes, the final `m2` tag and Canvas
+submission remain team work; the build arm alone does not complete them.
+
 **Windows startup, preserving existing data:** activate your virtual environment, then set
 the key in that terminal and start the server. The app rejects pasted control characters
 before contacting the provider. An already-running server must be restarted after replacing

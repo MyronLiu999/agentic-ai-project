@@ -13,7 +13,8 @@ The program can reach nothing but our tools (Lecture 3, slides 26-27):
     every subprocess and native-library load, and every file opened outside the scratch folder (the Python
     installation itself stays readable, so `import json` works);
   - its only way out is call(name, args), which goes back over its stdin/stdout to this process, where the
-    registry handles it as a code caller: validation, the policy hook, a key on every write, the call record;
+    registry handles it with validation, the policy hook, a key on every write and the call record. Questions
+    remain model-written for permission checks, and approval/stop boundaries interrupt the program;
   - only the value it assigns to `result` comes back: none of the results along the way, and nothing it
     prints, enters the model's context.
 
@@ -34,6 +35,14 @@ import uuid
 
 TIMEOUT_S = 30.0          # wall clock for one program
 MAX_CALLS = 200           # tool calls one program may make
+
+
+class ProgramInterrupted(RuntimeError):
+    """A nested approval or stop must reach the executor before the program continues."""
+    def __init__(self, result, call):
+        super().__init__((result.get("error") or {}).get("message", "Program interrupted"))
+        self.result = result
+        self.call = call
 
 _BOOT = r'''
 import builtins, io, json, os, sys, traceback
@@ -135,8 +144,8 @@ def _scratch_root():
 
 
 def run_program(run_key, code, registry, *, request_id=None) -> dict:
-    """Run one program; every call it makes is `registry.call(name, args, "code")`."""
-    from agent.registry import CODE
+    """Run code through the registry; questions retain their model-authored permission class."""
+    from agent.registry import CODE, MODEL
 
     folder = _scratch_root() / f"program-{uuid.uuid4().hex[:12]}"
     folder.mkdir(parents=True, exist_ok=True)
@@ -184,10 +193,18 @@ def run_program(run_key, code, registry, *, request_id=None) -> dict:
                 else:
                     name = str(message["call"])
                     args = _disclosed(name, message.get("args") if isinstance(message.get("args"), dict) else {})
-                    reply = registry.call(name, args, CODE)
+                    caller = MODEL if name == "ask_stranger" else CODE
+                    reply = registry.call(name, args, caller)
                     from agent import exits
-                    reply = exits.resolve(registry, name, args, CODE, reply, run_key=run_key,
+                    reply = exits.resolve(registry, name, args, caller, reply, run_key=run_key,
                                           request_id=request_id or getattr(registry, "_key_context", None))
+                    if (reply.get("error") or {}).get("type") in ("approval_required", "stopped"):
+                        raise ProgramInterrupted(reply, {"name": name, "args": args, "caller": caller})
+                    if name == "ask_stranger" and reply.get("ok") and not reply.get("is_error"):
+                        # The host owns this marker. Child-program output cannot forge an outside wait.
+                        outcome = {"result": reply, "program_stopped": True, "outside_question": {"result": reply,
+                                                                        "question": args["question"]}}
+                        break
                 proc.stdin.write(json.dumps(reply, default=str) + "\n")
                 proc.stdin.flush()
             elif "final" in message:
@@ -196,6 +213,9 @@ def run_program(run_key, code, registry, *, request_id=None) -> dict:
                 outcome = {"error": str(message["error"])}
                 if message.get("line"):
                     outcome["line"] = int(message["line"])
+    except ProgramInterrupted:
+        _trace(run_key, calls, "program yielded at an approval or stop boundary")
+        raise
     except (BrokenPipeError, OSError) as exc:
         outcome = {"error": f"the program's channel broke: {type(exc).__name__}"}
     finally:
@@ -213,3 +233,18 @@ def run_program(run_key, code, registry, *, request_id=None) -> dict:
     outcome["calls"] = min(calls, MAX_CALLS)
     _trace(run_key, outcome["calls"], outcome.get("error"))
     return outcome
+
+
+def resume_call(run_key, call, registry, *, request_id):
+    """Execute only the suspended, already-prepared call; never restart its program prefix."""
+    from agent import exits
+    name, args, caller = call["name"], call["args"], call["caller"]
+    result = registry.call(name, args, caller)
+    result = exits.resolve(registry, name, args, caller, result, run_key=run_key, request_id=request_id)
+    _trace(run_key, 1, (result.get("error") or {}).get("type"))
+    if not result.get("ok") or result.get("is_error"):
+        return {**result, "program_call": call}
+    output = {"result": result, "calls": 1, "program_stopped": True}
+    if name == "ask_stranger":
+        output["outside_question"] = {"result": result, "question": args["question"]}
+    return {"ok": True, "output": output, "is_error": False, "error": None}

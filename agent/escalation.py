@@ -117,18 +117,38 @@ def held(session_id=None) -> list[dict]:
 
 
 def answer(run_key, text, who: str = "operator"):
-    """The operator's answer to a held run, from any later console session: lifts the hold and resumes the
-    run from its checkpoint (agent/runs.resume) with the answer as the operator's turn.
-    MERGE-CHECK (abraham): route a console reply to a held run here (e.g. "/answer <n> <text>" in
-    agent/stop.py, or messages.intercept when the session's live run is held)."""
-    from agent import runs
+    """Submit the operator's answer through the service's shared continuation ownership."""
+    from agent import service
     from harness.turns import Reply
     expire()
     hold = active_hold(run_key)
     if hold is None:
         return Reply(f"Run {run_key} is not held: nothing to answer.")
-    if not store.set_hold(hold["id"], "held", status="answered", answered_at=store.now(), answer=str(text)[:2000],
-                          who=who):
+    return service.continue_run(run_key, {"kind": "escalation_answer", "text": text,
+                                          "who": who, "escalation": hold["id"]})
+
+
+def _accept_answer(run_key, event):
+    """Lift the exact hold only after the service owns this session's execution."""
+    from agent import runs
+    from harness.turns import Reply
+    if event.get("who") != "operator":
+        return Reply("Only the operator can answer a held run.")
+    text = event.get("text")
+    if not isinstance(text, str) or not text.strip():
+        return Reply("An answer must contain the operator's instruction.")
+    expire()
+    hold = active_hold(run_key)
+    if hold is None or hold["id"] != event.get("escalation"):
+        return Reply(f"Run {run_key} is not held by that escalation: nothing to answer.")
+    if run_key not in runs.live(runs.session_of(run_key)):
+        return Reply(f"Run {run_key} has ended and cannot continue.")
+    state = checkpoints.load(run_key) or {}
+    if (state.get("path") == "workflow" or state.get("split_state")) and text.strip().casefold() not in (
+            "retry", "discard"):
+        return Reply("This fixed executor accepts only retry or discard. Use /answer <run number> retry to "
+                     "retry its saved work, or /answer <run number> discard and start a revised request.")
+    accepted = store.answer_hold(run_key, hold["id"], text)
+    if accepted is None:
         return Reply(f"Run {run_key}'s hold was answered or ended meanwhile.")
-    checkpoints.update(run_key, held=None)
-    return runs.resume(run_key, {"kind": "operator_turn", "text": str(text), "escalation": hold["id"]})
+    return accepted

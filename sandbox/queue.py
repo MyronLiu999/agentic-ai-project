@@ -156,6 +156,40 @@ def set_hold(hold_id: str, from_status: str, **fields) -> bool:
         return cur.rowcount == 1
 
 
+def answer_hold(run_key: str, hold_id: str, text: str) -> dict | None:
+    """Commit an answer, release its hold/wait, and retain its continuation together.
+
+    The executor clears pending_operator_answer only with the checkpoint that
+    incorporates the instruction. A crash before then replays this exact event.
+    """
+    event = {"kind": "operator_turn", "text": text, "escalation": hold_id}
+    with connect() as conn:
+        conn.execute("BEGIN IMMEDIATE")
+        holds = _current(conn, "held_runs", "t.id = ? AND t.run_key = ? AND t.status = 'held'",
+                         (hold_id, run_key))
+        run = conn.execute("SELECT ended_at FROM runs WHERE run_key = ?", (run_key,)).fetchone()
+        latest = conn.execute("SELECT state_json FROM checkpoints WHERE run_key = ? ORDER BY id DESC LIMIT 1",
+                              (run_key,)).fetchone()
+        wait = conn.execute("SELECT kind, ref FROM waits WHERE run_key = ?", (run_key,)).fetchone()
+        if not holds or run is None or run["ended_at"] or latest is None:
+            return None
+        state = json.loads(latest["state_json"])
+        if (state.get("cancelled") or state.get("pending_operator_answer") or not wait
+                or wait["kind"] != "escalation" or wait["ref"] != hold_id):
+            return None
+        answered_at = now()
+        if holds[0].get("deadline") and holds[0]["deadline"] < answered_at:
+            return None
+        conn.execute("UPDATE held_runs SET status = 'answered', answered_at = ?, answer = ?, who = 'operator' "
+                     "WHERE id = ?", (answered_at, text, hold_id))
+        state.update(held=None, waiting_for=None, pending_operator_answer=event)
+        conn.execute("INSERT INTO checkpoints (run_key, saved_at, mode, state_json) VALUES (?, ?, 'sync', ?)",
+                     (run_key, answered_at, json.dumps(state, sort_keys=True, ensure_ascii=False)))
+        conn.execute("DELETE FROM waits WHERE run_key = ? AND kind = 'escalation' AND ref = ?",
+                     (run_key, hold_id))
+    return event
+
+
 def asks_on(day: str) -> int:
     """Asks a reviewer met on one day (YYYY-MM-DD): approvals put up, and packets sent (not over the cap)."""
     with connect() as conn:

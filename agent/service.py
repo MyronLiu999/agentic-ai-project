@@ -29,6 +29,15 @@ def operator_turn(session_id: str, text: str) -> Reply:
     caller_session = session_id
     run = runtime.current_run()
     session_id = run.run_id if run else session_id
+    answer = text.strip().split(maxsplit=2)
+    if answer and answer[0].lower() == '/answer':
+        if len(answer) != 3 or not answer[1].isascii() or not answer[1].isdigit() or not answer[2].strip():
+            return Reply('Use /answer <run number> <answer> for a held run in this session.')
+        run_key = stop._target(session_id, answer[1])
+        if run_key is None:
+            return Reply('No run with that number exists in this session.')
+        from agent import escalation
+        return escalation.answer(run_key, answer[2])
     with _session_lock:
         busy = session_id in _active_sessions
     if busy and text.strip().split(' ', 1)[0].lower() in ('/resume', '/rollback'):
@@ -180,12 +189,20 @@ def continue_run(run_key, event):
         if session_id in _active_sessions:
             if event.get('kind') == 'crash':
                 return Reply('The interrupted run is already continuing; your message remains queued.')
+            if event.get('kind') == 'escalation_answer':
+                return Reply('The session is still running. Retry /answer when the current call finishes; '
+                             'the hold remains in place.')
             checkpoints.update(run_key, resume_requested=event)
             return Reply('The answer is saved; the current call will finish before this run continues.')
         if event.get('kind') == 'crash' and run_key not in _resumable_crashes(session_id):
             return Reply('This run is no longer eligible for crash recovery; your message remains queued.')
         _active_sessions.add(session_id)
     try:
+        if event.get('kind') == 'escalation_answer':
+            from agent import escalation
+            event = escalation._accept_answer(run_key, event)
+            if isinstance(event, Reply):
+                return event
         reply = runs.resume(run_key, event)
         _refresh_session_status(session_id)
     finally:

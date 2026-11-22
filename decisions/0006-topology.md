@@ -1,9 +1,9 @@
 # 0006: Keep one agent for the sales analyst
 
-Owner: Abraham. Decision date: 2026-11-20. Status: single agent by default. The experimental split code is
-included in `main` at the 2026-11-22 integration. The merged task matrix uses the real MCP and approval
-contracts; current verification is recorded in [integration evidence](../docs/milestones/M2-integration-evidence.json).
-No matched-budget benefit has been established.
+Owner: Abraham. Decision date: 2026-11-20; finalized 2026-11-22. Status: **single-only on `main`**.
+The integrated split experiment is preserved on `m2-split` at `m2-split-final`, including the real MCP,
+policy, approval and recovery contracts. Its free correctness tests establish mechanisms only;
+no matched-budget benefit has been established. See [integration evidence](../docs/milestones/M2-integration-evidence.json).
 
 ## What would have to cross between components?
 
@@ -50,7 +50,7 @@ Stop at the first failure; a later gate is not claimed to pass by default.
 | Report writer separated from reviewer | No: check/revise cycles exchange the draft and failures | Not reached | Not reached | Not reached | Keep the code critic |
 | Reviewer as another model | No for the same correction cycle | Not reached | Not reached | Not reached | Deterministic recomputation is cheaper and independently grounded |
 | Per-distributor batch workers | Yes only for disjoint request IDs and artifacts | Yes: check each report/draft against its request, upload and sales rows | No demonstrated need: `tasks/batch_reports_two.yaml` has two short chains that the existing plan executor handles | Not reached | Single pending evidence |
-| Read-only analyst → artifact writer experiment | No in the general case: an ambiguous upload or a discrepancy needs another analyst/writer correction round; the branch only proceeds with a frozen validated handoff | Not reached | Not reached | Not reached | Build the closest candidate on the branch, do not merge |
+| Read-only analyst → artifact writer experiment | No in the general case: an ambiguous upload or a discrepancy needs another analyst/writer correction round; the branch only proceeds with a frozen validated handoff | Not reached | Not reached | Not reached | Preserve the closest candidate at the experimental tag; exclude it from `main` |
 
 The experiment's two roles have different **tool surfaces**: analyst gets `parse_file` and `query_sales`;
 writer gets `render_chart`, `save_report` and `draft_report_email` for the selected request. The coordinator
@@ -101,9 +101,21 @@ planted divergent state must fail even when each local result says success. No r
 the coordinator sequences them. Workers cannot write the same request; request scope is unique and every
 write remains keyed in the common registry, with the run key in its logical identity. The combined checker uses captured per-run writer outputs rather than session-wide stamps; each claimed ID must appear in that writer’s successful ledger. Its chart contract is one current-revenue bar, and both stored values and the rendered SVG must match.
 
-Build evidence: `tests/test_split.py` on `abraham-split`, 21 tests passing on 2026-11-21. The matrix runs all eight current official task files through their sandbox checks with `topology=split`; only batch reports use the split. The seven ordinary tasks stay within 150,000 tokens; the four-task long session uses its 400,000-token session ceiling. Focused tests cover malformed returns, boolean record IDs, role surfaces, observed spend, shared-budget exhaustion, exact action approvals, and stopped-write resume. Regression cases verify durable paid responses and final returns (including critique), rejection of writer IDs absent from its successful ledger, independent effects for consecutive console runs, restoration of a mismatched approval wait, persisted subject/report/chart/SVG validation, and operator additions surviving role transitions and the mailbox-consumption crash window. These are free-model correctness tests, not a timing or quality comparison. At the team merge the branch
-will be based on the real policy, checkpoint and MCP implementations, then tested/tagged as `m2-split-final`
-by the assigned review steps. No current-build matched-budget pass has been run.
+Build evidence: `tests/test_split.py` is preserved at `m2-split-final`. Its matrix runs all twelve official
+task files through sandbox checks with `topology=split`; only batch reports use the split. Ordinary tasks
+stay within 150,000 tokens; the four-task long session uses its 400,000-token session ceiling. Focused
+tests cover malformed returns, boolean IDs, role surfaces, observed spend, budget exhaustion, exact
+approvals, stopped-write resume and saved model responses. Corruption cases reject IDs absent from the
+writer's ledger and edited reports/charts/SVGs. Further cases check distinct console-run effects,
+approval-wait identity and operator additions across role transitions and a crash. The real MCP,
+policy and checkpoint implementations are used with fake models. Neither a paid split comparison nor
+a measured `m2-build` arm exists; free correctness does not demonstrate timing, quality or equal-spend benefit.
+
+One local calculation per actual role surface on 2026-11-22 gives 310 estimated definition tokens for
+the analyst (two tools) and 473 for the writer (three), using ceiling(serialized characters/4).
+[Evidence](../docs/abraham-m2-test-evidence.json) records the tool names, character counts and hashes.
+These estimates exclude role prompts, histories and repeated calls; they are not a provider-metered
+bill or evidence that split saves total tokens.
 
 Reopen only with at least eight independent distributor requests whose selected inputs exceed one
 configured context budget, with a per-request sandbox oracle and a combined check. Run single and split
