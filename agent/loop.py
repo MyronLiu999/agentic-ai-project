@@ -12,7 +12,7 @@ from dataclasses import asdict, dataclass
 import hashlib
 import json
 
-from agent import bounds, checkpoints, context, critique, disclosure, events, messages as midtask, outside, runs, stop, tools
+from agent import bounds, checkpoints, context, critique, disclosure, events, exits, messages as midtask, outside, runs, stop, tools
 from agent.registry import MODEL
 from harness import runtime
 from harness.client import ToolCall, tool_result
@@ -329,6 +329,8 @@ class _Loop:
                 if pending_question:
                     return self.finish(events.NEEDS_ANSWER, 'A clarifying question is pending for the operator.',
                                        self.request['thread_id'])
+        except exits.UnsettledWrite as exc:
+            return self.finish(events.UNSETTLED_WRITE, str(exc))
         except stop.ControlStopped as exc:
             if self.run_key:
                 checkpoints.update(self.run_key, stopped=True)
@@ -363,9 +365,14 @@ class _Loop:
             self.prepared = {'id': call.id, 'name': call.name, 'args': args}
             self.save_state()
         self.check()
+        checkpoints.before_step(self.run_key, {"path": "agent", "kind": "tool_call", "tool": call.name,
+                                              "args": deepcopy(args), "step": call.id,
+                                              "request_id": self.request["id"]})
         if call.name not in ('parse_file', 'query_sales', 'search_tools'):
             stop.notice(self.run_key)
         result = self.registry.call(call.name, args, MODEL, trace_step=step)
+        result = exits.resolve(self.registry, call.name, args, MODEL, result, request_id=self.request["id"],
+                               run_key=self.run_key, trace_step=step)
         return result, args if result['ok'] and not result['is_error'] else None
 
 
@@ -442,7 +449,8 @@ class EmailGate:
                 or (self.fixed_recipient is not None and passed.get("recipient") != self.fixed_recipient)
                 or any(not isinstance(passed.get(k), str) or not passed[k].strip() for k in editable)):
             raise CritiqueHeld("Critique changed the saved report or returned an invalid email draft.")
-        return {k: passed[k] for k in ("recipient", "subject", "body", "report_id")}
+        return {**{k: passed[k] for k in ("recipient", "subject", "report_id")},
+                "body": disclosure.with_disclosure(passed["body"])}
 
 
 def _error(message):

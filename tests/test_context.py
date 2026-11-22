@@ -13,6 +13,87 @@ TASK = 'tasks/standard_report_clean.yaml'
 
 
 class ContextTest(ScratchTest):
+    def test_tight_history_budget_keeps_the_latest_relevant_correction(self):
+        with fixed_run(TASK, 'history-correction', overrides=['context_budget=400']):
+            original = 'For each invoice this session use CAD as the settlement currency.'
+            correction = 'Correction: the settlement currency is now EUR, replacing CAD.'
+            notes.record('history-correction', 'operator', original)
+            notes.record('history-correction', 'operator', correction)
+            notes.record('history-correction', 'operator', 'Archive the warehouse inventory. ' * 30)
+            entries = notes.search('history-correction', sources={'operator'})
+            current = {'role': 'user', 'content': 'Use the settlement currency for this invoice.'}
+            system, sent, omitted = context.assemble('history-correction', purpose='agent_step',
+                system='Rules. ' + 'Required rule. ' * 50, messages=[current], tools=[])
+            self.assertIn(correction, system)
+            self.assertNotIn(original, system)
+            self.assertIn(entries[1]['id'], system)
+            self.assertIn('"source": "operator"', system)
+            self.assertTrue(any(entries[0]['id'] in item and 'operator' in item for item in omitted))
+            self.assertEqual(sent, [current])
+            self.assertLessEqual(sum(context.estimate_tokens(v) for v in (system, sent, [])), 400)
+
+    def test_admitted_history_keeps_corrections_after_the_original_instruction(self):
+        with fixed_run(TASK, 'history-order'):
+            original = 'For this session use CAD as the settlement currency.'
+            correction = 'Correction: the settlement currency is now EUR, replacing CAD.'
+            notes.record('history-order', 'operator', original)
+            notes.record('history-order', 'operator', correction)
+            system, _, _ = context.assemble('history-order', purpose='agent_step', system='Rules.',
+                messages=[{'role': 'user', 'content': 'Use the settlement currency for this invoice.'}], tools=[])
+            self.assertLess(system.index(original), system.index(correction))
+
+    def test_omitting_a_large_correction_does_not_restore_the_older_fact(self):
+        with fixed_run(TASK, 'history-long-correction', overrides=['context_budget=400']):
+            original = 'Use CAD as the settlement currency.'
+            correction = ('Correction: the settlement currency is now EUR, replacing CAD. '
+                          + 'The supporting explanation remains available in the archive. ' * 8)
+            notes.record('history-long-correction', 'operator', original)
+            notes.record('history-long-correction', 'operator', correction)
+            entries = notes.search('history-long-correction', sources={'operator'})
+            current = {'role': 'user', 'content': 'Use the settlement currency for this invoice.'}
+            system, sent, omitted = context.assemble('history-long-correction', purpose='agent_step',
+                system='Rules. ' + 'Required rule. ' * 50, messages=[current], tools=[])
+            self.assertNotIn(original, system)
+            self.assertNotIn(entries[0]['id'], system)
+            self.assertTrue(any(entries[0]['id'] in item for item in omitted))
+            self.assertTrue(any(entries[1]['id'] in item for item in omitted))
+            self.assertEqual(sent, [current])
+            self.assertLessEqual(sum(context.estimate_tokens(v) for v in (system, sent, [])), 400)
+
+    def test_operator_addition_remains_available_as_a_later_correction(self):
+        with fixed_run(TASK, 'history-addition', overrides=['context_budget=400']):
+            original = 'For each invoice this session use CAD as the settlement currency.'
+            correction = 'Correction: the settlement currency is now EUR, replacing CAD.'
+            notes.record('history-addition', 'operator', original)
+            context.assemble('history-addition', purpose='agent_step', system='Rules.',
+                messages=[{'role': 'user', 'content': json.dumps({'operator_instruction_addition': correction})}],
+                tools=[])
+            system, _, _ = context.assemble('history-addition', purpose='agent_step',
+                system='Rules. ' + 'Required rule. ' * 50,
+                messages=[{'role': 'user', 'content': 'Use the settlement currency for this invoice.'}], tools=[])
+            self.assertIn(correction, system)
+            self.assertNotIn(original, system)
+
+    def test_later_instruction_cannot_bypass_an_omitted_intermediate_correction(self):
+        for budget in (450, 500, 550):
+            with self.subTest(budget=budget), fixed_run(TASK, 'history-intermediate-correction',
+                                                       overrides=[f'context_budget={budget}']):
+                original = 'Use CAD as the settlement currency.'
+                correction = ('Correction: the settlement currency is now EUR, replacing CAD. '
+                              + 'The supporting explanation remains available in the archive. ' * 8)
+                latest = 'Archive the invoice once issued.'
+                for text in (original, correction, latest):
+                    notes.record('history-intermediate-correction', 'operator', text)
+                entries = notes.search('history-intermediate-correction', sources={'operator'})
+                current = {'role': 'user', 'content': 'Use the settlement currency for this invoice.'}
+                system, sent, omitted = context.assemble('history-intermediate-correction', purpose='agent_step',
+                    system='Rules. ' + 'Required rule. ' * 50, messages=[current], tools=[])
+                self.assertIn(latest, system)
+                self.assertNotIn(original, system)
+                self.assertTrue(any(entries[0]['id'] in item for item in omitted))
+                self.assertEqual(sent, [current])
+                self.assertLessEqual(sum(context.estimate_tokens(v) for v in (system, sent, [])), budget)
+
     def test_budget_includes_definitions_and_keeps_current_request_whole(self):
         with fixed_run(TASK, 'budget', overrides=['context_budget=500', 'compaction_threshold=350']):
             current = {'role': 'user', 'content': 'Keep the full current request: SYN-DIST-001, 2026Q3.'}

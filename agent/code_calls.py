@@ -134,7 +134,7 @@ def _scratch_root():
     return state_dir() / "scratch"
 
 
-def run_program(run_key, code, registry) -> dict:
+def run_program(run_key, code, registry, *, request_id=None) -> dict:
     """Run one program; every call it makes is `registry.call(name, args, "code")`."""
     from agent.registry import CODE
 
@@ -185,6 +185,9 @@ def run_program(run_key, code, registry) -> dict:
                     name = str(message["call"])
                     args = _disclosed(name, message.get("args") if isinstance(message.get("args"), dict) else {})
                     reply = registry.call(name, args, CODE)
+                    from agent import exits
+                    reply = exits.resolve(registry, name, args, CODE, reply, run_key=run_key,
+                                          request_id=request_id or getattr(registry, "_key_context", None))
                 proc.stdin.write(json.dumps(reply, default=str) + "\n")
                 proc.stdin.flush()
             elif "final" in message:

@@ -5,3 +5,6 @@ state/
 __pycache__/
 *.pyc
 .DS_Store
+
+# Local implementation plans; milestone requirements and evidence stay tracked.
+/docs/superpowers/plans/

@@ -89,22 +89,11 @@ def _call(reg, name: str, args: dict, step: str, actions: list[str], *, request_
 
 
 def _three_exits(reg, name, args, step, request_id, run_key, result) -> dict:
-    """Lecture 3, slide 40: read whether the effect happened. Yes: carry on with it. No: retry once under the
-    same key (the same step id). Cannot tell: escalate to the operator and end the run."""
-    outcome, found = exits.settle(name, args, request_id)
-    if outcome == "happened":
-        return {"ok": True, "output": found, "is_error": False, "error": None}
-    if outcome == "not_happened":
-        again = reg.call(name, args, CODE, step=step)
-        if again.get("ok") or not exits.unsettled(name, again):
-            return again
-        outcome, found = exits.settle(name, args, request_id)
-        if outcome == "happened":
-            return {"ok": True, "output": found, "is_error": False, "error": None}
-    why = found if isinstance(found, str) else f"{name} failed twice and its effect cannot be confirmed"
-    escalation.signal(run_key, "unsettled_write", attempted=f"{name} for {request_id} (step {step})", why=why,
-                      needs="the operator to check the sandbox and say whether to retry or discard")
-    raise _Stop(events.UNSETTLED_WRITE, f"{name}'s outcome cannot be told; the operator is asked to settle it")
+    """Use the same exact-key settlement and retry allowance as every executor."""
+    try:
+        return exits.resolve(reg, name, args, CODE, result, request_id=request_id, run_key=run_key, step=step)
+    except exits.UnsettledWrite as exc:
+        raise _Stop(events.UNSETTLED_WRITE, str(exc)) from exc
 
 
 def _compensate_completed(reg, run_key, steps: list[str]) -> list[str]:

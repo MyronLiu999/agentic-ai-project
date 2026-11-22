@@ -11,7 +11,7 @@ reuses it (Milestone 2, C3).
 
 from __future__ import annotations
 
-from agent import checkpoints, events, runs
+from agent import checkpoints, events, exits, runs
 from agent.registry import CODE
 from harness import runtime
 from harness.turns import Reply
@@ -95,8 +95,15 @@ def out_of_scope(session_id: str, request_id: str, registry=None) -> Reply:
         result = {"ok": True, "output": done, "is_error": False, "error": None}
     else:
         # A keyed write whose arguments code fixed before it runs: no checkpoint needed (checkpoints.needs_checkpoint).
-        result = _registry(request_id, registry).call("draft_clarifying_question", {"question": question}, CODE,
-                                                      step="1-decline")
+        reg = _registry(request_id, registry)
+        args = {"question": question}
+        result = reg.call("draft_clarifying_question", args, CODE, step="1-decline")
+        try:
+            result = exits.resolve(reg, "draft_clarifying_question", args, CODE, result,
+                                   request_id=request_id, run_key=run_key, step="1-decline")
+        except exits.UnsettledWrite as exc:
+            _end(trace, events.UNSETTLED_WRITE, detail=str(exc))
+            return Reply(str(exc))
         if result.get("ok"):
             checkpoints.record_step(run_key, "1-decline", "draft_clarifying_question", {"question": question},
                                     result.get("output") or {})

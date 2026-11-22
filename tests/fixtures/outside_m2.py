@@ -1,37 +1,9 @@
-"""Contract stand-in for Myron's not-yet-merged send tool, with real channel effects."""
+"""Free outside-exchange model; all tools use the production MCP registry."""
 import json
 import re
-from unittest import mock
 
-import channel
-from agent import tools
-from agent.registry import Registry, ToolSpec, CODE, MODEL
 from harness.client import Usage
-from policy.hook import registry_hook
-from sandbox import inbox
 from tests.fixtures.agent_milestone_model import MilestoneModel
-
-_build = tools.build
-
-
-def build(request_id):
-    registry = _build(request_id)
-    def send(question, key):
-        request = inbox.get(request_id)
-        prior = next((m for m in channel.messages(request['thread_id'])
-                      if m.sender == 'agent' and m.text == question), None)
-        message = prior or channel.send(request['thread_id'], question)
-        return {'thread_id': request['thread_id'], 'message_id': message.id, 'created': prior is None}
-    spec = ToolSpec('ask_stranger', 'Ask one factual question.',
-                    {'type': 'object', 'properties': {'question': {'type': 'string'}},
-                     'required': ['question'], 'additionalProperties': False}, send,
-                    callers=(CODE, MODEL), writes=True)
-    return Registry(list(registry._ordered) + [spec], key_context=request_id,
-                    pre_call_hook=registry_hook(request_id))
-
-
-def install():
-    return mock.patch('agent.tools.build', build)
 
 
 class OutsideModel(MilestoneModel):

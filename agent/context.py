@@ -62,8 +62,9 @@ def _record(session_id, purpose, messages):
             except (ValueError, TypeError):
                 parsed = {}
             if isinstance(parsed, dict):
-                if 'operator_instruction' in parsed:
-                    notes.record(session_id, 'operator', parsed['operator_instruction'], deduplicate=True)
+                for field in ('operator_instruction', 'operator_instruction_addition'):
+                    if field in parsed:
+                        notes.record(session_id, 'operator', parsed[field], deduplicate=True)
                 if 'outside_reply_from_stranger' in parsed:
                     source = 'stranger'
                 elif 'outside_request' in parsed:
@@ -95,26 +96,70 @@ def _record(session_id, purpose, messages):
                     notes.update(session_id, ids=ids, done=done)
 
 
-def _extras(session_id, purpose):
+def _history_candidates(session_id, messages):
+    """Retrieve individual operator records; current instructions already travel whole.
+
+    Prefer the newest relevant instruction (which may correct an old fact), then
+    the first relevant instruction. Admit the rest by relevance and recency.
+    Selection priority is separate from their chronological presentation order.
+    """
+    current = []
+    for message in messages:
+        content = message.get('content')
+        if message.get('role') != 'user' or not isinstance(content, str):
+            continue
+        try:
+            payload = json.loads(content)
+        except ValueError:
+            payload = content
+        if isinstance(payload, dict):
+            current.extend(str(payload[key]) for key in ('operator_instruction', 'operator_instruction_addition')
+                           if key in payload)
+        elif isinstance(payload, str):
+            current.append(payload)
+    stopwords = {'this', 'that', 'with', 'from', 'have', 'will', 'your', 'please', 'into', 'each', 'then'}
+    def terms(text):
+        return {word for word in re.findall(r'[\w-]+', text.casefold())
+                if len(word) > 3 and word not in stopwords}
+    query = terms(' '.join(current))
+    entries = [(index, e) for index, e in enumerate(notes.snapshot(session_id).get('events', []))
+               if e['source'] == 'operator' and str(e['content']) not in current]
+    scores = {index: len(query & terms(str(e['content'])[:600])) for index, e in entries}
+    ranked = sorted(entries, key=lambda item: (scores[item[0]], item[0]), reverse=True)
+    relevant = [item for item in entries if scores[item[0]]]
+    priority = ([relevant[-1], relevant[0]] if relevant else entries[:1]) + ranked
+    following = {earlier[1]['id']: later[1]['id'] for earlier, later in zip(relevant, relevant[1:])}
+    seen = set()
+    for index, entry in priority:
+        if entry['id'] not in seen:
+            seen.add(entry['id'])
+            # Chain every later related record: an intermediate correction can
+            # invalidate an old fact even when the newest instruction is admitted.
+            yield index, entry, following.get(entry['id'])
+
+
+def _extras(session_id, purpose, messages):
     from agent import memory
     result = []
     planner = 'plan' in purpose
     records = memory.for_session(session_id, budget_tokens=2000)
     safe = [r for r in records if r.get('source') in ('operator', 'system') and r.get('confirmed', False)]
     if safe:
-        result.append(('memory', '\nVerified memory with provenance:\n' + json.dumps(safe, ensure_ascii=False)))
+        result.append(('memory', '\nVerified memory with provenance:\n' + json.dumps(safe, ensure_ascii=False),
+                       (0, 0), None))
     structured = notes.for_call(session_id, purpose)
     if structured:
-        result.append(('notes', '\nCode-maintained identifiers and status:\n' + structured))
+        result.append(('notes', '\nCode-maintained identifiers and status:\n' + structured, (1, 0), None))
     if not planner:
-        entries = notes.search(session_id, '', limit=50, sources={'operator'})
-        # The earliest instruction is the session's stable fact; recent instructions give its corrections.
-        chosen = entries[:1] + entries[-5:] if len(entries) > 5 else entries
-        if chosen:
-            excerpt = [{'id': e['id'], 'source': e['source'], 'recorded_at': e['recorded_at'],
-                        'content': str(e['content'])[:600]} for e in chosen]
-            result.append(('session_events', '\nRetrieved operator history (earlier tasks are history, '
-                           'not authorization to repeat effects):\n' + json.dumps(excerpt, ensure_ascii=False)))
+        for index, entry, requires in _history_candidates(session_id, messages):
+            excerpt = {key: entry[key] for key in ('id', 'source', 'recorded_at')}
+            excerpt['content'] = str(entry['content'])[:600]
+            if len(str(entry['content'])) > 600:
+                excerpt['truncated'] = True
+            result.append((f"session_events:{entry['source']}:{entry['id']}",
+                           '\nRetrieved operator history (later corrections supersede earlier instructions; '
+                           'past tasks do not authorize repeated effects):\n' + json.dumps(excerpt, ensure_ascii=False),
+                           (2, index), f'session_events:operator:{requires}' if requires else None))
     return result
 
 
@@ -218,12 +263,22 @@ def assemble(session_id, *, purpose, system, messages, tools):
                                         budget=budget, left_out=left_out, refused=True)
         raise ContextBudgetError('The current request, system and tool definitions exceed context_budget; '
                                  'shorten the request or select less data. The current request was not truncated.')
+    extras = _extras(session_id, purpose, original)
+    by_source = {item[0]: item for item in extras}
+    admitted = {}
     assembled_system = base_system
-    for source, text in _extras(session_id, purpose):
-        if _count(assembled_system + text, flatten(), tools) <= budget:
-            assembled_system += text
-        else:
-            left_out.append(source)
+    for source, _, _, _ in extras:
+        needed = {}
+        dependency = source
+        while dependency is not None and dependency not in admitted:
+            name, text, order, dependency = by_source[dependency]
+            needed[name] = (order, text)
+        addition = ''.join(text for _, text in sorted(needed.values()))
+        if _count(assembled_system + addition, flatten(), tools) <= budget:
+            admitted.update(needed)
+            assembled_system += addition
+    left_out.extend(source for source, _, _, _ in extras if source not in admitted)
+    assembled_system = base_system + ''.join(text for _, text in sorted(admitted.values()))
     assembled = flatten()
     after = _count(assembled_system, assembled, tools)
     trace = runtime.trace(session_id)

@@ -379,20 +379,30 @@ class SplitTest(ScratchTest):
 
 
 class SplitTaskMatrixTest(ScratchTest):
-    def test_every_official_task_runs_on_the_split_branch_configuration(self):
-        from tests.fixtures.outside_m2 import install
+    def test_every_official_task_runs_on_the_split_topology_configuration(self):
+        from tests.fixtures.m2_tasks import task_backend
         task_files = sorted((ROOT / "tasks").glob("*.yaml")) + sorted((ROOT / "tasks/sessions").glob("*.yaml"))
         for task in task_files:
-            backend = MODEL
-            if task.name.startswith("outside_"):
-                backend = "tests.fixtures.outside_m2:OutsideModel"
-            elif task.name.startswith("long_"):
-                backend = "tests.fixtures.context_session_model:LongSessionModel"
-            with self.subTest(task=task.name), install():
-                record = self.run_task(str(task), "split-matrix-" + task.stem, backend=backend,
+            with self.subTest(task=task.name):
+                record = self.run_task(str(task), "split-matrix-" + task.stem, backend=task_backend(task, split=True),
                                        overrides=["topology=split"])
                 self.assertTrue(record["passed"], record.get("error") or record["check"])
                 ceiling = 400000 if task.parent.name == "sessions" else bounds.TOKEN_BUDGET
                 self.assertLessEqual(record["tokens"]["total"], ceiling)
+                trace_path = Path(record["trace"])
+                if not trace_path.is_absolute():
+                    trace_path = ROOT / trace_path
+                trace = [json.loads(line) for line in trace_path.read_text().splitlines()]
+                returned = [line for line in trace if line.get("type") == "split_return"]
                 if task.name == "batch_reports_two.yaml":
                     self.assertEqual(record["measures"]["requests_done"], 2)
+                    self.assertEqual(len(returned), 4)
+                else:
+                    self.assertEqual(returned, [], "only a batch request belongs in the split executor")
+                if task.name == "escalation_conflicting_figure.yaml":
+                    # Exercise the deterministic correction path; the official
+                    # safety check alone also permits a run that writes nothing.
+                    request = inbox.all_requests()[0]
+                    self.assertEqual(len(reports.for_request(request["id"])), 1)
+                    self.assertEqual(len(pending.for_request(request["id"])), 1)
+                    self.assertEqual(record["measures"]["escalations"], 0)

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 import json
 import re
 
-from agent import checkpoints, disclosure, events, runs, tools
+from agent import checkpoints, disclosure, events, exits, runs, tools
 from agent.registry import CODE, MODEL
 from harness import runtime
 from harness.turns import Reply
@@ -51,8 +51,14 @@ def ask(run_key, question, template=None) -> Reply:
     checkpoints.update(run_key, outside_exchange=exchange)
     from agent import stop
     stop.notice(run_key)
-    result = tools.build(request['id']).call('ask_stranger', {'question': text}, caller,
-                                           step='outside-units' if template else 'outside-question')
+    reg = tools.build(request['id'])
+    step = 'outside-units' if template else 'outside-question'
+    args = {'question': text}
+    checkpoints.before_step(run_key, {'path': 'agent', 'kind': 'tool_call', 'tool': 'ask_stranger',
+                                     'args': args, 'step': step, 'request_id': request['id']})
+    result = reg.call('ask_stranger', args, caller, step=step)
+    result = exits.resolve(reg, 'ask_stranger', args, caller, result, request_id=request['id'],
+                           run_key=run_key, step=step)
     stop.after_call(run_key)
     if not result.get('ok') or result.get('is_error'):
         error = result.get('error') or {}

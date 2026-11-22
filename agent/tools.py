@@ -312,12 +312,15 @@ def _send_once(record: dict, text: str) -> tuple[int, bool]:
     """Deliver one pending record on its thread, once. The record is the write key's target (pending.add
     returns the first record for a key), so a retried key gets the first message back. A send whose outcome
     cannot be told is never retried here: it is ambiguous, and the three exits settle it."""
+    from sandbox import deliveries
     status = record["status"]
     if status == "sent":
-        mine = [m for m in channel.messages(record["thread_id"]) if m.sender == channel.AGENT]
-        same = [m for m in mine if m.text == text]
-        if same or mine:
-            return (same or mine)[-1].id, False
+        receipt = deliveries.get(record["id"])
+        if receipt and receipt["body"] == text:
+            same = [m for m in channel.messages(record["thread_id"])
+                    if m.id == receipt["message_id"] and m.sender == channel.AGENT and m.text == text]
+            if same:
+                return same[0].id, False
         raise AmbiguousToolError(f"pending record {record['id']} is sent, but its message cannot be found")
     if status in ("sending", "send_failed"):
         raise AmbiguousToolError(f"pending record {record['id']} is {status}: the send may have happened")
@@ -330,6 +333,7 @@ def _send_once(record: dict, text: str) -> tuple[int, bool]:
     except Exception as exc:
         pending.fail_send(record["id"])
         raise AmbiguousToolError(f"the channel failed during the send: {type(exc).__name__}") from exc
+    deliveries.record(record["id"], message.id, text)
     if not pending.complete_send(record["id"]):
         raise AmbiguousToolError(f"the send of pending record {record['id']} could not be recorded")
     return message.id, True
@@ -372,8 +376,8 @@ def _send_report_email(request_id: str | None, pending_id: int, key: str) -> dic
         raise ValueError("the draft's recipient is not this request's contact; it cannot be sent")
     package = email_packages.freeze(record) if record["status"] == "pending" else email_packages.saved(record["id"])
     message_id, created = _send_once(record, _email_text(record, package))
-    if created:
-        email_packages.link_message(record["id"], message_id)
+    # Replaying an acknowledged delivery also repairs a crash before package linkage.
+    email_packages.link_message(record["id"], message_id)
     return {"request_id": request["id"], "pending_id": record["id"], "thread_id": record["thread_id"],
             "sent_id": message_id, "recipient": record["recipient"], "created": created}
 
@@ -636,11 +640,11 @@ def code_calls_on(use_case: str | None = None) -> bool:
     return any(str(v) == "on" for k, v in current.items() if k.startswith("code_calls."))
 
 
-def _program_spec(holder: dict) -> ToolSpec:
+def _program_spec(holder: dict, request_id: str | None = None) -> ToolSpec:
     from agent import code_calls, runs
 
     def run(code: str) -> dict:
-        out = code_calls.run_program(runs.current_key(), code, holder["registry"])
+        out = code_calls.run_program(runs.current_key(), code, holder["registry"], request_id=request_id)
         if "error" in out:      # a failed call whose repair text lets the model fix the program
             where = f" at line {out['line']}" if out.get("line") else ""
             raise ValueError(f"the program failed{where}: {out['error']} ({out['calls']} calls made)")
@@ -679,7 +683,7 @@ def build(request_id: str | None = None, use_case: str | None = None) -> Registr
               for spec in specs(request_id)]
     holder: dict = {}
     if code_calls_on(use_case):
-        served.append(_program_spec(holder))
+        served.append(_program_spec(holder, request_id))
     # Milestone 2 setup seam: every call passes the policy hook (policy/hook.py, myron) before it runs.
     registry = Registry(served, key_context=request_id, pre_call_hook=policy_hook.registry_hook(request_id),
                         loading=_loading(), always_loaded=ALWAYS_LOADED)

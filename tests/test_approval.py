@@ -6,12 +6,10 @@ and one it does not list asks. Plus: every decision logged, a run waiting for an
 the computed screen, and both test tasks with approvals: run end to end on a fake model.
 """
 
-import contextlib
 import json
 import subprocess
 import sys
 import unittest
-from unittest import mock
 
 import channel
 from agent import disclosure
@@ -81,21 +79,6 @@ class SendsAfterApproval:
                                        "figures": {"period": scope["period"], "total_revenue": query["total_revenue"],
                                                    "total_units": query["total_units"]}})
         return use("query_sales", {"period": scope["period"]})
-
-
-@contextlib.contextmanager
-def drafts_carry_the_line():
-    """Stands in for the drafting callers' with_disclosure (MERGE-CHECK: abraham's EmailGate and plan,
-    claudea's workflows add the line before draft_report_email; the hook refuses a send without it)."""
-    from agent import loop
-    real = loop.EmailGate.checked_email
-
-    def checked(self, draft):
-        out = real(self, draft)
-        return {**out, "body": disclosure.with_disclosure(out["body"])}
-
-    with mock.patch.object(loop.EmailGate, "checked_email", checked):
-        yield
 
 
 def lines(run) -> list[dict]:
@@ -220,11 +203,12 @@ class GateTest(ScratchTest):
             self.assertEqual(approvals.pending(), [])
 
     def test_decide_approval_resumes_the_run_through_the_one_resume_entry(self):
-        from agent import service
+        from agent import checkpoints, service
         from tests.fakes import FakeResume
         with fixed_run(TASK, "gate-resume"):
             _, registry, draft, _ = self.prepare("gate-resume")
             approval_id = registry.call("send_report_email", {"pending_id": draft["pending_id"]}, MODEL)["error"]["approval_id"]
+            checkpoints.set_wait("gate-resume", "approval", approval_id)
             with FakeResume().install() as resume:
                 service.decide_approval(approval_id, True, "ok")
         self.assertEqual(resume.calls, [("gate-resume", {"kind": "approval", "approval_id": approval_id,
@@ -233,11 +217,10 @@ class GateTest(ScratchTest):
 
 STEP = """
 import sys
-from tests.test_approval import drafts_carry_the_line
 from tests.support import fixed_run
 from harness import turns
 with fixed_run("tasks/approval_send_report.yaml", "gate-restart", backend="tests.test_approval:SendsAfterApproval",
-               overrides=["critique.report_email=off"], fresh=sys.argv[1] == "first"), drafts_carry_the_line():
+               overrides=["critique.report_email=off"], fresh=sys.argv[1] == "first"):
     if sys.argv[1] == "first":
         reply = turns.operator_turn("gate-restart", "Handle the new request on the outside channel, and send the report email.")
         assert "approval" in reply.text, reply.text
@@ -262,17 +245,15 @@ class ApprovalAcrossRestartTest(ScratchTest):
 
 class ApprovalTasksTest(ScratchTest):
     def test_the_approved_task_sends_once(self):
-        with drafts_carry_the_line():
-            record = self.run_task(TASK, "approval-yes", backend="tests.test_approval:SendsAfterApproval",
-                                   overrides=CRITIQUE_OFF)
+        record = self.run_task(TASK, "approval-yes", backend="tests.test_approval:SendsAfterApproval",
+                               overrides=CRITIQUE_OFF)
         self.assertTrue(record["passed"], record["check"])
         self.assertEqual(record["measures"]["sends"], 1)
         self.assertEqual(record["approvals"]["answered"], 1)
 
     def test_the_declined_task_sends_nothing(self):
-        with drafts_carry_the_line():
-            record = self.run_task("tasks/approval_send_declined.yaml", "approval-no",
-                                   backend="tests.test_approval:SendsAfterApproval", overrides=CRITIQUE_OFF)
+        record = self.run_task("tasks/approval_send_declined.yaml", "approval-no",
+                               backend="tests.test_approval:SendsAfterApproval", overrides=CRITIQUE_OFF)
         self.assertTrue(record["passed"], record["check"])
         self.assertEqual(record["measures"]["sends"], 0)
 

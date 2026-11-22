@@ -96,7 +96,7 @@ def live(session_id: str) -> list[str]:
 
 
 # A run that ends its turn for one of these has not finished: it waits, and resumes when a call reaches it.
-WAITING = ("needs_answer", "awaiting_approval", "held", "stopped")
+WAITING = ("needs_answer", "awaiting_approval", "held", "stopped", "unsettled_write")
 
 
 def end(run_key: str | None, reason: str) -> None:

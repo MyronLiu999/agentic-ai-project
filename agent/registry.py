@@ -17,6 +17,7 @@ from types import SimpleNamespace
 from typing import Callable
 
 from harness.schema import errors as schema_errors
+from agent.exits import UnsettledWrite
 
 MODEL, CODE, OPERATOR = "model", "code", "operator"
 CALLERS = (MODEL, CODE, OPERATOR)
@@ -286,6 +287,9 @@ class Registry:
                 )
                 return self._record(name, normalized, caller, step, key, result, started, attempts,
                                     outcome="ambiguous", trace_step=trace_step)
+            except UnsettledWrite:
+                # A nested program raised a durable operator hold, not a repairable tool error.
+                raise
             except Exception as exc:  # the registry turns tool failures into the public error contract
                 retryable = isinstance(exc, TransientToolError)
                 if spec.retryable is not None:
@@ -337,6 +341,13 @@ class Registry:
             return {"compensated_by": f"compensate:{spec.name}", "result": output}
         from agent import compensations      # claudea's table (C4), for every tool without its own
         return compensations.compensate(call_record)
+
+    def write_key(self, name: str, args: dict, *, step: str | None = None) -> str | None:
+        """The same normalized identity used by call, for durable outcome inspection."""
+        spec = self._specs.get(name)
+        if spec is None or not spec.writes:
+            return None
+        return self._write_key(spec, _normalize_enums(copy.deepcopy(args), spec.input_schema), step)
 
     def _write_key(self, spec: ToolSpec, args: dict, step: str | None) -> str:
         identity = {field: _canonical_identity(_nested_value(args, field)) for field in spec.key_fields}
@@ -453,6 +464,10 @@ def _canonical_identity(value):
 def _scope_id() -> str:
     try:
         from harness import runtime
+
+        run_key = _run_key()
+        if run_key:
+            return run_key
 
         run = runtime.current_run()
         if run is not None:

@@ -4,10 +4,9 @@ import sys
 from unittest import mock
 
 import channel
-from agent import checkpoints, outside, runs
+from agent import checkpoints, outside, runs, tools
 from harness import runtime, turns
 from tests.support import ScratchTest, fixed_run, check_run
-from tests.fixtures.outside_m2 import install
 
 TASK = 'tasks/outside_units.yaml'
 REQUEST = 'REQ-SYN-thread-outside'
@@ -44,18 +43,30 @@ class OutsideTest(ScratchTest):
             self.assertEqual(len(writes), 1)
 
     def test_model_question_stops_before_later_write_and_waits_for_reply(self):
-        from agent import loop
-        from tests.fixtures.outside_m2 import build
+        from agent import disclosure, loop
+        from sandbox import reports
         with fixed_run(TASK, 'model-question', backend='harness.scripted:SaysDone'):
             runs.new_run('model-question')
             state = {'run_key': 'model-question', 'path': 'agent', 'request_id': REQUEST,
                      'operator_text': 'Handle request.', 'conversation': [{'role': 'user', 'content': 'task'}],
-                     'pending_calls': [{'id': 'q', 'name': 'ask_stranger', 'input': {'question': 'Which units?'}}]}
+                     'pending_calls': [{'id': 'q', 'name': 'ask_stranger', 'input': {'question': 'Which units?'}},
+                                       {'id': 'save', 'name': 'save_report',
+                                        'input': {'kind': 'standard', 'figures': {}, 'body': 'Too soon.'}}]}
             checkpoints.save('model-question', state)
-            result = loop.resume_from(state, {'kind': 'crash'}, registry=build(REQUEST))
+            result = loop.resume_from(state, {'kind': 'crash'}, registry=tools.build(REQUEST))
+            self.assertEqual(result.reason, 'awaiting_approval')
+            wait = checkpoints.waiting()[0]
+            self.assertEqual(wait['kind'], 'approval')
+            self.assertEqual([m for m in channel.messages('SYN-thread-outside') if m.sender == 'agent'], [])
+            self.assertEqual(reports.for_request(REQUEST), [])
+            result = turns.decide_approval(wait['ref'], True)
             self.assertEqual(result.waiting_for, 'SYN-thread-outside')
             self.assertEqual(checkpoints.waiting()[0]['kind'], 'outside')
             self.assertEqual(outside.statuses()['SYN-thread-outside']['status'], 'waiting')
+            sent = [m for m in channel.messages('SYN-thread-outside') if m.sender == 'agent']
+            self.assertEqual(len(sent), 1)
+            self.assertTrue(disclosure.has_line(sent[0].text))
+            self.assertEqual(reports.for_request(REQUEST), [])
 
     def test_crash_after_parse_keeps_clarification_and_tool_result(self):
         from agent import loop, stop
@@ -77,8 +88,7 @@ class OutsideTest(ScratchTest):
             checkpoints.save('parse-crash', state)
             with mock.patch('agent.stop.after_call', side_effect=Crash), self.assertRaises(Crash):
                 loop.resume_from(state, {'kind': 'crash'}, registry=reg)
-            with install():
-                result = loop.resume_from(checkpoints.load('parse-crash'), {'kind': 'crash'}, registry=reg)
+            result = loop.resume_from(checkpoints.load('parse-crash'), {'kind': 'crash'}, registry=reg)
             self.assertEqual(result.waiting_for, 'SYN-thread-outside')
             self.assertEqual([c['name'] for c in reg.calls], ['parse_file'])
             saved = checkpoints.load('parse-crash')
@@ -108,17 +118,15 @@ class OutsideTest(ScratchTest):
             self.assertEqual(result.reason, 'done')
 
     def test_exchange_uses_reply_and_does_not_ask_twice(self):
-        with install():
-            record = self.run_task(TASK, 'outside', backend='tests.fixtures.outside_m2:OutsideModel')
+        record = self.run_task(TASK, 'outside', backend='tests.fixtures.outside_m2:OutsideModel')
         self.assertTrue(record['passed'], record['check'])
         self.assertEqual(record['measures']['questions_asked'], 1)
 
     def test_wait_survives_process_restart(self):
         setup = '''
 from tests.support import fixed_run
-from tests.fixtures.outside_m2 import install
 from harness import turns
-with fixed_run('tasks/outside_units.yaml', 'outside-restart', backend='tests.fixtures.outside_m2:OutsideModel', fresh=FRESH), install():
+with fixed_run('tasks/outside_units.yaml', 'outside-restart', backend='tests.fixtures.outside_m2:OutsideModel', fresh=FRESH):
     REPLY
 '''
         first = setup.replace('FRESH', 'True').replace('REPLY',
@@ -133,7 +141,7 @@ with fixed_run('tasks/outside_units.yaml', 'outside-restart', backend='tests.fix
         self.assertEqual(checkpoints.waiting(), [])
 
     def test_template_does_not_promote_arbitrary_text_to_code(self):
-        with fixed_run(TASK, 'template'), install():
+        with fixed_run(TASK, 'template'):
             runs.new_run('template')
             checkpoints.update('template', path='agent', request_id=REQUEST)
             with self.assertRaises(ValueError):
@@ -142,7 +150,7 @@ with fixed_run('tasks/outside_units.yaml', 'outside-restart', backend='tests.fix
 
     def test_expired_or_human_reply_holds_without_resuming(self):
         for answer, deadline in [('human', None), ('units_column=measure_a', '2000-01-01T00:00:00+00:00')]:
-            with self.subTest(answer=answer), fixed_run(TASK, 'held'), install():
+            with self.subTest(answer=answer), fixed_run(TASK, 'held'):
                 runs.new_run('held')
                 checkpoints.update('held', path='agent', request_id=REQUEST)
                 outside.ask('held', '', template='units_column')
@@ -154,8 +162,7 @@ with fixed_run('tasks/outside_units.yaml', 'outside-restart', backend='tests.fix
                 self.assertTrue(checkpoints.load('held')['held'])
 
     def test_duplicate_reply_does_not_resume_finished_run(self):
-        with install():
-            record = self.run_task(TASK, 'once', backend='tests.fixtures.outside_m2:OutsideModel')
+        record = self.run_task(TASK, 'once', backend='tests.fixtures.outside_m2:OutsideModel')
         with fixed_run(TASK, record['run_id'], fresh=False), mock.patch('agent.runs.resume', side_effect=AssertionError('duplicate')):
             self.assertIn('waiting', turns.outside_reply('SYN-thread-outside', 'units_column=measure_a').text)
 
@@ -164,7 +171,7 @@ with fixed_run('tasks/outside_units.yaml', 'outside-restart', backend='tests.fix
         for index, later in enumerate(('units_column=measure_b', 'human', 'not a column')):
             run_id = f'stopped-first-answer-{index}'
             with self.subTest(later=later), fixed_run(
-                    TASK, run_id, backend='tests.fixtures.outside_m2:OutsideModel'), install():
+                    TASK, run_id, backend='tests.fixtures.outside_m2:OutsideModel'):
                 first = turns.operator_turn(run_id, 'Handle the new request; save only the report.')
                 self.assertEqual(first.waiting_for, 'SYN-thread-outside')
                 parsed = checkpoints.load(run_id)['outside_parsed']
@@ -194,7 +201,7 @@ with fixed_run('tasks/outside_units.yaml', 'outside-restart', backend='tests.fix
         for stopped in (False, True):
             run_id = f'outside-queue-{stopped}'
             with self.subTest(stopped=stopped), fixed_run(
-                    TASK, run_id, backend='tests.fixtures.outside_m2:OutsideModel'), install():
+                    TASK, run_id, backend='tests.fixtures.outside_m2:OutsideModel'):
                 reply = turns.operator_turn(run_id, 'Handle the new request; save only the report.')
                 self.assertEqual(reply.waiting_for, 'SYN-thread-outside')
                 if stopped:

@@ -58,13 +58,16 @@ def operator_turn(session_id: str, text: str) -> Reply:
         rules.add_rule(session_id, rule)
         notes.record(session_id, 'operator', text)
         return Reply('The stated limit is recorded and applies before subsequent tool calls.')
-    live = runs.live(session_id)
-    if not busy and len(live) == 1 and not text.lstrip().startswith('/'):
-        state = checkpoints.load(live[0]) or {}
-        from policy import flags
-        if (state.get('path') and not state.get('waiting_for') and not state.get('held')
-                and not flags.is_stopped(live[0])):
-            return continue_run(live[0], {'kind': 'operator_turn', 'text': text})
+    if not text.lstrip().startswith('/'):
+        with _session_lock:
+            crashed = _resumable_crashes(session_id) if session_id not in _active_sessions else []
+            # A plain turn remains queued work; /add is the way to change an interrupted task.
+            taken = messages.intercept(session_id, text) if crashed else None
+        if crashed:
+            reply = continue_run(crashed[0], {'kind': 'crash'})
+            if taken is not None:
+                reply.text = taken.text + '\n' + reply.text
+            return reply
     with _session_lock:
         active = session_id in _active_sessions
         live = runs.live(session_id)
@@ -157,14 +160,30 @@ def _refresh_session_status(session_id):
             inbox.set_status(rid, 'awaiting_answer' if state['waiting_for']['kind'] == 'outside' else 'awaiting_approval')
 
 
+def _resumable_crashes(session_id):
+    from agent import checkpoints, runs
+    from policy import flags
+    candidates = []
+    for key in runs.crashed(session_id):
+        state = checkpoints.load(key) or {}
+        if (state.get('path') and not state.get('waiting_for') and not state.get('cancelled')
+                and not flags.is_stopped(key)):
+            candidates.append(key)
+    return candidates
+
+
 def continue_run(run_key, event):
     """All external continuation events share the same execution ownership and queue drain."""
     from agent import checkpoints, runs
     session_id = runs.session_of(run_key)
     with _session_lock:
         if session_id in _active_sessions:
+            if event.get('kind') == 'crash':
+                return Reply('The interrupted run is already continuing; your message remains queued.')
             checkpoints.update(run_key, resume_requested=event)
             return Reply('The answer is saved; the current call will finish before this run continues.')
+        if event.get('kind') == 'crash' and run_key not in _resumable_crashes(session_id):
+            return Reply('This run is no longer eligible for crash recovery; your message remains queued.')
         _active_sessions.add(session_id)
     try:
         reply = runs.resume(run_key, event)

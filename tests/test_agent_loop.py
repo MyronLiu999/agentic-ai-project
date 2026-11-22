@@ -3,7 +3,7 @@
 import json
 from unittest import mock
 
-from agent import bounds, critique, loop
+from agent import bounds, critique, disclosure, loop
 from harness import runtime
 from harness.client import Usage
 from sandbox import inbox, pending, reports
@@ -175,7 +175,9 @@ class AgentLoopTest(ScratchTest):
             self.assertEqual(result.reason, "done")
             records = pending.all_pending()
             self.assertEqual(len(records), 1)
-            self.assertEqual((records[0]["body"], records[0]["report_id"]), ("Checked body", args["report_id"]))
+            self.assertEqual((records[0]["body"], records[0]["report_id"]),
+                             (f"Checked body\n\n{disclosure.LINE}", args["report_id"]))
+            self.assertEqual(records[0]["body"].count(disclosure.LINE), 1)
 
     def test_held_critique_blocks_email_and_later_calls(self):
         with fixed_run(TASK, "held", backend=BACKEND):
@@ -227,7 +229,12 @@ class AgentLoopTest(ScratchTest):
             purposes = [e["purpose"] for e in runtime.trace().lines() if e["type"] == "model_call"]
             self.assertEqual(purposes, ["agent_step", "critique_revision", "agent_step"])
             feedback = json.loads(model.requests[2]["messages"][-1]["content"][0]["content"])
-            self.assertEqual(feedback["executed_input"], {**args, **revision})
+            expected_body = f"Checked\n\n{disclosure.LINE}"
+            self.assertEqual(feedback["executed_input"], {**args, **revision, "body": expected_body})
+            drafted = pending.all_pending()
+            self.assertEqual(len(drafted), 1)
+            self.assertEqual(drafted[0]["body"], expected_body)
+            self.assertEqual(drafted[0]["body"].count(disclosure.LINE), 1)
             tool_lines = [e for e in runtime.trace().lines() if e["type"] == "tool_call"]
             self.assertEqual(tool_lines[0]["step"], 1)
 

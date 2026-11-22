@@ -10,7 +10,7 @@ import math
 import re
 from pathlib import Path
 
-from agent import approvals, bounds, checkpoints, context, disclosure, events, loop, messages, runs, stop, tools
+from agent import approvals, bounds, checkpoints, context, disclosure, events, exits, loop, messages, runs, stop, tools
 from agent.registry import MODEL
 from harness import runtime
 from harness.paths import state_dir
@@ -641,6 +641,8 @@ class _Batch:
             if len(self.guard.outputs) != len(self.guard.steps):
                 raise PlanError("Unresolved planned work remains")
             return self.finish(events.DONE, "All planned actions have verified results; pending drafts require operator sending.")
+        except exits.UnsettledWrite as exc:
+            return self.finish(events.UNSETTLED_WRITE, str(exc))
         except _Pause as exc:
             return self.finish(exc.reason, exc.text)
         except stop.ControlStopped as exc:
@@ -662,12 +664,13 @@ class _Batch:
             raise _Replan(self.revision_feedback)
         rid, name, sid = step["request_id"], step["tool"], step["id"]
         args = resolve(step["args"], self.guard.outputs, request=self.requests[rid])
-        if self.pending_call and self.pending_call.get("step_id") == sid:
+        prepared = self.pending_call and self.pending_call.get("step_id") == sid
+        if prepared:
             args = deepcopy(self.pending_call["args"])
         validate_args(name, args, allow_fills=False)
         if not self.guard.authorize(sid, rid, name, args):
             raise PlanError("Off-plan call refused")
-        if name == "draft_report_email":
+        if name == "draft_report_email" and not prepared:
             gate = loop.EmailGate(rid, self.model_call, self.check,
                                   fixed_recipient=self.requests[rid]["contact_email"])
             try:
@@ -692,9 +695,13 @@ class _Batch:
         self.guard.track(rid, name, args)
         self.pending_call = {"step_id": sid, "tool": name, "request_id": rid, "args": deepcopy(args)}
         self.save(current_step=sid)
+        checkpoints.before_step(self.run_key, {"path": "agent", "kind": "tool_call", "tool": name,
+                                              "args": deepcopy(args), "step": sid, "request_id": rid})
         if name not in READS:
             stop.notice(self.run_key)
         result = self.registries[rid].call(name, deepcopy(args), MODEL, step=sid)
+        result = exits.resolve(self.registries[rid], name, args, MODEL, result,
+                               request_id=rid, run_key=self.run_key, step=sid)
         if not result["ok"] or result["is_error"]:
             error = result.get("error") or {}
             if error.get("type") == "approval_required":

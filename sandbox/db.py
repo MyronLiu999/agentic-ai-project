@@ -38,6 +38,8 @@ CREATE TABLE IF NOT EXISTS charts (
     values_json TEXT NOT NULL, path TEXT NOT NULL, key TEXT NOT NULL UNIQUE, stamp TEXT NOT NULL, created_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS email_packages (
     pending_id INTEGER PRIMARY KEY, message_id INTEGER, payload_json TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS delivery_receipts (
+    pending_id INTEGER PRIMARY KEY, message_id INTEGER NOT NULL UNIQUE, body TEXT NOT NULL);
 """
 
 FILENAME = "sales.sqlite3"

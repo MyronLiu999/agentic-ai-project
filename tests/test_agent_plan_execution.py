@@ -4,7 +4,7 @@ from copy import deepcopy
 import json
 from unittest import mock
 
-from agent import bounds, critique, plan
+from agent import bounds, critique, disclosure, plan
 from harness import runtime, turns
 from harness.client import Usage
 from harness.paths import state_dir
@@ -179,12 +179,18 @@ class AgentPlanExecutionTest(ScratchTest):
             raw["steps"][3]["expect"]["value"] = 10**12
             revised = deepcopy(raw)
             revised["steps"][3]["expect"]["value"] = 0
+            # The first email has already been amended and written. Replanning
+            # must preserve that completed prefix, including its disclosure.
+            revised["steps"][2]["args"]["body"] = f"Report ready.\n\n{disclosure.LINE}"
             self.script(raw, revised)
             self.run_plan((RID, other))
             self.assertEqual(self.reason(), "done")
             self.assertEqual(len(reports.for_request(RID)), 1)
             self.assertEqual(len(pending.for_request(RID)), 1)
             self.assertEqual(len(pending.for_request(other)), 1)
+            for drafted in pending.all_pending():
+                self.assertEqual(drafted["body"], f"Report ready.\n\n{disclosure.LINE}")
+                self.assertEqual(drafted["body"].count(disclosure.LINE), 1)
             self.assertTrue(any(e["type"] == "repeat_call" for e in runtime.trace().lines()))
 
     def test_replanner_cannot_rewrite_completed_effects(self):
@@ -275,12 +281,17 @@ class AgentPlanExecutionTest(ScratchTest):
                 self.run_plan()
             self.assertEqual(self.reason(), "done")
             self.assertEqual(pending.all_pending()[0]["recipient"], "contact@brightline.example")
-            self.assertEqual(pending.all_pending()[0]["body"], "Checked")
+            expected_body = f"Checked\n\n{disclosure.LINE}"
+            self.assertEqual(len(pending.all_pending()), 1)
+            self.assertEqual(pending.all_pending()[0]["body"], expected_body)
+            self.assertEqual(pending.all_pending()[0]["body"].count(disclosure.LINE), 1)
             self.assertEqual(len(model.requests), 2)
             lines = runtime.trace().lines()
             amended = next(i for i, e in enumerate(lines) if e["type"] == "plan" and e.get("approved_by") == "critique")
             written = next(i for i, e in enumerate(lines) if e["type"] == "tool_call" and e["name"] == "draft_report_email")
             self.assertLess(amended, written)
+            self.assertEqual(lines[amended]["plan"]["steps"][-1]["args"]["body"], expected_body)
+            self.assertEqual(lines[written]["input"]["body"], expected_body)
 
     def test_planner_tokens_stop_execution_before_any_tools(self):
         with fixed_run(TASK, "plan-budget", backend=MODEL):

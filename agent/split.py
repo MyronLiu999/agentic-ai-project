@@ -13,7 +13,7 @@ import hashlib
 import json
 import math
 
-from agent import bounds, checkpoints, context, critique, events, loop, messages, runs, stop, tools
+from agent import bounds, checkpoints, context, critique, events, exits, loop, messages, runs, stop, tools
 from agent.registry import MODEL
 from harness import runtime
 from harness.client import BudgetExceeded, ModelResponse, ToolCall, Usage, tool_result
@@ -468,8 +468,14 @@ class _Coordinator:
                 if self.role == "writer":
                     stop.notice(self.run_key)
                 logical_step = f"{self.run_key}:split-{self.state['request_index']}-{self.role}-{call.name}"
+                checkpoints.before_step(self.run_key, {"path": "agent", "kind": "tool_call", "tool": call.name,
+                                                      "args": deepcopy(args), "step": logical_step,
+                                                      "request_id": self.rid})
                 result = self.registries[self.rid].call(call.name, args, MODEL, step=logical_step,
                                                        trace_step=self.state["rounds"])
+                result = exits.resolve(self.registries[self.rid], call.name, args, MODEL, result,
+                                       request_id=self.rid, run_key=self.run_key, step=logical_step,
+                                       trace_step=self.state["rounds"])
                 if not result.get("ok") or result.get("is_error"):
                     error = result.get("error") or {}
                     if error.get("type") == "approval_required":
@@ -524,6 +530,8 @@ class _Coordinator:
                    "spent": {"tool_calls": 0, "tokens": 0}, "not_determined": [str(exc)]}
             self.return_contract(raw, generated=True)
             return self.finish(getattr(exc, "reason", events.AGENT_BUDGET), "The shared split budget ended; no later role ran.")
+        except exits.UnsettledWrite as exc:
+            return self.finish(events.UNSETTLED_WRITE, str(exc))
         except stop.ControlStopped as exc:
             return self.finish(exc.reason, "The operator stopped the split; completed effects are saved.")
         except _Pause as exc:
@@ -532,7 +540,7 @@ class _Coordinator:
             return self.finish(events.PLAN_REJECTED, str(exc))
 
     def finish(self, reason, text):
-        self.save(end_reason=reason, held=reason == events.HELD)
+        self.save(end_reason=reason, held=reason in (events.HELD, events.UNSETTLED_WRITE))
         checkpoints.to_trace(self.trace, self.run_key)
         runs.end(self.run_key, reason)
         self.trace.end(reason, detail=text)

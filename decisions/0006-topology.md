@@ -1,8 +1,9 @@
 # 0006: Keep one agent for the sales analyst
 
 Owner: Abraham. Decision date: 2026-11-20. Status: single agent by default. The experimental split code is
-included in `main` at the 2026-11-22 integration; the merged task matrix still needs the fixes recorded in
-`docs/superpowers/plans/2026-11-22-m2-integration.md`. No matched-budget benefit has been established.
+included in `main` at the 2026-11-22 integration. The merged task matrix uses the real MCP and approval
+contracts; current verification is recorded in [integration evidence](../docs/milestones/M2-integration-evidence.json).
+No matched-budget benefit has been established.
 
 ## What would have to cross between components?
 

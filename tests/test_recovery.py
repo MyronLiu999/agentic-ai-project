@@ -1,97 +1,173 @@
-"""The recovery test (Milestone 2, Part 1 task 2; owner: claudea, C5).
+"""Eleven real-process crash/restart cases with task checks and exact effects.
 
-On every test task that makes a write, kill the process with SIGKILL during its last write, after the sandbox
-commits it and before the system records it; resume in a new process under the same run ID. Then: the task's
-check passes, the sandbox holds one effect per intended write, and the resume repeated no completed call.
-
-RECOVERY_TASKS is the list. To cover a new task that writes, add one line: its file, and the sandbox function its
-last write commits through. (abraham adds his and myron's new tasks here at the merge, T2c, with their
-before / after crash / after resume rows in M2.md.)
+Each target names the last intended write, its request, and its occurrence for
+that request. The MCP child kills both processes after the sandbox commit and
+before its response; a fresh driver resumes and finishes the durable task script.
 """
 
 import json
 import os
+from pathlib import Path
+import signal
 import subprocess
 import sys
+import tempfile
 import unittest
 
+from tests.recovery_mcp import write_json
 from tests.support import ScratchTest, check_run
 
-RECOVERY_TASKS = [
-    # (task file, the sandbox function the task's last write commits through)
-    ("tasks/standard_report_clean.yaml", "sandbox.pending:add"),        # workflow: 6-email is the last write
-    ("tasks/out_of_scope_margins.yaml", "sandbox.pending:add"),         # workflow: the one decline
-    ("tasks/messy_file_semicolon.yaml", "sandbox.pending:add"),         # agent loop: the email draft
-    ("tasks/compare_check_last_quarter.yaml", "sandbox.pending:add"),   # agent loop: the email draft
-    ("tasks/memory_subject_preference.yaml", "sandbox.pending:add"),    # workflow, a later session's task
-    # MERGE-CHECK (abraham): tasks/batch_reports_two.yaml runs on agent/plan.py, which saves no checkpoint yet;
-    # add it here once plan.py calls checkpoints.before_step / start (PLAN_M2.md 3.3).
-]
 
-# One effect per intended write: what each task's run should leave, in rows stamped with its run ID.
-EXPECTED = {
-    "standard_report_clean": {"reports": 1, "pending": 1, "charts": 1},
-    "out_of_scope_margins": {"reports": 0, "pending": 1, "charts": 0},
-    "messy_file_semicolon": {"pending": 1, "reports": 1},
-    "compare_check_last_quarter": {"pending": 1, "reports": 1},
-    "memory_subject_preference": {"reports": 1, "pending": 1, "charts": 1},
-}
+def case(task, thread, *, tool="draft_report_email", commit="sandbox.pending:add",
+         reports=1, pending=1, charts=1, sent=0, messages=0, answers=0):
+    return {"task": "tasks/" + task + ".yaml",
+            "target": {"tool": tool, "request_id": "REQ-" + thread, "occurrence": 1, "commit": commit},
+            "expected": {"reports": reports, "pending": pending, "charts": charts,
+                         "sent_drafts": sent, "agent_messages": messages, "outside_answers": answers}}
+
+
+RECOVERY_TASKS = [
+    case("standard_report_clean", "SYN-thread-1001"),
+    case("out_of_scope_margins", "SYN-thread-1501", tool="draft_clarifying_question", reports=0, charts=0),
+    case("messy_file_semicolon", "SYN-thread-1101"),
+    case("compare_check_last_quarter", "SYN-thread-1201"),
+    case("memory_subject_preference", "SYN-thread-1601"),
+    case("batch_reports_two", "SYN-thread-1302", reports=2, pending=2, charts=2),
+    case("outside_units", "SYN-thread-outside", tool="save_report", commit="sandbox.reports:save",
+         sent=1, messages=1, answers=1),
+    case("approval_send_report", "SYN-thread-1401", tool="send_report_email",
+         commit="sandbox.email_packages:link_message", charts=0, sent=1, messages=1),
+    case("approval_send_declined", "SYN-thread-1402", charts=0),
+    case("escalation_conflicting_figure", "SYN-thread-1403"),
+    case("sessions/long_campaign", "SYN-thread-long-4", reports=4, pending=4, charts=0),
+]
 
 
 def _child(*args, env):
-    return subprocess.run([sys.executable, "-m", "tests.recovery_child", *args], env=env, capture_output=True,
-                          text=True, timeout=120)
+    return subprocess.run([sys.executable, "-m", "tests.recovery_child", *args], env=env,
+                          capture_output=True, text=True, timeout=120)
+
+
+def _lines(path):
+    return [json.loads(line) for line in path.read_text().splitlines() if line.strip()] if path.exists() else []
+
+
+def _completed_identity(line):
+    return (line["name"], json.dumps(line.get("input"), sort_keys=True))
 
 
 class RecoveryTest(ScratchTest):
-    def _crash_and_resume(self, task_file, die_on):
-        from harness import tasks
-        from tests.recovery_child import counts
-
-        task_id = tasks.read(task_file)["id"] if hasattr(tasks, "read") else os.path.basename(task_file)[:-5]
-        run_id = f"recover-{task_id}"
-        snapshot = str(self.tmp / f"{task_id}.before.json")
-        env = dict(os.environ)
-
-        crashed = _child("crash", task_file, run_id, die_on, snapshot, env=env)
-        self.assertEqual(crashed.returncode, -9, f"the kill never fired:\n{crashed.stdout}\n{crashed.stderr}")
-        with open(snapshot) as fh:
-            before = json.load(fh)
-        after_crash = counts(run_id)
-
-        resumed = _child("resume", task_file, run_id, env=env)
-        self.assertEqual(resumed.returncode, 0, resumed.stderr[-2000:])
-        after_resume = counts(run_id)
-        return task_id, run_id, before, after_crash, after_resume, resumed
-
     def test_every_task_that_writes_survives_a_kill_during_its_last_write(self):
+        from agent import checkpoints
+        from harness import tasks
+        from harness.paths import state_dir
+        from tests.recovery_child import counts
         from tests.support import _trace_path
-        rows = []
-        for task_file, die_on in RECOVERY_TASKS:
-            with self.subTest(task=task_file):
-                task_id, run_id, before, after_crash, after_resume, resumed = self._crash_and_resume(task_file, die_on)
-                rows.append((task_id, before, after_crash, after_resume))
 
-                result = check_run(task_file, run_id)
-                self.assertTrue(result["passed"], result["reason"])
-
-                for table, n in EXPECTED[task_id].items():
-                    self.assertEqual(after_resume[table], n, f"{table}: one effect per intended write")
-                self.assertEqual(after_crash["pending"], 1, "the crash came after the sandbox committed the write")
-
-                with open(_trace_path(run_id)) as fh:
-                    lines = [json.loads(l) for l in fh if l.strip()]
-                resume_at = next(i for i, l in enumerate(lines) if l.get("type") == "resume")
-                done_before = {(l["name"], json.dumps(l.get("input"), sort_keys=True))
-                               for l in lines[:resume_at] if l.get("type") == "tool_call" and l.get("outcome") == "ok"}
-                again = [(l["name"], json.dumps(l.get("input"), sort_keys=True))
-                         for l in lines[resume_at:] if l.get("type") == "tool_call" and l.get("outcome") == "ok"]
-                self.assertEqual([c for c in again if c in done_before], [], "the resume repeated a completed call")
-                if os.environ.get("RECOVERY_TABLE"):
-                    after = [(l["name"], l.get("outcome")) for l in lines[resume_at:] if l.get("type") == "tool_call"]
-                    hits = [l.get("type") for l in lines[resume_at:] if l.get("type") in ("journal_hit",)]
-                    print(f"| {task_id} | {before} | {after_crash} | {after_resume} | resume calls: {after} | "
-                          f"{json.loads(resumed.stdout)} |")
+        evidence_path = Path(os.environ.get("RECOVERY_EVIDENCE") or
+                             (Path(tempfile.mkdtemp(prefix="m2-recovery-")) / "evidence.json"))
+        evidence = {"kind": "free synthetic real-MCP crash/restart matrix", "cases": []}
+        selected = os.environ.get("RECOVERY_TASK")
+        cases = [c for c in RECOVERY_TASKS if not selected or Path(c["task"]).stem == selected]
+        self.assertTrue(cases, f"Unknown RECOVERY_TASK: {selected}")
+        for spec in cases:
+            with self.subTest(task=spec["task"]):
+                task = tasks.load(Path(spec["task"]))
+                task_id, run_id = task["id"], "recover-" + task["id"]
+                progress = self.tmp / (task_id + ".script.json")
+                row = {"task": task_id, "target": spec["target"], "expected": spec["expected"], "passed": False}
+                evidence["cases"].append(row)
+                try:
+                    crashed = _child("crash", spec["task"], run_id, json.dumps(spec["target"]), str(progress),
+                                     env=dict(os.environ))
+                    row["crash_returncode"] = crashed.returncode
+                    self.assertEqual(crashed.returncode, -signal.SIGKILL,
+                                     f"The selected MCP commit did not kill the driver:\n{crashed.stdout}\n{crashed.stderr}")
+                    row["before"] = json.loads(progress.with_suffix(".before.json").read_text())
+                    self.assertTrue(all(value == 0 for value in row["before"].values()))
+                    row["after_crash"] = counts(run_id)
+                    boundary = json.loads(progress.with_suffix(".boundary.json").read_text())
+                    row["boundary"] = boundary
+                    self.assertNotEqual(boundary["server_pid"], boundary["driver_pid"])
+                    self.assertEqual(boundary["tool"], spec["target"]["tool"])
+                    self.assertEqual(boundary["context"]["request_id"], spec["target"]["request_id"])
+                    self.assertEqual(boundary["occurrence"], spec["target"]["occurrence"])
+                    self.assertEqual(row["after_crash"], spec["expected"], "Crash must follow the last intended effect")
+                    self.assertIsNone(checkpoints.completed(run_id, boundary["context"]["key"]),
+                                      "The selected write must not have reached registry journaling")
+                    before_lines = _lines(_trace_path(run_id))
+                    before_mcp = _lines(state_dir() / "mcp_calls.jsonl")
+                    resumed = _child("resume", spec["task"], run_id, str(progress), env=dict(os.environ))
+                    row["resume_returncode"] = resumed.returncode
+                    self.assertEqual(resumed.returncode, 0, resumed.stderr[-6000:])
+                    result = json.loads(resumed.stdout)
+                    row["after_resume"] = counts(run_id)
+                    row["check"] = check_run(spec["task"], run_id, replies=result["replies"])
+                    self.assertTrue(result["complete"])
+                    self.assertTrue(row["check"]["passed"], row["check"]["reason"])
+                    self.assertEqual(row["after_resume"], spec["expected"], "Exactly one effect per intended write")
+                    self.assertEqual(sum(r["function"] == "operator_turn" for r in result["replies"]),
+                                     len(task["operator"]), "Every scripted operator turn must retain its reply")
+                    script = json.loads(progress.read_text())
+                    row["script"] = {"operator_index": script["operator_index"],
+                                     "approval_index": script["approval_index"], "outside": script["outside"],
+                                     "complete": script["complete"], "replies": script["replies"],
+                                     "events": [{k: v for k, v in e.items() if k not in ("text", "reply")}
+                                                for e in script["events"]]}
+                    self.assertEqual(script["approval_index"], len(tasks.scripted_answers(task)))
+                    self.assertEqual(sum(e["resumed"] for e in script["events"]), 1)
+                    after_lines = _lines(_trace_path(run_id))[len(before_lines):]
+                    row["recovered_reply_count"] = sum(l.get("type") == "reply" and l.get("crash_resume", False)
+                                                       for l in after_lines)
+                    self.assertEqual(row["recovered_reply_count"], 1)
+                    self.assertTrue(any(l.get("type") == "resume" and l.get("event_kind") == "crash"
+                                        for l in after_lines))
+                    # Subsequent operator turns can deliberately read the same
+                    # data. Only the resumed interrupted execution is replay.
+                    next_operator = next((i for i, l in enumerate(after_lines) if l.get("type") == "operator"),
+                                         len(after_lines))
+                    replay_lines = after_lines[:next_operator]
+                    completed = {_completed_identity(l) for l in before_lines
+                                 if l.get("type") == "tool_call" and l.get("outcome") == "ok"}
+                    repeated = [_completed_identity(l) for l in replay_lines
+                                if l.get("type") == "tool_call" and l.get("outcome") == "ok"
+                                and _completed_identity(l) in completed]
+                    row["repeated_completed_calls"] = repeated
+                    self.assertEqual(repeated, [], "Resume repeated a call completed before the crash")
+                    done_keys = {c["key"] for c in before_mcp if c.get("key") and c.get("outcome") == "ok"}
+                    after_mcp = _lines(state_dir() / "mcp_calls.jsonl")[len(before_mcp):]
+                    row["repeated_completed_mcp_writes"] = [c["key"] for c in after_mcp
+                                                             if c.get("key") in done_keys]
+                    self.assertEqual(row["repeated_completed_mcp_writes"], [],
+                                     "A completed write physically reached the MCP server again")
+                    row["resume_calls"] = [{"name": l["name"], "outcome": l.get("outcome")}
+                                           for l in replay_lines if l.get("type") == "tool_call"]
+                    if task_id == "escalation_conflicting_figure":
+                        from checks.common import report_email_problems
+                        from types import SimpleNamespace
+                        problems, _ = report_email_problems(SimpleNamespace(run_id=run_id, state_dir=state_dir()),
+                                                            task["input"])
+                        self.assertEqual(problems, [], "The correction must match the database revenue")
+                        self.assertEqual(row["check"]["measures"]["escalations"], 0)
+                        self.assertIsNone((checkpoints.load(run_id) or {}).get("held"))
+                    if task_id == "outside_units":
+                        self.assertEqual(script["outside"][0]["answered"], 1)
+                    if task_id.startswith("approval_send_"):
+                        measures = row["check"]["measures"]
+                        self.assertEqual(measures["approvals_asked"], 1)
+                        self.assertEqual(measures["approvals_approved"], int(task_id == "approval_send_report"))
+                        self.assertEqual(measures["approvals_rejected"], int(task_id == "approval_send_declined"))
+                    row["passed"] = True
+                except Exception as exc:
+                    row["error"] = str(exc)
+                    raise
+                finally:
+                    write_json(evidence_path, evidence)
+        if os.environ.get("RECOVERY_TABLE"):
+            print(f"Recovery evidence: {evidence_path}")
+            for row in evidence["cases"]:
+                print(f"| {row['task']} | {row.get('before')} | {row.get('after_crash')} | "
+                      f"{row.get('after_resume')} | passed={row['passed']} |")
 
 
 if __name__ == "__main__":
