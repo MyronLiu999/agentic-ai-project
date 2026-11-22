@@ -37,6 +37,7 @@ memory:  # claudea: one per kind of fact kept
 
 tools:   # myron
   loading: {setting: all, values: [all, deferred], added: 2026-11-20, about: "all: 8 definitions a request (9 with run_program), under Lecture 3 slide 24's ~10; deferred is built and tested for a pass. myron, M3."}
+  send_after_draft: {setting: "off", values: ["off", "on"], added: 2026-11-22, about: "Pass 2: on, draft_report_email tells the model to call send_report_email next when the operator asked for a send; the send still waits for approval. off until the pass's verdict. myron."}
 
 code_calls:  # myron: one per use case it is built for
   batch_reports: {setting: "off", values: ["off", "on"], added: 2026-11-20, about: "Closest use case to looping over many results, but each request's registry reads one distributor in a few calls: off until a run shows the loop. myron, M3."}

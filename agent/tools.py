@@ -413,6 +413,23 @@ def _search_tools(query: str) -> dict:
     return {"query": str(query), "matches": matches, "note": note}
 
 
+DRAFT_EMAIL_REVIEW = (
+    "Create one pending email for the operator to review and send. The recipient and thread come from "
+    "trusted request metadata; a supplied recipient must match it. This tool cannot send email."
+)
+DRAFT_EMAIL_SEND_NEXT = (
+    "Create one pending email draft. The recipient and thread come from trusted request metadata; a supplied "
+    "recipient must match it. This tool cannot send email: when the operator asked for the email to be sent, "
+    "call send_report_email next with this draft's pending_id. That send waits for the operator's approval."
+)
+
+
+def draft_email_description() -> str:
+    """Pass 2 (tools.send_after_draft, myron): off keeps the built text; on points the model at the send,
+    whose approval gate is unchanged. Only this description differs between the arms."""
+    return DRAFT_EMAIL_SEND_NEXT if _switch("tools.send_after_draft", "off") == "on" else DRAFT_EMAIL_REVIEW
+
+
 def specs(request_id: str | None = None) -> list[ToolSpec]:
     """The tools for one case, as the MCP server executes them. `request_id` binds the case: query_sales reads
     only that request's distributor, which code takes from the request record (gate 2), never from the model.
@@ -539,8 +556,7 @@ def specs(request_id: str | None = None) -> list[ToolSpec]:
         ),
         ToolSpec(
             "draft_report_email",
-            "Create one pending email for the operator to review and send. The recipient and thread come from "
-            "trusted request metadata; a supplied recipient must match it. This tool cannot send email.",
+            draft_email_description(),
             _object_schema({
                 "recipient": {"type": "string"}, "report_id": {"type": "integer"},
                 "subject": {"type": "string"},
