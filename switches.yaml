@@ -71,4 +71,4 @@ strict:
   run_program: {setting: "on", values: ["off", "on"], added: 2026-11-20, about: "One required code string; the registry caps its length. myron, M3."}
 
 # Experimental topology; single remains the default.
-topology: {setting: single, values: [single, split], added: 2026-11-20, about: "Analyst/writer experiment on abraham-split; single until a matched-budget pass favors split."}
+topology: {setting: single, values: [single], added: 2026-11-20, about: "Single-agent submission. The unproven analyst/writer experiment remains on m2-split at m2-split-final."}

@@ -101,8 +101,7 @@ class WriteRecoveryTest(ScratchTest):
         from agent import checkpoints, runs
         from agent.registry import Registry
         from tests.fixtures.m2_tasks import task_backend
-        cases = [("tasks/messy_file_semicolon.yaml", []), ("tasks/batch_reports_two.yaml", []),
-                 ("tasks/batch_reports_two.yaml", ["topology=split"])]
+        cases = [("tasks/messy_file_semicolon.yaml", []), ("tasks/batch_reports_two.yaml", [])]
         real_call = Registry.call
         for task, overrides in cases:
             for committed in (False, True):
@@ -124,7 +123,7 @@ class WriteRecoveryTest(ScratchTest):
                         return real_call(reg, name, args, caller, step=step, trace_step=trace_step)
 
                     with mock.patch.object(Registry, "call", flaky):
-                        record = self.run_task(task, "settle", backend=task_backend(task, split=bool(overrides)),
+                        record = self.run_task(task, "settle", backend=task_backend(task),
                                                overrides=overrides)
                     self.assertTrue(record["check"]["passed"], record["check"])
                     self.assertEqual(failed, ["draft_report_email"])

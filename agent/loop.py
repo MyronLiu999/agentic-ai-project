@@ -79,12 +79,9 @@ def resume_from(checkpoint: dict, event: dict, *, registry=None, limits: bounds.
                 clock=None) -> LoopResult:
     """Replay persisted calls with their exact arguments before another model round."""
     if checkpoint.get("split_state"):
-        from agent import split
-        reply = split.resume_from(checkpoint, event, limits=limits, clock=clock,
-                                  **({"registry_factory": lambda rid: registry} if registry else {}))
-        state = checkpoints.load(checkpoint['run_key']) or {}
-        return LoopResult(state.get('end_reason', events.DONE), reply.text, tuple(reply.actions),
-                          reply.waiting_for, 0, 0)
+        return LoopResult(events.HELD,
+                          'This checkpoint belongs to the split experiment. Resume it at m2-split-final; '
+                          'main supports only single-agent execution.', (), None, 0, 0)
     if checkpoint.get("plan_state"):
         from agent import plan
         reply = plan.resume_from(checkpoint, event, limits=limits, clock=clock,

@@ -11,21 +11,22 @@
     "structure_checks": {
       "command": "make check",
       "passed": 4
+    },
+    "commit": "b73e9e5028bdff79994c3988ce8350bffb6e0269",
+    "source_sha256": {
+      "agent/code_calls.py": "70bddc2cef671b6b39a3f62038ba5ecdc18708be11daf8853f77654a68958545",
+      "agent/escalation.py": "6af28ca2bcf74e0de5aaf9fb35606b7ff230e31b7c3ab16273401b4d320f5a21",
+      "agent/loop.py": "23c30ef24485e5d3eee78beb2205ae0400ad287353395919d6bd4052814e86d6",
+      "agent/plan.py": "d228ac16869680a7c6c5e63a6aae8c30fff9b074d120457f84230f0906f82a75",
+      "agent/registry.py": "8a510ebd0a1a9db975cc9cdf3e731154a0cc9c6695e78f686e2112352a3e752b",
+      "agent/runs.py": "d8d85a732287048ffa4068488efad0a0d19dce0f41832a61ebeeed0f7041e906",
+      "agent/service.py": "c59de2d5750a11b3c1246e9851898a9b0c9c56bf2179733e29c4895571917e8c",
+      "agent/tools.py": "77cb4e5ed31effb699a1465c43bd8cd76f30d3a18e24c6b717429e358ef9e73e",
+      "sandbox/queue.py": "901909029e82392ac551bccd7e5ff30e39577b20089e2c492a347f1d12756e57",
+      "tests/test_program_approval.py": "474575a42452d7dfcff79ef843e1be3fd4e2a6888fb846ecfd86bef0f46e8c14",
+      "tests/test_escalation_console.py": "dd5865f6c18848ac140771b3ee6ce02dc62885a82af02a0dd5305124929106f9",
+      "tests/test_escalation_recovery.py": "951374b28a866f181bc63622236e7a806a8632597501077ea0c875c8b5b6ad30"
     }
-  },
-  "source_sha256": {
-    "agent/code_calls.py": "70bddc2cef671b6b39a3f62038ba5ecdc18708be11daf8853f77654a68958545",
-    "agent/escalation.py": "6af28ca2bcf74e0de5aaf9fb35606b7ff230e31b7c3ab16273401b4d320f5a21",
-    "agent/loop.py": "23c30ef24485e5d3eee78beb2205ae0400ad287353395919d6bd4052814e86d6",
-    "agent/plan.py": "d228ac16869680a7c6c5e63a6aae8c30fff9b074d120457f84230f0906f82a75",
-    "agent/registry.py": "8a510ebd0a1a9db975cc9cdf3e731154a0cc9c6695e78f686e2112352a3e752b",
-    "agent/runs.py": "d8d85a732287048ffa4068488efad0a0d19dce0f41832a61ebeeed0f7041e906",
-    "agent/service.py": "c59de2d5750a11b3c1246e9851898a9b0c9c56bf2179733e29c4895571917e8c",
-    "agent/tools.py": "77cb4e5ed31effb699a1465c43bd8cd76f30d3a18e24c6b717429e358ef9e73e",
-    "sandbox/queue.py": "901909029e82392ac551bccd7e5ff30e39577b20089e2c492a347f1d12756e57",
-    "tests/test_program_approval.py": "474575a42452d7dfcff79ef843e1be3fd4e2a6888fb846ecfd86bef0f46e8c14",
-    "tests/test_escalation_console.py": "dd5865f6c18848ac140771b3ee6ce02dc62885a82af02a0dd5305124929106f9",
-    "tests/test_escalation_recovery.py": "951374b28a866f181bc63622236e7a806a8632597501077ea0c875c8b5b6ad30"
   },
   "regressions": [
     "Model-authored program questions require approval even for exact template text.",
@@ -35,7 +36,8 @@
     "Operator corrections precede pending writes and automatic clarification questions.",
     "Answer acceptance, hold release and wait removal commit atomically; crash recovery retains the exact instruction until checkpoint acknowledgment.",
     "Plan revision requirements survive a crash after instruction acknowledgment.",
-    "Fixed workflows require retry/discard; discard ends the run without more effects."
+    "Fixed workflows require retry/discard; discard ends the run without more effects.",
+    "Main refuses saved split checkpoints without initializing an executor or changing domain effects; m2-split-final preserves their executor."
   ],
   "strict_schema": {
     "command": "python scripts/strict_request.py --dry-run --output /tmp/m2-strict-current.json",
@@ -49,6 +51,7 @@
   },
   "recovery": {
     "kind": "free synthetic real-MCP crash/restart matrix",
+    "verified_on": "main single-only working tree",
     "cases": [
       {
         "task": "standard_report_clean",
@@ -521,5 +524,36 @@
         "repeated_completed_mcp_writes": []
       }
     ]
+  },
+  "main_verification": {
+    "command": "make test",
+    "passed": true,
+    "tests": 591,
+    "seconds": 95.337,
+    "topology_values": [
+      "single"
+    ],
+    "structure_checks": {
+      "command": "make check",
+      "passed": 4
+    },
+    "source_sha256": {
+      "agent/code_calls.py": "70bddc2cef671b6b39a3f62038ba5ecdc18708be11daf8853f77654a68958545",
+      "agent/escalation.py": "6af28ca2bcf74e0de5aaf9fb35606b7ff230e31b7c3ab16273401b4d320f5a21",
+      "agent/loop.py": "f2980dc7404b36e6c6037ba1b7213a3dccefa97513e3993ee55ad04f2cd11943",
+      "agent/plan.py": "d228ac16869680a7c6c5e63a6aae8c30fff9b074d120457f84230f0906f82a75",
+      "agent/registry.py": "8a510ebd0a1a9db975cc9cdf3e731154a0cc9c6695e78f686e2112352a3e752b",
+      "agent/runs.py": "d8d85a732287048ffa4068488efad0a0d19dce0f41832a61ebeeed0f7041e906",
+      "agent/service.py": "9addbca3725fae94c493158278ce0d076185dce29beadba71ee0a8077ed5b515",
+      "agent/tools.py": "77cb4e5ed31effb699a1465c43bd8cd76f30d3a18e24c6b717429e358ef9e73e",
+      "sandbox/queue.py": "901909029e82392ac551bccd7e5ff30e39577b20089e2c492a347f1d12756e57",
+      "tests/test_program_approval.py": "474575a42452d7dfcff79ef843e1be3fd4e2a6888fb846ecfd86bef0f46e8c14",
+      "tests/test_escalation_console.py": "dd5865f6c18848ac140771b3ee6ce02dc62885a82af02a0dd5305124929106f9",
+      "tests/test_escalation_recovery.py": "951374b28a866f181bc63622236e7a806a8632597501077ea0c875c8b5b6ad30",
+      "switches.yaml": "865b012c1ad82e0c496975120dcd656fd6b8f50531819cebc522f45d8936cf7f",
+      "tests/test_topology_boundary.py": "1c9cb6d7d975fe0638ad5a906da94fd4e6c54bb99dc7bb4199615710dc7d7c4d",
+      "tests/fixtures/m2_tasks.py": "e815ff369763e9442d6c748f8f92f1bdc09c13f0d6b03b1fdec4b0018f02f0bb",
+      "tests/test_write_recovery.py": "8242516aad81002d1c58ecf23ef57b20eb436ba54001ac7939a4e885efc81089"
+    }
   }
 }
