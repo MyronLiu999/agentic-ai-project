@@ -4,12 +4,14 @@ status_question and out_of_scope use cases. Both are plain code: no model call, 
     status_question(session_id, text) -> Reply     answers from records; writes nothing
     out_of_scope(session_id, request_id) -> Reply  declines with a fixed-template pending reply
 
-Each ends the run with trace.end(...). out_of_scope's one write goes through the registry.
+Each ends the run through _end (the run's last checkpoint into the trace, runs.end, trace.end). out_of_scope's
+one write goes through the registry, keyed by its step, and its output goes in the journal so a resume
+reuses it (Milestone 2, C3).
 """
 
 from __future__ import annotations
 
-from agent import events
+from agent import checkpoints, events, runs
 from agent.registry import CODE
 from harness import runtime
 from harness.turns import Reply
@@ -42,6 +44,12 @@ def _request_lines(r: dict) -> tuple[list[str], int]:
     return lines, open_count
 
 
+def _end(trace, reason, detail=None):
+    checkpoints.to_trace(trace, runs.current_key())
+    runs.end(runs.current_key(), reason)
+    trace.end(reason, detail=detail)
+
+
 def status_question(session_id: str, text: str) -> Reply:
     """Answer from the records: the requests the text names (or all of them), their latest report, their
     pending records, and what is still open. Reads only; writes nothing."""
@@ -49,7 +57,7 @@ def status_question(session_id: str, text: str) -> Reply:
     named = inbox.mentioned(text)
     targets = named or inbox.all_requests()
     if not targets:
-        trace.end(events.DONE, detail="no requests")
+        _end(trace, events.DONE, detail="no requests")
         return Reply("There are no requests in the system.")
     lines, still_open = [], 0
     for r in targets:
@@ -57,7 +65,7 @@ def status_question(session_id: str, text: str) -> Reply:
         lines += more
         still_open += n
     lines.append("Nothing is still open." if not still_open else f"{still_open} item(s) still open.")
-    trace.end(events.DONE, detail=f"answered from records for {len(targets)} request(s)")
+    _end(trace, events.DONE, detail=f"answered from records for {len(targets)} request(s)")
     return Reply("\n".join(lines), [f"read records for {len(targets)} request(s); wrote nothing"])
 
 
@@ -74,21 +82,32 @@ def out_of_scope(session_id: str, request_id: str, registry=None) -> Reply:
     trace = runtime.trace(session_id)
     req = inbox.get(request_id)
     if req is None:
-        trace.end(events.TOOL_ERROR, detail=f"no request {request_id}")
+        _end(trace, events.TOOL_ERROR, detail=f"no request {request_id}")
         return Reply(f"There is no request {request_id}.")
     from sandbox import sales
     dist = sales.distributor(req["distributor_id"]) or {"name": req["distributor_id"]}
     question = DECLINE.format(name=dist["name"], period=req["period"] or "quarterly")
-    result = _registry(request_id, registry).call("draft_clarifying_question", {"question": question}, CODE,
-                                                  step="1-decline")
+    run_key = runs.current_key()
+    checkpoints.start(run_key, path="workflow", workflow="out_of_scope", use_case="out_of_scope",
+                      request_id=request_id)
+    done = checkpoints.step_result(run_key, "1-decline") if runs.resuming() == run_key else None
+    if done is not None:        # finished before the crash or the pause: reuse it, never write it twice
+        result = {"ok": True, "output": done, "is_error": False, "error": None}
+    else:
+        # A keyed write whose arguments code fixed before it runs: no checkpoint needed (checkpoints.needs_checkpoint).
+        result = _registry(request_id, registry).call("draft_clarifying_question", {"question": question}, CODE,
+                                                      step="1-decline")
+        if result.get("ok"):
+            checkpoints.record_step(run_key, "1-decline", "draft_clarifying_question", {"question": question},
+                                    result.get("output") or {})
     if not result.get("ok"):
         error = result.get("error") or {}
-        trace.end(events.TOOL_ERROR, detail=f"draft_clarifying_question: {error.get('message', '')}")
+        _end(trace, events.TOOL_ERROR, detail=f"draft_clarifying_question: {error.get('message', '')}")
         return Reply(f"{request_id} asks for confidential data. I could not draft the reply: "
                      f"{error.get('message', 'the tool failed')}.")
     pid = (result.get("output") or {}).get("pending_id")
     inbox.set_status(request_id, "declined")
-    trace.end(events.DECLINED, detail="asks for margins or other distributors' data")
+    _end(trace, events.DECLINED, detail="asks for margins or other distributors' data")
     return Reply(f"{request_id} asks for margins or other distributors' figures, which are confidential. I drafted "
                  f"a reply declining and offering their own report (pending record {pid}); it waits for you to send.",
                  [f"draft_clarifying_question: pending record {pid} for the operator to send"])

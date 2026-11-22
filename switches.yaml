@@ -31,8 +31,8 @@ context_budget: {setting: 16000, added: 2026-11-20, about: "Most input tokens on
 compaction_threshold: {setting: 12000, added: 2026-11-20, about: "Past this, older turns are compacted; at most the budget less what every call carries. abraham, B3."}
 
 memory:  # claudea: one per kind of fact kept
-  preferences: {setting: "off", values: ["off", "on"], added: 2026-11-20, about: "A preference the operator states (stated, not inferred). claudea, C6."}
-  standing_rules: {setting: "off", values: ["off", "on"], added: 2026-11-20, about: "A standing rule the operator states for later sessions. claudea, C6."}
+  preferences: {setting: "on", values: ["off", "on"], added: 2026-11-20, about: "Kept: a preference the operator states (such as a report email subject prefix). Stated, not inferable from any record. claudea, C6."}
+  standing_rules: {setting: "on", values: ["off", "on"], added: 2026-11-20, about: "Kept: a standing rule the operator states (from now on / always / never). Stated, not inferable. claudea, C6."}
 
 tools:   # myron
   loading: {setting: all, values: [all, deferred], added: 2026-11-20, about: "all: 8 definitions a request (9 with run_program), under Lecture 3 slide 24's ~10; deferred is built and tested for a pass. myron, M3."}

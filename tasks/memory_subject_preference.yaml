@@ -1,0 +1,41 @@
+id: memory_subject_preference
+title: "A later session: the operator said last week how report email subjects start; today's report must use it"
+use_case: standard_report      # the expected route
+
+# Milestone 2 (claudea, C7): a test task that is a later session. run.py plays every task from a reset sandbox,
+# so seed(task) writes the earlier session's memory record itself, with its provenance (the operator stated it,
+# a week earlier). The operator does not repeat it today. The check reads the sandbox for whether it was used.
+input:
+  thread: SYN-thread-1601
+  from: SYN-contact-acme
+  distributor: SYN-DIST-001
+  contact_email: contact@acme.example
+  period: 2026Q3
+  text: "SYNTHETIC. Our Q3 sell-out by product is attached. How did we do this quarter?"
+  file:
+    name: acme_q3_weekly.csv
+    content: |
+      sku,units_sold,region
+      SYN-SKU-001,120,North
+      SYN-SKU-004,35,North
+
+memory:
+  - kind: semantic
+    name: email_subject_prefix
+    fact: "Start every report email's subject with 'ACME weekly:'"
+    value: "ACME weekly:"
+    source: operator
+    written_at: "2026-11-13T09:00:00.000+00:00"
+    derived_or_ingested: ingested
+    confirmed: true
+    session_id: SYN-console-session-earlier
+
+expect:
+  subject_prefix: "ACME weekly:"   # the check reads this; the agent never sees it
+
+operator:
+  - "Handle the new request on the outside channel."
+
+outside: []
+
+check: checks/memory_preference.py

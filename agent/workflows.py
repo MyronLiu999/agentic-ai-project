@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import json
 
-from agent import checkpoints, context, critique, events, runs
+from agent import checkpoints, context, critique, escalation, events, exits, runs
 from agent.registry import CODE
 from harness import runtime
 from harness.turns import Reply
@@ -53,12 +53,26 @@ def _registry(request_id: str, registry):
     return tools.build(request_id)
 
 
-def _call(reg, name: str, args: dict, step: str, actions: list[str]) -> dict:
+def _call(reg, name: str, args: dict, step: str, actions: list[str], *, request_id: str | None = None,
+          use_case: str = "standard_report", args_from_model: bool = False) -> dict:
+    """One workflow step through the registry (Milestone 2, C2 to C4).
+
+    On a resume (runs.resume in scope), a step already finished comes back from the journal and is not called
+    again. Before the call, the placement rule decides whether to checkpoint (checkpoints.before_step). A write
+    that failed with an unknown outcome takes the three exits (agent/exits.py). A finished step's output goes
+    in the journal."""
     run_key = runs.current_key()
-    # Setup seam: claudea's placement rule (checkpoints.before_step) decides what this saves.
-    checkpoints.before_step(run_key, {"path": "workflow", "workflow": "standard_report", "step": step,
-                                      "tool": name, "args": args})
+    if run_key and runs.resuming() == run_key:
+        done = checkpoints.step_result(run_key, step)
+        if done is not None:
+            actions.append(f"{name}: {_summary(name, done)} (finished before; reused, not called again)")
+            return done
+    checkpoints.before_step(run_key, {"path": "workflow", "workflow": use_case, "use_case": use_case,
+                                      "request_id": request_id, "step": step, "tool": name, "args": args,
+                                      "args_from_model": args_from_model})
     result = reg.call(name, args, CODE, step=step)
+    if not result.get("ok") and request_id and exits.unsettled(name, result):
+        result = _three_exits(reg, name, args, step, request_id, run_key, result)
     if not result.get("ok"):
         error = result.get("error") or {}
         if error.get("type") == "approval_required":
@@ -68,8 +82,59 @@ def _call(reg, name: str, args: dict, step: str, actions: list[str]) -> dict:
         if error.get("type") == "stopped":
             raise _Stop(events.STOPPED, "the operator stopped this run; its state is saved")
         raise _Stop(events.TOOL_ERROR, f"{name} failed ({error.get('kind', 'error')}): {error.get('message', '')}")
-    actions.append(f"{name}: {_summary(name, result.get('output') or {})}")
-    return result.get("output") or {}
+    output = result.get("output") or {}
+    checkpoints.record_step(run_key, step, name, args, output)
+    actions.append(f"{name}: {_summary(name, output)}")
+    return output
+
+
+def _three_exits(reg, name, args, step, request_id, run_key, result) -> dict:
+    """Lecture 3, slide 40: read whether the effect happened. Yes: carry on with it. No: retry once under the
+    same key (the same step id). Cannot tell: escalate to the operator and end the run."""
+    outcome, found = exits.settle(name, args, request_id)
+    if outcome == "happened":
+        return {"ok": True, "output": found, "is_error": False, "error": None}
+    if outcome == "not_happened":
+        again = reg.call(name, args, CODE, step=step)
+        if again.get("ok") or not exits.unsettled(name, again):
+            return again
+        outcome, found = exits.settle(name, args, request_id)
+        if outcome == "happened":
+            return {"ok": True, "output": found, "is_error": False, "error": None}
+    why = found if isinstance(found, str) else f"{name} failed twice and its effect cannot be confirmed"
+    escalation.signal(run_key, "unsettled_write", attempted=f"{name} for {request_id} (step {step})", why=why,
+                      needs="the operator to check the sandbox and say whether to retry or discard")
+    raise _Stop(events.UNSETTLED_WRITE, f"{name}'s outcome cannot be told; the operator is asked to settle it")
+
+
+def _compensate_completed(reg, run_key, steps: list[str]) -> list[str]:
+    """Irreversible steps last (Lecture 3, slide 41): when a write fails for good after earlier writes succeeded,
+    undo the completed ones newest first, where a compensation exists. Returns one line per step."""
+    lines = []
+    for step in reversed(steps):
+        output = checkpoints.step_result(run_key, step) if run_key else None
+        if output is None:
+            continue
+        tool = {"3-chart": "render_chart", "4-save": "save_report", "6-email": "draft_report_email"}.get(step)
+        if tool is None:
+            continue
+        done = reg.compensate({"tool": tool, "result": {"output": output}}) if hasattr(reg, "compensate") else \
+            {"compensated_by": "none"}
+        lines.append(f"{step} {tool}: {done.get('compensated_by', 'none')}")
+    return lines
+
+
+def resume(run_key: str, state: dict, event: dict) -> Reply:
+    """Carry on a workflow run from its checkpoint (runs.resume calls this). Finished steps come back from the
+    journal; the step that was running at the crash or the pause replays with its saved arguments."""
+    from agent import domain_workflows
+    session_id = runs.session_of(run_key)
+    request_id = state.get("request_id")
+    if state.get("workflow") == "out_of_scope":
+        return domain_workflows.out_of_scope(session_id, request_id)
+    if state.get("workflow") == "standard_report":
+        return standard_report(session_id, request_id)
+    raise ValueError(f"{run_key}: no workflow named {state.get('workflow')!r} to resume")
 
 
 def _summary(name: str, out: dict) -> str:
@@ -136,6 +201,24 @@ def _end(trace, reason, detail=None):
         trace.end(reason, detail=detail)
 
 
+def _saved_email(run_key):
+    """On a resume, the email arguments the checkpoint saved before step 6 (already through the critique)."""
+    if not run_key or runs.resuming() != run_key:
+        return None
+    state = checkpoints.load(run_key) or {}
+    if state.get("current_step") == "6-email" and isinstance(state.get("args"), dict):
+        return dict(state["args"])
+    return None
+
+
+def _subject(session_id: str, period: str) -> str:
+    """The email subject; a remembered operator preference for its prefix applies (agent/memory.py)."""
+    from agent import memory
+    prefix = memory.preference(session_id, "email_subject_prefix")
+    subject = f"Your {period} sales report"
+    return f"{prefix.strip()} {subject}" if prefix else subject
+
+
 def standard_report(session_id: str, request_id: str, registry=None) -> Reply:
     trace = runtime.trace(session_id)
     actions: list[str] = []
@@ -144,26 +227,42 @@ def standard_report(session_id: str, request_id: str, registry=None) -> Reply:
         _end(trace, events.TOOL_ERROR, detail=f"no request {request_id}")
         return Reply(f"There is no request {request_id}.")
     reg = _registry(request_id, registry)
+    run_key = runs.current_key()
+    checkpoints.start(run_key, path="workflow", workflow="standard_report", use_case="standard_report",
+                      request_id=request_id)
+
+    def call(name, args, step, **kw):
+        return _call(reg, name, args, step, actions, request_id=request_id, **kw)
+
     try:
         trace.progress(f"Standard report for {request_id}: reading the file.")
-        parsed = _call(reg, "parse_file", {}, "1-parse", actions)
+        parsed = call("parse_file", {}, "1-parse")
         from_file = file_units(parsed)
         period = req["period"]
-        data = _call(reg, "query_sales", {"period": period}, "2-query", actions)
+        data = call("query_sales", {"period": period}, "2-query")
         names = [r.get("name") or r.get("sku") for r in data.get("by_product") or []]
         values = [float(r.get("revenue") or 0) for r in data.get("by_product") or []]
-        chart = _call(reg, "render_chart", {"title": f"{period} revenue by product", "labels": names,
-                                            "values": values}, "3-chart", actions)
+        chart = call("render_chart", {"title": f"{period} revenue by product", "labels": names,
+                                      "values": values}, "3-chart")
         dist = sales.distributor(req["distributor_id"]) or {"id": req["distributor_id"], "name": req["distributor_id"],
                                                              "region": "?"}
         figures = {"period": period, "total_revenue": data["total_revenue"], "total_units": data["total_units"],
                    "file_total_units": sum(from_file.values()), "chart_id": chart.get("chart_id")}
-        saved = _call(reg, "save_report", {"kind": "standard", "figures": figures,
-                                           "body": report_body(dist, data, from_file)}, "4-save", actions)
+        saved = call("save_report", {"kind": "standard", "figures": figures,
+                                     "body": report_body(dist, data, from_file)}, "4-save")
+
+        resumed = _saved_email(run_key)
+        if resumed is not None:      # the draft passed the critique before the crash: reuse it, no model calls
+            pending = call("draft_report_email", resumed, "6-email", args_from_model=True)
+            inbox.set_status(request_id, "report_drafted")
+            _end(trace, events.DONE)
+            return Reply(f"Saved report {saved.get('report_id')} for {request_id} and drafted the email to "
+                         f"{req['contact_email']} as pending record {pending.get('pending_id')} (resumed from its "
+                         f"checkpoint). It waits for you to send it from the request page.", actions)
 
         trace.progress("Drafting the covering email and checking it against the sandbox.")
         email_figures = {k: figures[k] for k in ("period", "total_revenue", "total_units")}
-        subject = f"Your {period} sales report"
+        subject = _subject(session_id, period)
         draft = {"recipient": req["contact_email"], "subject": subject, "figures": email_figures,
                  "body": _write_email(session_id, 5, email_figures, req["question"])}
 
@@ -178,11 +277,14 @@ def standard_report(session_id: str, request_id: str, registry=None) -> Reply:
             return Reply(f"Saved report {saved.get('report_id')} for {request_id}, but held the email: "
                          f"{result.reason}. Nothing is waiting to be sent.", actions)
         final = result.draft
-        pending = _call(reg, "draft_report_email", {"recipient": final["recipient"], "subject": final["subject"],
-                                                    "body": final["body"], "report_id": saved.get("report_id")},
-                        "6-email", actions)
+        pending = call("draft_report_email", {"recipient": final["recipient"], "subject": final["subject"],
+                                              "body": final["body"], "report_id": saved.get("report_id")},
+                       "6-email", args_from_model=True)
     except _Stop as stop:
         actions.append(f"stopped: {stop.text}")
+        if stop.reason == events.TOOL_ERROR and run_key:
+            undone = _compensate_completed(reg, run_key, ["3-chart", "4-save"])
+            actions += [f"compensated {line}" for line in undone]
         _end(trace, stop.reason, detail=stop.text)
         if stop.reason == events.UNKNOWN_LAYOUT:
             return Reply(f"{request_id}: {stop.text}. It needs the messy-file path, not the standard report.", actions)

@@ -101,9 +101,25 @@ def end(run_key: str | None, reason: str) -> None:
     """Record that a run's turn ended; a waiting reason leaves it live."""
     if not run_key or reason in WAITING:
         return
+    from agent import memory
+    memory.commit_run(session_of(run_key))       # memory is written at a run's end, never mid-run
     with state_store.connect() as conn:
         conn.execute("UPDATE runs SET ended_at = ?, end_reason = ? WHERE run_key = ?",
                      (state_store.now(), reason, run_key))
+
+
+def crashed(session_id: str) -> list[str]:
+    """Runs of the session that a crash stopped: started, not ended, with a checkpoint, and not waiting on a
+    person or a stranger. What resumes one is the operator's next turn (agent/service.py calls resume with
+    {"kind": "crash"}); nothing resumes a run at start-up on its own."""
+    from agent import checkpoints
+    waiting = {w["run_key"] for w in checkpoints.waiting(session_id)}
+    out = []
+    for run_key in live(session_id):
+        state = checkpoints.load(run_key)
+        if state is not None and run_key not in waiting and not state.get("held") and not state.get("stopped"):
+            out.append(run_key)
+    return out
 
 
 def resuming() -> str | None:
@@ -138,6 +154,6 @@ def resume(run_key: str, event: dict) -> Reply:
             result = loop.resume_from(state, event)
             return Reply(result.text, list(result.actions), result.waiting_for)
         if state.get("path") == "workflow":
-            # MERGE-CHECK (claudea, C3): workflows re-enter from their saved step.
-            raise NotImplementedError("resuming a workflow run is claudea's C3")
+            from agent import workflows
+            return workflows.resume(run_key, state, event)
     raise ValueError(f"the checkpoint of {run_key} names no path it can resume")

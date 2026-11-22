@@ -65,3 +65,17 @@ def read_svg(chart: dict) -> str:
         return Path(chart["path"]).read_text(encoding="utf-8")
     except OSError:
         return ""
+
+
+def delete(chart_id: int) -> bool:
+    """The undo of a render (Milestone 2 rollback): remove the chart's row and its file. Returns whether it
+    existed."""
+    from pathlib import Path
+    with db.connect() as conn:
+        row = conn.execute("SELECT path FROM charts WHERE id = ?", (chart_id,)).fetchone()
+        if row is None:
+            return False
+        conn.execute("DELETE FROM charts WHERE id = ?", (chart_id,))
+    if row["path"]:
+        Path(row["path"]).unlink(missing_ok=True)
+    return True

@@ -79,6 +79,18 @@ repositories in `docs/assignment_refs.md`. Milestone 1 behaviour is unchanged: t
 - *Changed tests*: `tests/test_tools.py` and `tests/test_registry.py` (myron's own) now pin the eight-tool
   surface of PLAN_M2.md 3.4 instead of M1's six.
 
+**claudea's build (2026-11-21, C1 to C10):** *Added:* the checkpoint placement rule and durability mode per kind
+of run (`agent/checkpoints.py`), a journal of finished steps so a resume reuses them, the workflow resume
+(`workflows.resume`, `runs.crashed`), the three exits for a write whose outcome is unknown (`agent/exits.py`),
+compensations for rollback (`agent/compensations.py`, `sandbox/reports.withdraw`, `sandbox/charts.delete`) and
+compensate-in-reverse on a permanent failure, the recovery test (`tests/test_recovery.py`, kill -9 during the last
+write of every task that writes), the memory store and its write policy (`sandbox/memory.py`, `agent/memory.py`),
+the later session's read, the test task `memory_subject_preference` and its check, and the disclosure tests.
+*Changed:* `domain_workflows` now ends its runs through `runs.end`; the standard report's email subject takes a
+remembered prefix; `memory.preferences` and `memory.standing_rules` are on. *Limited:* memory keeps only what the
+operator states; nothing from the outside channel is stored. *Reused:* no assignment code; the kill-during-a-write
+test follows the design of claudea's Assignment 4 `--die-during-step` (`claudea24/agentic-ai-assignment4`).
+
 ## Milestone 1
 
 **Post-measurement audit fixes (2026-11-01, items 1–6):** report checks and the
