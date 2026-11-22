@@ -1,6 +1,8 @@
 # 0006: Keep one agent for the sales analyst
 
-Owner: Abraham. Decision date: 2026-11-20. Status: single agent; split is an experiment on `abraham-split`.
+Owner: Abraham. Decision date: 2026-11-20. Status: single agent by default. The experimental split code is
+included in `main` at the 2026-11-22 integration; the merged task matrix still needs the fixes recorded in
+`docs/superpowers/plans/2026-11-22-m2-integration.md`. No matched-budget benefit has been established.
 
 ## What would have to cross between components?
 
