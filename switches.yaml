@@ -69,3 +69,6 @@ strict:
   send_report_email: {setting: "on", values: ["off", "on"], added: 2026-11-20, about: "One required integer pending_id: an irreversible call gets the vendor's grammar too. myron, M2."}
   search_tools: {setting: "on", values: ["off", "on"], added: 2026-11-20, about: "One required query string in a closed object. myron, M3."}
   run_program: {setting: "on", values: ["off", "on"], added: 2026-11-20, about: "One required code string; the registry caps its length. myron, M3."}
+
+# Experimental topology; single remains the default.
+topology: {setting: single, values: [single, split], added: 2026-11-20, about: "Analyst/writer experiment on abraham-split; single until a matched-budget pass favors split."}

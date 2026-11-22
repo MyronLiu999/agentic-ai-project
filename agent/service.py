@@ -193,6 +193,9 @@ def _execute_task(session_id: str, text: str) -> Reply:
         if follow_up and follow_up["quarter"]:
             reply.text += "\n" + _saved_comparisons(ids, follow_up["quarter"].upper())
         return reply
+    if route.path == "agent" and route.use_case == "batch_reports" and runtime.switch("topology") == "split":
+        from agent import split
+        return split.run(session_id, route.request_ids, text)
     if route.path == "agent" and route.use_case == "batch_reports" and runtime.switch("plan.batch_reports") == "on":
         from agent import plan
         return plan.run(session_id, route.request_ids, text)

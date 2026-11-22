@@ -78,6 +78,13 @@ def run(session_id: str, request_id: str, text: str, *, registry=None,
 def resume_from(checkpoint: dict, event: dict, *, registry=None, limits: bounds.Limits | None = None,
                 clock=None) -> LoopResult:
     """Replay persisted calls with their exact arguments before another model round."""
+    if checkpoint.get("split_state"):
+        from agent import split
+        reply = split.resume_from(checkpoint, event, limits=limits, clock=clock,
+                                  **({"registry_factory": lambda rid: registry} if registry else {}))
+        state = checkpoints.load(checkpoint['run_key']) or {}
+        return LoopResult(state.get('end_reason', events.DONE), reply.text, tuple(reply.actions),
+                          reply.waiting_for, 0, 0)
     if checkpoint.get("plan_state"):
         from agent import plan
         reply = plan.resume_from(checkpoint, event, limits=limits, clock=clock,
