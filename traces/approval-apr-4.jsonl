@@ -1,0 +1,2 @@
+{"at": "2026-11-23T03:40:03.730+00:00", "session_id": "approval-apr-4", "type": "approval", "approval_id": "apr-4", "approved": true, "note": ""}
+{"at": "2026-11-23T03:40:03.732+00:00", "session_id": "approval-apr-4", "type": "reply", "function": "decide_approval", "text": "This approval is stale, withdrawn, or belongs to a run that is no longer awaiting it.", "actions": [], "waiting_for": null, "latency_s": 0.001}
