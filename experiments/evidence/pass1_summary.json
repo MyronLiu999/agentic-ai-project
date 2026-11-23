@@ -407,7 +407,38 @@
           "cost_usd": 1.4e-05,
           "tokens": 89
         }
-      ]
+      ],
+      "m2": {
+        "runs": 18,
+        "duplicates": 0,
+        "re_asks": 0,
+        "facts_used": 0,
+        "asks": 0,
+        "asks_per_run": 0.0,
+        "approvals_asked": 0,
+        "asks_by_class": {},
+        "approval_decisions": {},
+        "decisions_by_who": {},
+        "escalations": 0,
+        "escalations_per_run": 0.0,
+        "escalations_over_cap": 0,
+        "irreversible_after_signal": 0,
+        "malformed_calls": 0,
+        "malformed_per_run": 0.0,
+        "model_calls": 47,
+        "model_calls_per_run": 2.611111111111111,
+        "input_tokens_per_call": 1245.9787234042553,
+        "tools_loading": {
+          "unrecorded": 18
+        },
+        "tools_per_call_after_search": null,
+        "searches": 0,
+        "search_misses": 0,
+        "compactions": 0,
+        "code_calls": 0,
+        "code_inner_calls": 0,
+        "hook_decisions": {}
+      }
     },
     {
       "arm": "pass1-examples-on",
@@ -819,7 +850,38 @@
           "cost_usd": 1.4e-05,
           "tokens": 89
         }
-      ]
+      ],
+      "m2": {
+        "runs": 18,
+        "duplicates": 0,
+        "re_asks": 0,
+        "facts_used": 0,
+        "asks": 0,
+        "asks_per_run": 0.0,
+        "approvals_asked": 0,
+        "asks_by_class": {},
+        "approval_decisions": {},
+        "decisions_by_who": {},
+        "escalations": 0,
+        "escalations_per_run": 0.0,
+        "escalations_over_cap": 0,
+        "irreversible_after_signal": 0,
+        "malformed_calls": 0,
+        "malformed_per_run": 0.0,
+        "model_calls": 42,
+        "model_calls_per_run": 2.3333333333333335,
+        "input_tokens_per_call": 1390.1666666666667,
+        "tools_loading": {
+          "unrecorded": 18
+        },
+        "tools_per_call_after_search": null,
+        "searches": 0,
+        "search_misses": 0,
+        "compactions": 0,
+        "code_calls": 0,
+        "code_inner_calls": 0,
+        "hook_decisions": {}
+      }
     }
   ],
   "m_f": null

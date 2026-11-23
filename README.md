@@ -156,7 +156,7 @@ The console runs the implemented agent.
 | `/console` | The operator's chat with the agent: sessions and their history. Each message goes to `operator_turn` |
 | `/queue` | The work waiting: your sandbox's queue (`sandbox/queue.py`), the threads your agent waits on, and what waits for approval |
 | `/threads` | The outside channel's conversations. You can write as the stranger; each message reaches the agent once, through `on_outside_reply` |
-| `/approvals` | What waits for the operator's answer, from `pending_approvals()`: empty until you build an approval gate. An item's `session_id` names the console session it is answered in |
+| `/approvals` | What waits for the operator's answer, from `pending_approvals()`: each gated call or plan put up by the approval gate (`agent/approvals.py`), with its computed screen. An item's `session_id` names the console session it is answered in |
 | `/traces` | Every run record in `results/` (those in `results/_free/` marked free) and every session's trace |
 
 Change `app/product.py` and `app/templates/home.html` freely; the other pages

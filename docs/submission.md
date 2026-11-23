@@ -294,15 +294,15 @@ published. Any future pass must keep its source revision fixed across both arms 
 its prediction before either arm starts; a draft under `docs/drafts/` is not preregistration.
 Publication requires the team's explicit authorization.
 
-The final team review must fill measured placeholders in M2, reconcile every number to raw
-evidence, rerun required tests/checks, confirm the preserved split reference, and finish the
-README/ledger/submission status. The final `m2` tag and Canvas submission/receipt remain
-pending team tasks. M1's published tag and its Canvas note above do not establish M2 release
+The final review (2026-11-22) filled M2's placeholders, reconciled its numbers with
+`analyze.py` and `failures.py` on every committed arm, reran `make test` and `make check`, and
+checked a fresh clone (`make setup`, `make check`, `make app`, `make serve` with the earlier session
+carrying on). The final `m2` tag and Canvas submission/receipt remain pending team tasks. M1's published tag and its Canvas note above do not establish M2 release
 or submission.
 
 The 2026-11-22 final-review check also found three historical derived files to refresh:
 `baseline_summary.json`, `pass1_summary.json` and `pass1_failures.json` under
 `experiments/evidence/`. `python -m experiments.analysis.recompute --check` reports them
 stale because the current readers add `m2` metrics and `control_events`; comparison with
-fresh output found no changes to existing values. Regenerate and review these derived
-files during F2, preserving every raw run and trace.
+fresh output found no changes to existing values. They were regenerated in F2 (only fields
+added, no existing value changed); `recompute --check` now verifies all six derived artifacts.

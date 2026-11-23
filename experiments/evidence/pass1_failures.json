@@ -19,6 +19,7 @@
         "message": "Orphan step 'r1_chart': output is not consumed by later work"
       },
       "evidence_issues": [],
+      "control_events": {},
       "synthetic": false
     },
     {
@@ -39,6 +40,7 @@
         "message": "Orphan step 'r0_chart': output is not consumed by later work"
       },
       "evidence_issues": [],
+      "control_events": {},
       "synthetic": false
     },
     {
@@ -59,6 +61,7 @@
         "message": "total_revenue is 0, but the database says 67,246.55 for 2026Q3"
       },
       "evidence_issues": [],
+      "control_events": {},
       "synthetic": false
     },
     {
@@ -79,6 +82,7 @@
         "message": "recipient is recipient@example.com, but the request's contact is contact@delta.example; the body does not state the total revenue 60,771.05"
       },
       "evidence_issues": [],
+      "control_events": {},
       "synthetic": false
     },
     {
@@ -99,6 +103,7 @@
         "message": "Orphan step 'r0_chart': output is not consumed by later work"
       },
       "evidence_issues": [],
+      "control_events": {},
       "synthetic": false
     },
     {
@@ -119,6 +124,7 @@
         "message": "recipient is recipient@example.com, but the request's contact is contact@delta.example; the body does not state the total revenue 60,771.05"
       },
       "evidence_issues": [],
+      "control_events": {},
       "synthetic": false
     },
     {
@@ -139,6 +145,7 @@
         "message": "SYN-thread-1201: the last report does not carry 62,799.60"
       },
       "evidence_issues": [],
+      "control_events": {},
       "synthetic": false
     }
   ],
