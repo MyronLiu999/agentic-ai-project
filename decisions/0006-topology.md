@@ -70,6 +70,10 @@ queryable session log. Splitting loses easy correction of an interpretation and 
 validation and a shared-budget mechanism. Not splitting loses potential parallelism on a sufficiently
 large independent batch and separately bounded contexts.
 
+## Rejected alternative
+
+**The analyst → writer split** (built on `m2-split`, preserved at `m2-split-final`) is the rejected alternative. It lost because it fails gate 1 in the general case (an ambiguous upload or a figure discrepancy needs another analyst/writer round), no pass has measured it beating one agent at the same budget, and its one plausible benefit, context isolation, is available to one agent more cheaply through bounded tool results, notes and the queryable session log. A **prompt-only second reviewer model** was also rejected: copies of one model do not fail independently, and the code critic recomputes figures from the sandbox.
+
 ## Assignment evidence and spend check
 
 Source: `docs/assignment_refs.md`, Assignment 6, read 2026-11-20, copied by claudea from
