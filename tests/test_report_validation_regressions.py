@@ -194,11 +194,16 @@ class WrongEmailReference(MilestoneModel):
 
 class FullRunValidationRegressionTest(ScratchTest):
     def test_corrupt_report_and_email_mutations_never_complete_successfully(self):
-        for task, backend in ((MESSY, "WrongSavedUnits"), (MESSY, "NonfiniteSavedRevenue"),
-                              (COMPARE, "MissingComparison"), (MESSY, "WrongEmailReference")):
+        # MissingComparison runs with tools.computed_figures=off (edited by myron for Pass 3): with it on, code
+        # fills the dropped comparison from the database, so the saved report is no longer corrupt. Its on-side
+        # behaviour is pinned in tests/test_computed_figures.py. The assertions are unchanged.
+        off = ["tools.computed_figures=off"]
+        for task, backend, overrides in ((MESSY, "WrongSavedUnits", None), (MESSY, "NonfiniteSavedRevenue", None),
+                                         (COMPARE, "MissingComparison", off), (MESSY, "WrongEmailReference", None)):
             with self.subTest(backend=backend):
                 record = self.run_task(task, "validation-" + backend,
-                                       backend="tests.test_report_validation_regressions:" + backend)
+                                       backend="tests.test_report_validation_regressions:" + backend,
+                                       overrides=overrides)
                 self.assertFalse(record["passed"], record["check"])
                 self.assertEqual(pending.all_pending("pending"), [])
 

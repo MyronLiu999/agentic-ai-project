@@ -28,11 +28,17 @@ class ComputedFiguresTest(ScratchTest):
             stored = [reports.figures(r) for r in reports.for_request(RID)]
             return result, stored, registry
 
-    def test_default_is_off_and_stores_the_callers_figures(self):
-        for setting, run_id in ((None, "cf-default"), ("off", "cf-off")):
-            result, stored, _ = self.save(setting, {"kind": "comparison", "figures": WRONG, "body": "Q3."}, run_id)
-            self.assertTrue(result["ok"], result)
-            self.assertEqual(stored, [WRONG])
+    def test_off_stores_the_callers_figures(self):
+        result, stored, _ = self.save("off", {"kind": "comparison", "figures": WRONG, "body": "Q3."}, "cf-off")
+        self.assertTrue(result["ok"], result)
+        self.assertEqual(stored, [WRONG])
+
+    def test_default_is_on_by_the_pass_verdict(self):
+        """switches.yaml sets it on (ledger, Pass 3's verdict): with no override the figures are computed."""
+        result, stored, _ = self.save(None, {"kind": "comparison", "figures": WRONG, "body": "Q3."}, "cf-default")
+        self.assertTrue(result["ok"], result)
+        self.assertEqual(stored[0]["total_revenue"], sales.distributor_sales(DIST, "2026Q3")["total_revenue"])
+        self.assertNotEqual(stored, [WRONG])
 
     def test_on_computes_the_comparison_from_the_database(self):
         result, stored, _ = self.save("on", {"kind": "comparison", "figures": WRONG, "body": "Q3."}, "cf-on")
@@ -72,6 +78,21 @@ class ComputedFiguresTest(ScratchTest):
                                       "cf-invalid")
         self.assertFalse(result["ok"])
         self.assertEqual(stored, [])
+
+    def test_on_a_dropped_comparison_is_filled_from_the_database_in_a_full_run(self):
+        """The on side of test_report_validation_regressions' MissingComparison (which runs with off): the fake
+        model saves the comparison report without previous_total_revenue; code fills it, the check passes."""
+        from tests.test_domain_checks import COMPARE
+        record = self.run_task(COMPARE, "cf-missing-comparison",
+                               backend="tests.test_report_validation_regressions:MissingComparison",
+                               overrides=["tools.computed_figures=on"])
+        self.assertTrue(record["passed"], record["check"])
+        from sandbox import inbox
+        rid = inbox.request_id("SYN-thread-1201")
+        saved = reports.figures(reports.for_request(rid)[-1])
+        request = inbox.get(rid)
+        self.assertEqual(saved["previous_total_revenue"],
+                         sales.distributor_sales(request["distributor_id"], "2026Q2")["total_revenue"])
 
     def test_the_definitions_are_the_same_in_both_settings(self):
         from agent import tools
