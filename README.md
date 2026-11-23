@@ -31,27 +31,25 @@ ignored `state/ui-demo/`. See the demo guide before reloading.
 
 **M2 measured runs (2026-11-22, model gpt-4o-mini):** the build and both improvement passes have run and
 are committed with every record and paired trace, failures included. `main` uses the single-agent path;
-`m2-split` and `m2-split-final` preserve the separate topology experiment. To reproduce (each arm spends
-tokens; the runner skips runs already finished, so raise `--sweeps` one at a time to alternate arms):
+`m2-split` and `m2-split-final` preserve the separate topology experiment. Read the existing
+build evidence without rerunning its arm:
 
 ```bash
-# the build: every switch at its setting
-python run.py --tasks tasks/ tasks/sessions/ --sweeps 3 --arm m2-build --jobs 1
-# Pass 2: tools.send_after_draft (kept off)
-python run.py --tasks tasks/ tasks/sessions/ --sweeps N --arm pass2-send-after-draft-off --set tools.send_after_draft=off
-python run.py --tasks tasks/ tasks/sessions/ --sweeps N --arm pass2-send-after-draft-on  --set tools.send_after_draft=on
-# Pass 3: tools.computed_figures (kept on)
-python run.py --tasks tasks/ tasks/sessions/ --sweeps N --arm pass3-computed-figures-off --set tools.computed_figures=off
-python run.py --tasks tasks/ tasks/sessions/ --sweeps N --arm pass3-computed-figures-on  --set tools.computed_figures=on
-# read any arm
-python -m harness.summarize results/<arm>
-python experiments/analysis/analyze.py results/<arm>
-python -m experiments.analysis.failures results/<arm>
+python -m harness.summarize results/m2-build
+python experiments/analysis/analyze.py results/m2-build
+python -m experiments.analysis.failures results/m2-build
 ```
+
+The same readers accept `results/pass2-send-after-draft-off/`, `results/pass2-send-after-draft-on/`,
+`results/pass3-computed-figures-off/` and `results/pass3-computed-figures-on/`. New measurements must
+use a fresh arm and the source revision required by their ledger prediction; current `main` has
+the post-measurement switch settings. Follow the [source checks](docs/submission.md#m2-pending-work-and-key-holder-runbook).
 
 The passes' predictions, results and verdicts are in `experiments/LEDGER.md` (Pass 2, Pass 3) and
 `docs/milestones/M2.md` Part 4. `tasks/` alone omits the long session. Scripted task approvals do not
-measure human review; no session answered by a person was recorded. `make serve` preserves the app's
+measure human review; no session answered by a person was recorded. Follow the
+[human-review procedure](docs/submission.md#a-person-reads-and-answers-the-approval-screens) for that
+remaining measurement. `make serve` preserves the app's
 state; `make app` resets it. On Windows set `PYTHONUTF8=1` and `git config core.longpaths true` first.
 
 **Windows startup, preserving existing data:** activate your virtual environment, then set

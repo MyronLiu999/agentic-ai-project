@@ -1,0 +1,1186 @@
+{
+  "records": 36,
+  "failures": [
+    {
+      "run_id": "m2-build-approval_send_declined-s01-1fec93",
+      "arm": "m2-build",
+      "task": "approval_send_declined",
+      "outcome": "completed",
+      "end_reasons": [
+        "critique_held"
+      ],
+      "check_reason": "no drafted report email is still pending; no approval was answered no for this run",
+      "record": "results/m2-build/m2-build-approval_send_declined-s01-1fec93.json",
+      "trace": "results/m2-build/m2-build-approval_send_declined-s01-1fec93.trace.jsonl",
+      "first_failure": {
+        "line": 49,
+        "kind": "critique_revise",
+        "message": "the saved report revenue assertion for 2026Q3 does not match the database; the draft has an unfilled placeholder, [Your Name]; write the real words"
+      },
+      "evidence_issues": [],
+      "control_events": {
+        "escalation": 1
+      },
+      "synthetic": false,
+      "diagnosis": {
+        "category": "Bounded critique / unreliable outside signal",
+        "explanation": "The email contains an unfilled name slot. The check also reads the year in the saved report as a revenue amount. Revision removes the slot but cannot change that saved report, so the run remains held and never reaches the rejection gate.",
+        "evidence": [
+          {
+            "line": 43,
+            "label": "saved prose",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 48,
+            "label": "draft",
+            "event_type": "model_call"
+          },
+          {
+            "line": 49,
+            "label": "first check",
+            "event_type": "critique"
+          },
+          {
+            "line": 53,
+            "label": "held",
+            "event_type": "critique"
+          }
+        ]
+      }
+    },
+    {
+      "run_id": "m2-build-approval_send_declined-s02-4044d3",
+      "arm": "m2-build",
+      "task": "approval_send_declined",
+      "outcome": "completed",
+      "end_reasons": [
+        "done"
+      ],
+      "check_reason": "no approval was answered no for this run",
+      "record": "results/m2-build/m2-build-approval_send_declined-s02-4044d3.json",
+      "trace": "results/m2-build/m2-build-approval_send_declined-s02-4044d3.trace.jsonl",
+      "first_failure": {
+        "line": 53,
+        "kind": "check_failed",
+        "message": "no approval was answered no for this run"
+      },
+      "evidence_issues": [],
+      "control_events": {},
+      "synthetic": false,
+      "diagnosis": {
+        "category": "False finish / missing tool call",
+        "explanation": "The draft passes and is saved, but the model ends by inviting another confirmation instead of calling send_report_email. No actual approval is queued, so the scripted rejection cannot occur. The stopping description is Pass 2's hypothesis, not a cause proved by this trace alone.",
+        "evidence": [
+          {
+            "line": 41,
+            "label": "check passes",
+            "event_type": "critique"
+          },
+          {
+            "line": 44,
+            "label": "draft saved",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 49,
+            "label": "premature finish",
+            "event_type": "model_call"
+          },
+          {
+            "line": 53,
+            "label": "task check",
+            "event_type": "run_end"
+          }
+        ]
+      }
+    },
+    {
+      "run_id": "m2-build-approval_send_declined-s03-9984b1",
+      "arm": "m2-build",
+      "task": "approval_send_declined",
+      "outcome": "completed",
+      "end_reasons": [
+        "done"
+      ],
+      "check_reason": "no approval was answered no for this run",
+      "record": "results/m2-build/m2-build-approval_send_declined-s03-9984b1.json",
+      "trace": "results/m2-build/m2-build-approval_send_declined-s03-9984b1.trace.jsonl",
+      "first_failure": {
+        "line": 53,
+        "kind": "check_failed",
+        "message": "no approval was answered no for this run"
+      },
+      "evidence_issues": [],
+      "control_events": {},
+      "synthetic": false,
+      "diagnosis": {
+        "category": "False finish / missing tool call",
+        "explanation": "After a passing draft the model asks the operator to confirm, without calling send_report_email or putting up an approval. The requested rejection path is never exercised.",
+        "evidence": [
+          {
+            "line": 41,
+            "label": "check passes",
+            "event_type": "critique"
+          },
+          {
+            "line": 44,
+            "label": "draft saved",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 49,
+            "label": "premature finish",
+            "event_type": "model_call"
+          },
+          {
+            "line": 53,
+            "label": "task check",
+            "event_type": "run_end"
+          }
+        ]
+      }
+    },
+    {
+      "run_id": "m2-build-approval_send_report-s01-cc4bb6",
+      "arm": "m2-build",
+      "task": "approval_send_report",
+      "outcome": "completed",
+      "end_reasons": [
+        "critique_held"
+      ],
+      "check_reason": "0 messages from the agent on the thread, not one; no drafted report email is marked sent; no approval was answered yes for this run: the send did not cross the gate",
+      "record": "results/m2-build/m2-build-approval_send_report-s01-cc4bb6.json",
+      "trace": "results/m2-build/m2-build-approval_send_report-s01-cc4bb6.trace.jsonl",
+      "first_failure": {
+        "line": 41,
+        "kind": "critique_revise",
+        "message": "the saved report revenue assertion for 2026Q3 does not match the database; the draft has an unfilled placeholder, [Your Name]; write the real words"
+      },
+      "evidence_issues": [],
+      "control_events": {
+        "escalation": 1
+      },
+      "synthetic": false,
+      "diagnosis": {
+        "category": "Bounded critique / unreliable outside signal",
+        "explanation": "The first email has a name placeholder. After its repair, the check still treats “sales for the third quarter of 2026” in the saved report as a revenue assertion. Correct numeric figures cannot overcome this prose false positive; no draft or send reaches approval.",
+        "evidence": [
+          {
+            "line": 35,
+            "label": "saved prose",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 40,
+            "label": "draft",
+            "event_type": "model_call"
+          },
+          {
+            "line": 41,
+            "label": "first check",
+            "event_type": "critique"
+          },
+          {
+            "line": 45,
+            "label": "held",
+            "event_type": "critique"
+          }
+        ]
+      }
+    },
+    {
+      "run_id": "m2-build-approval_send_report-s02-cd1fbd",
+      "arm": "m2-build",
+      "task": "approval_send_report",
+      "outcome": "completed",
+      "end_reasons": [
+        "done"
+      ],
+      "check_reason": "0 messages from the agent on the thread, not one; no drafted report email is marked sent; no approval was answered yes for this run: the send did not cross the gate",
+      "record": "results/m2-build/m2-build-approval_send_report-s02-cd1fbd.json",
+      "trace": "results/m2-build/m2-build-approval_send_report-s02-cd1fbd.trace.jsonl",
+      "first_failure": {
+        "line": 53,
+        "kind": "check_failed",
+        "message": "0 messages from the agent on the thread, not one; no drafted report email is marked sent; no approval was answered yes for this run: the send did not cross the gate"
+      },
+      "evidence_issues": [],
+      "control_events": {},
+      "synthetic": false,
+      "diagnosis": {
+        "category": "False finish / missing tool call",
+        "explanation": "The model saves a passing email draft and says the request is complete, but leaves sending for another confirmation. It never calls the gated send despite the original send instruction.",
+        "evidence": [
+          {
+            "line": 41,
+            "label": "check passes",
+            "event_type": "critique"
+          },
+          {
+            "line": 44,
+            "label": "draft saved",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 49,
+            "label": "premature finish",
+            "event_type": "model_call"
+          },
+          {
+            "line": 53,
+            "label": "task check",
+            "event_type": "run_end"
+          }
+        ]
+      }
+    },
+    {
+      "run_id": "m2-build-approval_send_report-s03-9119b1",
+      "arm": "m2-build",
+      "task": "approval_send_report",
+      "outcome": "completed",
+      "end_reasons": [
+        "done"
+      ],
+      "check_reason": "0 messages from the agent on the thread, not one; no drafted report email is marked sent; no approval was answered yes for this run: the send did not cross the gate",
+      "record": "results/m2-build/m2-build-approval_send_report-s03-9119b1.json",
+      "trace": "results/m2-build/m2-build-approval_send_report-s03-9119b1.trace.jsonl",
+      "first_failure": {
+        "line": 53,
+        "kind": "check_failed",
+        "message": "0 messages from the agent on the thread, not one; no drafted report email is marked sent; no approval was answered yes for this run: the send did not cross the gate"
+      },
+      "evidence_issues": [],
+      "control_events": {},
+      "synthetic": false,
+      "diagnosis": {
+        "category": "False finish / missing tool call",
+        "explanation": "The model ends after creating the pending email and offers to send later. A pending draft is not a queued approval or a sent message; the requested effect is absent.",
+        "evidence": [
+          {
+            "line": 41,
+            "label": "check passes",
+            "event_type": "critique"
+          },
+          {
+            "line": 44,
+            "label": "draft saved",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 49,
+            "label": "premature finish",
+            "event_type": "model_call"
+          },
+          {
+            "line": 53,
+            "label": "task check",
+            "event_type": "run_end"
+          }
+        ]
+      }
+    },
+    {
+      "run_id": "m2-build-batch_reports_two-s03-6bd214",
+      "arm": "m2-build",
+      "task": "batch_reports_two",
+      "outcome": "completed",
+      "end_reasons": [
+        "replan_bound",
+        "done"
+      ],
+      "check_reason": "SYN-thread-1301: no report saved; SYN-thread-1301: no pending report email; SYN-thread-1302: no report saved; SYN-thread-1302: no pending report email",
+      "record": "results/m2-build/m2-build-batch_reports_two-s03-6bd214.json",
+      "trace": "results/m2-build/m2-build-batch_reports_two-s03-6bd214.trace.jsonl",
+      "first_failure": {
+        "line": 10,
+        "kind": "plan_rejected",
+        "message": "Planner response was not valid JSON"
+      },
+      "evidence_issues": [],
+      "control_events": {},
+      "synthetic": false,
+      "diagnosis": {
+        "category": "Malformed plan / replan bound",
+        "explanation": "All three planner responses wrap the JSON in Markdown fences. The plain-JSON parser rejects each before graph execution, exhausting the planning allowance with no writes. The complete content parses after removing only the fences; the abbreviated trace text is not evidence of an output-token truncation.",
+        "evidence": [
+          {
+            "line": 9,
+            "label": "first proposal",
+            "event_type": "model_call"
+          },
+          {
+            "line": 10,
+            "label": "first rejection",
+            "event_type": "plan"
+          },
+          {
+            "line": 14,
+            "label": "second rejection",
+            "event_type": "plan"
+          },
+          {
+            "line": 18,
+            "label": "third rejection",
+            "event_type": "plan"
+          },
+          {
+            "line": 20,
+            "label": "bound",
+            "event_type": "end"
+          }
+        ]
+      }
+    },
+    {
+      "run_id": "m2-build-compare_check_last_quarter-s01-fed326",
+      "arm": "m2-build",
+      "task": "compare_check_last_quarter",
+      "outcome": "completed",
+      "end_reasons": [
+        "critique_held",
+        "done"
+      ],
+      "check_reason": "SYN-thread-1201: no pending report email",
+      "record": "results/m2-build/m2-build-compare_check_last_quarter-s01-fed326.json",
+      "trace": "results/m2-build/m2-build-compare_check_last_quarter-s01-fed326.trace.jsonl",
+      "first_failure": {
+        "line": 44,
+        "kind": "critique_revise",
+        "message": "revenue_change is 446.95, not 4,446.95; the draft has an unfilled placeholder, [Your Name]; write the real words"
+      },
+      "evidence_issues": [],
+      "control_events": {
+        "escalation": 1
+      },
+      "synthetic": false,
+      "diagnosis": {
+        "category": "Wrong arguments / critique cannot repair saved figures",
+        "explanation": "The model saves revenue_change=446.95 although its two query results imply 4,446.95. The critique correctly catches this; its reviser can edit only the email and retains the erroneous saved figure. Name placeholders also remain.",
+        "evidence": [
+          {
+            "line": 24,
+            "label": "current query",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 28,
+            "label": "previous query",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 33,
+            "label": "wrong proposal",
+            "event_type": "model_call"
+          },
+          {
+            "line": 38,
+            "label": "saved",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 44,
+            "label": "first check",
+            "event_type": "critique"
+          },
+          {
+            "line": 48,
+            "label": "held",
+            "event_type": "critique"
+          }
+        ]
+      }
+    },
+    {
+      "run_id": "m2-build-compare_check_last_quarter-s02-525454",
+      "arm": "m2-build",
+      "task": "compare_check_last_quarter",
+      "outcome": "completed",
+      "end_reasons": [
+        "critique_held",
+        "done"
+      ],
+      "check_reason": "SYN-thread-1201: no pending report email",
+      "record": "results/m2-build/m2-build-compare_check_last_quarter-s02-525454.json",
+      "trace": "results/m2-build/m2-build-compare_check_last_quarter-s02-525454.trace.jsonl",
+      "first_failure": {
+        "line": 44,
+        "kind": "critique_revise",
+        "message": "revenue_change is 446.95, not 4,446.95"
+      },
+      "evidence_issues": [],
+      "control_events": {
+        "escalation": 1
+      },
+      "synthetic": false,
+      "diagnosis": {
+        "category": "Wrong arguments / critique cannot repair saved figures",
+        "explanation": "The saved change is again 446.95 rather than 4,446.95. The revision repeats that amount, and cannot update the saved figures checked by the critic; no email is written.",
+        "evidence": [
+          {
+            "line": 24,
+            "label": "current query",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 28,
+            "label": "previous query",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 33,
+            "label": "wrong proposal",
+            "event_type": "model_call"
+          },
+          {
+            "line": 38,
+            "label": "saved",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 44,
+            "label": "first check",
+            "event_type": "critique"
+          },
+          {
+            "line": 48,
+            "label": "held",
+            "event_type": "critique"
+          }
+        ]
+      }
+    },
+    {
+      "run_id": "m2-build-compare_check_last_quarter-s03-038f80",
+      "arm": "m2-build",
+      "task": "compare_check_last_quarter",
+      "outcome": "completed",
+      "end_reasons": [
+        "critique_held",
+        "done"
+      ],
+      "check_reason": "SYN-thread-1201: the report revenue assertion for 2026Q2 does not match the database; SYN-thread-1201: no pending report email",
+      "record": "results/m2-build/m2-build-compare_check_last_quarter-s03-038f80.json",
+      "trace": "results/m2-build/m2-build-compare_check_last_quarter-s03-038f80.trace.jsonl",
+      "first_failure": {
+        "line": 44,
+        "kind": "critique_revise",
+        "message": "revenue_change is 446.95, not 4,446.95; the saved report revenue assertion for 2026Q2 does not match the database; the draft has an unfilled placeholder, [Your Name]; write the real words"
+      },
+      "evidence_issues": [],
+      "control_events": {
+        "escalation": 1
+      },
+      "synthetic": false,
+      "diagnosis": {
+        "category": "Wrong arguments / critique cannot repair saved figures",
+        "explanation": "Despite correct Q2/Q3 query results, the model saves and narrates a 446.95 increase instead of 4,446.95. The email-only revision preserves the bad figures and the run holds. Other prose/placeholder complaints do not remove this arithmetic error.",
+        "evidence": [
+          {
+            "line": 24,
+            "label": "previous query",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 28,
+            "label": "current query",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 33,
+            "label": "wrong proposal",
+            "event_type": "model_call"
+          },
+          {
+            "line": 38,
+            "label": "saved",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 44,
+            "label": "first check",
+            "event_type": "critique"
+          },
+          {
+            "line": 48,
+            "label": "held",
+            "event_type": "critique"
+          }
+        ]
+      }
+    },
+    {
+      "run_id": "m2-build-long_campaign-s01-93c2a1",
+      "arm": "m2-build",
+      "task": "long_campaign",
+      "outcome": "completed",
+      "end_reasons": [
+        "critique_held",
+        "done",
+        "done",
+        "done",
+        "done"
+      ],
+      "check_reason": "SYN-thread-long-1: the report revenue assertion for 2026Q3 does not match the database; SYN-thread-long-1: the report revenue assertion for 2026Q2 does not match the database; SYN-thread-long-1: the report revenue assertion for 2026Q2 does not match the database; SYN-thread-long-1: the report revenue assertion for 2026Q3 does not match the database; SYN-thread-long-1: no pending report email; SYN-thread-long-2: no report saved; SYN-thread-long-2: no pending report email; SYN-thread-long-3: no report saved; SYN-thread-long-3: no pending report email; SYN-thread-long-4: no report saved; SYN-thread-long-4: no pending report email; campaign fact used in 1/4 reports; late status question did not give saved revenue",
+      "record": "results/m2-build/m2-build-long_campaign-s01-93c2a1.json",
+      "trace": "results/m2-build/m2-build-long_campaign-s01-93c2a1.trace.jsonl",
+      "first_failure": {
+        "line": 36,
+        "kind": "critique_revise",
+        "message": "revenue_change is -9,157.15, not -9,147.15; the body revenue assertion for 2026Q3 does not match the database; the body revenue assertion for 2026Q2 does not match the database; the saved report revenue assertion for 2026Q3 does not match the database; the saved report revenue assertion for 2026Q2 does not match the database; the saved report revenue assertion for 2026Q2 does not match the database; the saved report revenue assertion for 2026Q3 does not match the database"
+      },
+      "evidence_issues": [],
+      "control_events": {
+        "compaction": 14,
+        "escalation": 1
+      },
+      "synthetic": false,
+      "diagnosis": {
+        "category": "Wrong arguments / hold propagates through the run",
+        "explanation": "The first report saves a change of -9,157.15; 51,264.85 minus 60,412.00 is -9,147.15. The email-only revision cannot repair it. After escalation, the same run's later requests are denied; their missing reports do not establish loss of the campaign fact through compaction.",
+        "evidence": [
+          {
+            "line": 14,
+            "label": "current query",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 18,
+            "label": "previous query",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 24,
+            "label": "wrong proposal",
+            "event_type": "model_call"
+          },
+          {
+            "line": 29,
+            "label": "saved",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 36,
+            "label": "first check",
+            "event_type": "critique"
+          },
+          {
+            "line": 41,
+            "label": "hold",
+            "event_type": "escalation"
+          },
+          {
+            "line": 56,
+            "label": "later denial",
+            "event_type": "tool_call"
+          }
+        ]
+      }
+    },
+    {
+      "run_id": "m2-build-long_campaign-s02-332171",
+      "arm": "m2-build",
+      "task": "long_campaign",
+      "outcome": "completed",
+      "end_reasons": [
+        "critique_held",
+        "done",
+        "done",
+        "done",
+        "done"
+      ],
+      "check_reason": "SYN-thread-long-1: no pending report email; SYN-thread-long-2: no report saved; SYN-thread-long-2: no pending report email; SYN-thread-long-3: no report saved; SYN-thread-long-3: no pending report email; SYN-thread-long-4: no report saved; SYN-thread-long-4: no pending report email; campaign fact used in 1/4 reports; late status question did not give saved revenue",
+      "record": "results/m2-build/m2-build-long_campaign-s02-332171.json",
+      "trace": "results/m2-build/m2-build-long_campaign-s02-332171.trace.jsonl",
+      "first_failure": {
+        "line": 36,
+        "kind": "critique_revise",
+        "message": "the body revenue assertion for 2026Q3 does not match the database; the draft has an unfilled placeholder, [Your Name]; write the real words"
+      },
+      "evidence_issues": [],
+      "control_events": {
+        "compaction": 14,
+        "escalation": 1
+      },
+      "synthetic": false,
+      "diagnosis": {
+        "category": "Unreliable outside signal / hold propagates through the run",
+        "explanation": "The first draft contains a name placeholder and the check reads an ordinary year reference as revenue. The revision removes the placeholder but retains a year-only sentence that still fails the parser. The hold then blocks later requests; the first saved report already contains the campaign code.",
+        "evidence": [
+          {
+            "line": 29,
+            "label": "saved campaign code",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 35,
+            "label": "draft",
+            "event_type": "model_call"
+          },
+          {
+            "line": 36,
+            "label": "first check",
+            "event_type": "critique"
+          },
+          {
+            "line": 39,
+            "label": "revision",
+            "event_type": "model_call"
+          },
+          {
+            "line": 40,
+            "label": "held",
+            "event_type": "critique"
+          },
+          {
+            "line": 56,
+            "label": "later denial",
+            "event_type": "tool_call"
+          }
+        ]
+      }
+    },
+    {
+      "run_id": "m2-build-long_campaign-s03-014c90",
+      "arm": "m2-build",
+      "task": "long_campaign",
+      "outcome": "completed",
+      "end_reasons": [
+        "critique_held",
+        "done",
+        "done",
+        "done",
+        "done"
+      ],
+      "check_reason": "SYN-thread-long-1: the report revenue assertion for 2026Q2 does not match the database; SYN-thread-long-1: no pending report email; SYN-thread-long-2: no report saved; SYN-thread-long-2: no pending report email; SYN-thread-long-3: no report saved; SYN-thread-long-3: no pending report email; SYN-thread-long-4: no report saved; SYN-thread-long-4: no pending report email; campaign fact used in 1/4 reports; late status question did not give saved revenue",
+      "record": "results/m2-build/m2-build-long_campaign-s03-014c90.json",
+      "trace": "results/m2-build/m2-build-long_campaign-s03-014c90.trace.jsonl",
+      "first_failure": {
+        "line": 36,
+        "kind": "critique_revise",
+        "message": "revenue_change is -9,157.15, not -9,147.15; the saved report revenue assertion for 2026Q2 does not match the database; the draft has an unfilled placeholder, [Your Name]; write the real words"
+      },
+      "evidence_issues": [],
+      "control_events": {
+        "compaction": 13,
+        "escalation": 1
+      },
+      "synthetic": false,
+      "diagnosis": {
+        "category": "Wrong arguments / hold propagates through the run",
+        "explanation": "The first report again saves -9,157.15 instead of -9,147.15. The bounded email revision preserves both the wrong figure and a name placeholder; escalation blocks subsequent requests under the same run key.",
+        "evidence": [
+          {
+            "line": 14,
+            "label": "current query",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 18,
+            "label": "previous query",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 24,
+            "label": "wrong proposal",
+            "event_type": "model_call"
+          },
+          {
+            "line": 29,
+            "label": "saved",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 36,
+            "label": "first check",
+            "event_type": "critique"
+          },
+          {
+            "line": 40,
+            "label": "held",
+            "event_type": "critique"
+          },
+          {
+            "line": 56,
+            "label": "later denial",
+            "event_type": "tool_call"
+          }
+        ]
+      }
+    },
+    {
+      "run_id": "m2-build-messy_file_semicolon-s01-f87ce8",
+      "arm": "m2-build",
+      "task": "messy_file_semicolon",
+      "outcome": "completed",
+      "end_reasons": [
+        "critique_held",
+        "done"
+      ],
+      "check_reason": "SYN-thread-1101: the last report's previous_total_revenue is 0.00, not 62,232.50; SYN-thread-1101: no pending report email; the report does not carry the file's 1240 units: the file was not decoded",
+      "record": "results/m2-build/m2-build-messy_file_semicolon-s01-f87ce8.json",
+      "trace": "results/m2-build/m2-build-messy_file_semicolon-s01-f87ce8.trace.jsonl",
+      "first_failure": {
+        "line": 37,
+        "kind": "critique_revise",
+        "message": "previous_total_revenue is 0.00, not 62,232.50; revenue_change is 0.00, not -1,377.90"
+      },
+      "evidence_issues": [],
+      "control_events": {
+        "escalation": 1
+      },
+      "synthetic": false,
+      "diagnosis": {
+        "category": "Ungrounded arguments / parsed facts not carried forward",
+        "explanation": "The file parses successfully (Menge totals 1,240), but the model saves a comparison with zero previous revenue and zero change without querying Q2. It also omits file_total_units. The critic detects the invented figures; email-only revision cannot repair the saved report.",
+        "evidence": [
+          {
+            "line": 13,
+            "label": "parsed file",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 21,
+            "label": "only query",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 26,
+            "label": "wrong proposal",
+            "event_type": "model_call"
+          },
+          {
+            "line": 31,
+            "label": "saved",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 37,
+            "label": "first check",
+            "event_type": "critique"
+          },
+          {
+            "line": 41,
+            "label": "held",
+            "event_type": "critique"
+          }
+        ]
+      }
+    },
+    {
+      "run_id": "m2-build-messy_file_semicolon-s03-823681",
+      "arm": "m2-build",
+      "task": "messy_file_semicolon",
+      "outcome": "completed",
+      "end_reasons": [
+        "critique_held",
+        "done"
+      ],
+      "check_reason": "SYN-thread-1101: the report revenue comparison amounts do not match the database; SYN-thread-1101: no pending report email; the report does not carry the file's 1240 units: the file was not decoded",
+      "record": "results/m2-build/m2-build-messy_file_semicolon-s03-823681.json",
+      "trace": "results/m2-build/m2-build-messy_file_semicolon-s03-823681.trace.jsonl",
+      "first_failure": {
+        "line": 41,
+        "kind": "critique_revise",
+        "message": "the saved report revenue comparison amounts do not match the database; the draft has an unfilled placeholder, [Your Name]; write the real words"
+      },
+      "evidence_issues": [],
+      "control_events": {
+        "escalation": 1
+      },
+      "synthetic": false,
+      "diagnosis": {
+        "category": "Parsed facts not carried forward / critique false positive",
+        "explanation": "Both sales queries and the file parse succeed, but the report omits the file's 1,240-unit total. Separately, the revenue parser mistakes the later “down by 41” units statement for a comparison endpoint, and the email keeps a name placeholder. The run holds with no email; fixing only the parser would not satisfy the file-units check.",
+        "evidence": [
+          {
+            "line": 13,
+            "label": "parsed file",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 30,
+            "label": "incomplete proposal",
+            "event_type": "model_call"
+          },
+          {
+            "line": 35,
+            "label": "saved",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 41,
+            "label": "first check",
+            "event_type": "critique"
+          },
+          {
+            "line": 45,
+            "label": "held",
+            "event_type": "critique"
+          }
+        ]
+      }
+    },
+    {
+      "run_id": "m2-build-outside_units-s01-980c52",
+      "arm": "m2-build",
+      "task": "outside_units",
+      "outcome": "completed",
+      "end_reasons": [
+        "needs_answer",
+        "done"
+      ],
+      "check_reason": "report must use the clarified measure_a column (800 units)",
+      "record": "results/m2-build/m2-build-outside_units-s01-980c52.json",
+      "trace": "results/m2-build/m2-build-outside_units-s01-980c52.trace.jsonl",
+      "first_failure": {
+        "line": 54,
+        "kind": "check_failed",
+        "message": "report must use the clarified measure_a column (800 units)"
+      },
+      "evidence_issues": [],
+      "control_events": {},
+      "synthetic": false,
+      "diagnosis": {
+        "category": "Reply not used / false finish",
+        "explanation": "The disclosed question, reply units_column=measure_a, and resume all occur. The subsequent report omits file_total_units=800 and the model ends successfully. Exchange order passes; use of the clarified fact fails. This is not a missing-reply or duplicate-send failure.",
+        "evidence": [
+          {
+            "line": 13,
+            "label": "parsed rows",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 24,
+            "label": "outside answer",
+            "event_type": "outside"
+          },
+          {
+            "line": 25,
+            "label": "resume",
+            "event_type": "resume"
+          },
+          {
+            "line": 42,
+            "label": "incomplete proposal",
+            "event_type": "model_call"
+          },
+          {
+            "line": 45,
+            "label": "saved",
+            "event_type": "tool_call"
+          },
+          {
+            "line": 50,
+            "label": "premature finish",
+            "event_type": "model_call"
+          },
+          {
+            "line": 54,
+            "label": "task check",
+            "event_type": "run_end"
+          }
+        ]
+      }
+    }
+  ],
+  "issues": [],
+  "read_date": "2026-11-22",
+  "source_commit": "8cd2be32ff4e2a09ab7d332773b2d6d012b9b04f",
+  "analysis_commit": "96f98e3",
+  "method": "failures.collect identifies the first explicit signal; diagnosis uses complete model content, successful tool outputs, independent task checks, and offline parser probes. A detected critique problem is not automatically the earliest defect or its sole cause.",
+  "parser_probes": [
+    {
+      "run_id": "m2-build-approval_send_declined-s01-1fec93",
+      "source_line": 43,
+      "kind": "offline parser probe; not a new model run",
+      "original_clause": "This report compares the sales performance between Q2 and Q3 of 2026.",
+      "reported_errors": [
+        "revenue assertion for 2026Q3 does not match the database"
+      ],
+      "probe_clause": "This report compares the sales performance between Q2 and Q3 of this year.",
+      "probe_errors": [],
+      "query_revenues": {
+        "2026Q3": 67246.55,
+        "2026Q2": 62799.6
+      }
+    },
+    {
+      "run_id": "m2-build-approval_send_report-s01-cc4bb6",
+      "source_line": 35,
+      "kind": "offline parser probe; not a new model run",
+      "original_clause": "Report on the sales for the third quarter of 2026, compared to the second quarter.",
+      "reported_errors": [
+        "revenue assertion for 2026Q3 does not match the database"
+      ],
+      "probe_clause": "Report on the sales for the third quarter of this year, compared to the second quarter.",
+      "probe_errors": [],
+      "query_revenues": {
+        "2026Q3": 60854.6,
+        "2026Q2": 62232.5
+      }
+    },
+    {
+      "run_id": "m2-build-long_campaign-s02-332171",
+      "source_line": 39,
+      "kind": "offline parser probe; not a new model run",
+      "original_clause": "Please find attached the sales report comparing the third quarter of 2026 with the second quarter of 2026.",
+      "reported_errors": [
+        "revenue assertion for 2026Q3 does not match the database"
+      ],
+      "probe_clause": "Please find attached the sales report comparing the third quarter of this year with the second quarter of this year.",
+      "probe_errors": [],
+      "query_revenues": {
+        "2026Q3": 51264.85,
+        "2026Q2": 60412.0
+      }
+    },
+    {
+      "run_id": "m2-build-messy_file_semicolon-s03-823681",
+      "source_line": 35,
+      "kind": "offline parser probe; not a new model run",
+      "original_clause": "- The overall revenue decreased by €1,377.90 compared to Q2 2026, primarily due to a slight decrease in units sold (down by 41).",
+      "reported_errors": [
+        "revenue comparison amounts do not match the database"
+      ],
+      "probe_clause": "- The overall revenue decreased by €1,377.90 compared to Q2 2026, primarily due to a slight decrease in units sold.",
+      "probe_errors": [],
+      "query_revenues": {
+        "2026Q3": 60854.6,
+        "2026Q2": 62232.5
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "record": "results/m2-build/m2-build-approval_send_declined-s01-1fec93.json",
+      "record_sha256": "86a0bde7e41bab034493f8b61139c7e5541239e9d2c23b7684507756d0578dab",
+      "trace_sha256": "4cc268a00d66e588071bd5973102ab8e720d9de4e43b6a6fe07d555c590eb7b3"
+    },
+    {
+      "record": "results/m2-build/m2-build-approval_send_declined-s02-4044d3.json",
+      "record_sha256": "3f2cb85f2d54d10be3bd27d3d24053705eb3d04c4c34bb9ff9ae8094969a148a",
+      "trace_sha256": "8106e58eaf4153b6fa9c9a14345eec2b38c37727fd8e333e1976681a71d21d86"
+    },
+    {
+      "record": "results/m2-build/m2-build-approval_send_declined-s03-9984b1.json",
+      "record_sha256": "0a9237c2bc1ebb195581b911a800285b65fbe9a5b2381cbc695ab9b2b5142cca",
+      "trace_sha256": "bdbdaa003ca796b5f7bbea49bbf7bb7d7b0856d26d8a95ad398d6a87b834e32c"
+    },
+    {
+      "record": "results/m2-build/m2-build-approval_send_report-s01-cc4bb6.json",
+      "record_sha256": "37154560a246a7b8f18416df14d58845ac6efda96705262dac7b2cfff8357411",
+      "trace_sha256": "eea124a2d5e0d278b3a97a2e4e65063fe192ad09b6af74c6daa090981f2370d3"
+    },
+    {
+      "record": "results/m2-build/m2-build-approval_send_report-s02-cd1fbd.json",
+      "record_sha256": "35d41629a5d962bfaf4452ee6f44e0944e8606f5b792d6dbd2e345e961ea906f",
+      "trace_sha256": "9501678f1af64102b0fb9c603c88d76ff60e1268c1de0e6e6a4176077c043113"
+    },
+    {
+      "record": "results/m2-build/m2-build-approval_send_report-s03-9119b1.json",
+      "record_sha256": "c55181f07c4419def4848a1111e5699fdba561473627666cfac2d510c859bdf5",
+      "trace_sha256": "1b2e1b5680f17d7c5af8fd572fc51c19b9545fa8bc1beddb67e61779e80bc75f"
+    },
+    {
+      "record": "results/m2-build/m2-build-batch_reports_two-s01-6efeb9.json",
+      "record_sha256": "7923867ee5a5a03fba9c61135932a741278aced77ee47bccccd75f1a141a2422",
+      "trace_sha256": "4fdac15f1249100fbcadf4b8d16315c85b2837185fefd27cd3a9935d113c233e"
+    },
+    {
+      "record": "results/m2-build/m2-build-batch_reports_two-s02-769a8d.json",
+      "record_sha256": "aa167b311941f0cb8fd25cd092e798db728303dd6ecc803435fa83a692dac497",
+      "trace_sha256": "00bfb8e5c18bd36710004374584af30d68999021626052cf9410a327bab4f372"
+    },
+    {
+      "record": "results/m2-build/m2-build-batch_reports_two-s03-6bd214.json",
+      "record_sha256": "a07f4fb815d929050fdbc3156284dee490e7ac5d947f2497fb24c5d4a4a6b9c3",
+      "trace_sha256": "d9761aeee0eba44fda1163a648c125aa605f9a872236c9f94bb5cde4fd60c7fa"
+    },
+    {
+      "record": "results/m2-build/m2-build-compare_check_last_quarter-s01-fed326.json",
+      "record_sha256": "1c4bddc8b8863ffb715755873758980fa6bde4d404bc4d3b66b7e77922450f5c",
+      "trace_sha256": "40af88daf9a3b21f43abfd901f4db74f27ae124636d6e0427266c0f523bcb897"
+    },
+    {
+      "record": "results/m2-build/m2-build-compare_check_last_quarter-s02-525454.json",
+      "record_sha256": "feceb9edbbabbd79ace20393e4b0c164cfefa6cfd48cd2d988a25baa1b9272d3",
+      "trace_sha256": "8219171a34d3aeae844a318c557d0b24fa586f67abaec1617812f08ad62bf664"
+    },
+    {
+      "record": "results/m2-build/m2-build-compare_check_last_quarter-s03-038f80.json",
+      "record_sha256": "a86d1510815fbb382d238340a13692b956f869883d658267151f115d6dca7601",
+      "trace_sha256": "18af2d91974f2a89d61bf928e33ade1b5402db1fde96184162c97249adafb42b"
+    },
+    {
+      "record": "results/m2-build/m2-build-escalation_conflicting_figure-s01-47b8d6.json",
+      "record_sha256": "44c87ae2339b8032008440b8286efacde51a7e017424077ca604d669e8029b7e",
+      "trace_sha256": "a60ae2b8e2594175c53d73027d735b477f4dbdb1004452a36476e36e520bbfe6"
+    },
+    {
+      "record": "results/m2-build/m2-build-escalation_conflicting_figure-s02-cafde6.json",
+      "record_sha256": "2ab414ad0e6036ff53a59875fb821f73497be1c9d4e710d27bc1c70dd144bba1",
+      "trace_sha256": "38badf12f9f7bd06bcd1b849c3c394377a2137dac0ad6694160c62b757f23904"
+    },
+    {
+      "record": "results/m2-build/m2-build-escalation_conflicting_figure-s03-ae9ada.json",
+      "record_sha256": "47c58c59c3d1c4507519854cdf3642b583042c472dbf5f17180b5f83550b8dd2",
+      "trace_sha256": "52bb9b479e076deaaae434e85b8c56a413b13ee77b438f5c7b98ff2bf44455d8"
+    },
+    {
+      "record": "results/m2-build/m2-build-long_campaign-s01-93c2a1.json",
+      "record_sha256": "d65b6f778f277c5a9581f8cc7871d0ac1adbfac73ee82e66380f53eb3560434c",
+      "trace_sha256": "92605ed34442ac578e66d2e43824d97821051b737b96567549787670c427c0d7"
+    },
+    {
+      "record": "results/m2-build/m2-build-long_campaign-s02-332171.json",
+      "record_sha256": "e7ba548d54fb5622eabfc04db2a9cd49328374ecdd853182a94799ae58201d29",
+      "trace_sha256": "5d7753115cf9ec9c64dd890b3fda904c773f35fb23700934c29d6e0d4ba342c8"
+    },
+    {
+      "record": "results/m2-build/m2-build-long_campaign-s03-014c90.json",
+      "record_sha256": "6a3430102750edceff4b4b24df44a4c6afb0fdb783529138a1fe6f7c71cc46fa",
+      "trace_sha256": "267b59bacbce59c388a646765b01834a1e38f3af6d22d8933b53b0d4c7d2cedf"
+    },
+    {
+      "record": "results/m2-build/m2-build-memory_subject_preference-s01-801e60.json",
+      "record_sha256": "ac6bf6fc5cdd931bf3460f08119fc0034127e34bda59e4124b35268f620a68f0",
+      "trace_sha256": "ff7216116b287a0938b01cb09f42e898ebea04ae9daa6c925e86bed4bbbf2b34"
+    },
+    {
+      "record": "results/m2-build/m2-build-memory_subject_preference-s02-1b9ab1.json",
+      "record_sha256": "e295e833067fbc6dd26ef74a2789c678cdf820e803575ad338481a7e8c909853",
+      "trace_sha256": "7daaff30c6355a802c4ec809f00c6ad18f9aa9d49e9ea6912dadc3519147d687"
+    },
+    {
+      "record": "results/m2-build/m2-build-memory_subject_preference-s03-39d322.json",
+      "record_sha256": "a8da9f21ddd75a72a347ed20251ea55f3a9492c97cf87ae199389a17d2860690",
+      "trace_sha256": "c3e1ac108cb02fe7b62ecde83341cc81e3cb58d0031233350b8b0a1eeb54c4a7"
+    },
+    {
+      "record": "results/m2-build/m2-build-messy_file_semicolon-s01-f87ce8.json",
+      "record_sha256": "b8074a581a5e6f478804b0ded9b38f8a255d9c915a3157c990e558d61b376f9c",
+      "trace_sha256": "5f375e69d87979af518be661ab13a48dd1581e768b6462a94e424ba8b42c0b2a"
+    },
+    {
+      "record": "results/m2-build/m2-build-messy_file_semicolon-s02-54eb86.json",
+      "record_sha256": "15650e3e055b6446b19a8468e41803503c1bdad64f9acdff7acf2237a70ea2fa",
+      "trace_sha256": "098bc909b00d3dea055fa8b487327ceb1e01a61e1d5526e1a334dd30cbce720f"
+    },
+    {
+      "record": "results/m2-build/m2-build-messy_file_semicolon-s03-823681.json",
+      "record_sha256": "6e850704763d2dde7809ab8ae255ae8a8d9bb6ccd631af41561a3b351f991d47",
+      "trace_sha256": "889cf21220ce38184cd4826ecb099e7a2593605d7a2fdb33beaec9debce0a88a"
+    },
+    {
+      "record": "results/m2-build/m2-build-out_of_scope_margins-s01-9a0522.json",
+      "record_sha256": "00ad844b03994127bc70c2044578b4c35b69877a9b17dece335e4ad40c1c0920",
+      "trace_sha256": "d939985c89cf9d77f238cb13e50ed3febb604a8f25cfeb448ba98f4723f0b547"
+    },
+    {
+      "record": "results/m2-build/m2-build-out_of_scope_margins-s02-e4dd55.json",
+      "record_sha256": "602ae9d830b45a05058672597f3866ab083aa0167f0d772d9930b0b96f657ad6",
+      "trace_sha256": "d780870e108bd1e298cc7a28bc7fcdf1fa0a2e8c54fda3babf5999100270bc63"
+    },
+    {
+      "record": "results/m2-build/m2-build-out_of_scope_margins-s03-f6c072.json",
+      "record_sha256": "c6127e03527764b90e0daf05a11d32f0be6580799fc399646dad4eff15748a02",
+      "trace_sha256": "ac3151644cb8353e4d927faa260f2507251b5b82fb611d697676b753696e7fdf"
+    },
+    {
+      "record": "results/m2-build/m2-build-outside_units-s01-980c52.json",
+      "record_sha256": "ecf74252d0087013409de781094398a0524ad215ed5dd5f31a4fa7694bf98ad8",
+      "trace_sha256": "a986645d8564a134ac7e3e56023d42494cbd8cc7b63b20eee8b1d6397287eac5"
+    },
+    {
+      "record": "results/m2-build/m2-build-outside_units-s02-a9a120.json",
+      "record_sha256": "da737df3a188f416a4fd44a76abb603da8f1fd4c03d30e4a1706b9ee5dfcaa40",
+      "trace_sha256": "d1ea800497f6e6130157be6a73a2b713535df8810ed1bed774c426edcba57dc5"
+    },
+    {
+      "record": "results/m2-build/m2-build-outside_units-s03-dc141a.json",
+      "record_sha256": "5cf887840a83007ac42494a5325a0b0f59745e43a98ac7d47e1f21963f4a6761",
+      "trace_sha256": "9b40170796537915acf2f101648df1af0a1ecb8cdb893c932514383c3dbadcbb"
+    },
+    {
+      "record": "results/m2-build/m2-build-standard_report_clean-s01-fd0dca.json",
+      "record_sha256": "7eef18012b982f01b63eb0d61242e951138424b5affeb3fcd4beab4a5df07ec7",
+      "trace_sha256": "011d42dbd19d0b2d3a6e22d4d1206b369b2ce436ad3bc8e896b198155b45e665"
+    },
+    {
+      "record": "results/m2-build/m2-build-standard_report_clean-s02-e4ba60.json",
+      "record_sha256": "88259766c07118ec62e48ba84ead9638885b0b801d5a5120f9699779295a2955",
+      "trace_sha256": "dd102b754ffd74d4597985cb8e3a9b18262ccbc06193573b748b4e6f813508e1"
+    },
+    {
+      "record": "results/m2-build/m2-build-standard_report_clean-s03-3f7df5.json",
+      "record_sha256": "f16c4d7c9c977848c77cf182f4c3584dd57e9285abff230af7207e454c9b11ce",
+      "trace_sha256": "8fd97b93bc52582185755b69368574d5d7188c54fcbc607b9a885089020f67a8"
+    },
+    {
+      "record": "results/m2-build/m2-build-status_question_done_work-s01-3cb015.json",
+      "record_sha256": "7bf44251ac3fada72c01f93493897be1b681c47bd5122dfaf1e96d7ed01ac44e",
+      "trace_sha256": "efd2e211c362a49de8084d5e64ff0391c057de9467cf024a464773ad2e0077f2"
+    },
+    {
+      "record": "results/m2-build/m2-build-status_question_done_work-s02-ea527c.json",
+      "record_sha256": "71b3c7297beae1440c6508ee918f3ec79b03d8278adfdd0d85868797abb6b18c",
+      "trace_sha256": "4fbbc00028582bddfde9c5ede990b25cfc2603e2f0fba8e98365689a161c8f19"
+    },
+    {
+      "record": "results/m2-build/m2-build-status_question_done_work-s03-a6cf88.json",
+      "record_sha256": "c7b10cc5eefc2486f443673fb14dd11144e852e3d0045568a2d434fa0de48152",
+      "trace_sha256": "837f449ec775000e25800e564f0a52b266fcbd2024275b9dc126c6a59b8572c7"
+    }
+  ],
+  "build_totals": {
+    "tokens": 676341,
+    "cost_usd": 0.085607,
+    "long_campaign_tokens": 498407,
+    "long_campaign_cost_usd": 0.061946,
+    "long_campaign_token_share": 0.7369167328315155,
+    "long_campaign_cost_share": 0.723609050661745,
+    "long_campaign_details": [
+      {
+        "run_id": "m2-build-long_campaign-s01-93c2a1",
+        "hold_line": 41,
+        "later_model_calls": 12,
+        "later_denied_calls": 17,
+        "tokens": 170302,
+        "cost_usd": 0.022738,
+        "measures": {
+          "facts_used": 1,
+          "questions_answered": 0,
+          "reports_expected": 4
+        }
+      },
+      {
+        "run_id": "m2-build-long_campaign-s02-332171",
+        "hold_line": 41,
+        "later_model_calls": 12,
+        "later_denied_calls": 16,
+        "tokens": 170091,
+        "cost_usd": 0.02172,
+        "measures": {
+          "facts_used": 1,
+          "questions_answered": 0,
+          "reports_expected": 4
+        }
+      },
+      {
+        "run_id": "m2-build-long_campaign-s03-014c90",
+        "hold_line": 41,
+        "later_model_calls": 11,
+        "later_denied_calls": 14,
+        "tokens": 158014,
+        "cost_usd": 0.017488,
+        "measures": {
+          "facts_used": 1,
+          "questions_answered": 0,
+          "reports_expected": 4
+        }
+      }
+    ]
+  }
+}

@@ -49,14 +49,25 @@ inside the app writes to the simulated local channel.
 
 ## M2 pending work and key-holder runbook
 
-Updated 2026-11-22. The M1 status above is historical. No measured `m2-build` result or
-human approval rate is claimed here. The key was unavailable in the preparation session,
-so no build runs were created. The paid build and human review are deferred to the teammate
-with the key, using the steps below; implementation tests do not substitute for either. Use the final
-published `main` containing the approval fix and single-agent configuration. Keep
-`m2-split` / `m2-split-final` as the separate experiment; do not merge it for this run.
+Updated 2026-11-22. The M1 status above is historical. The measured `m2-build` is committed:
+36 clean-source runs at `8cd2be3`, with 20 task checks passing. Pass 2 has 36 runs per arm
+(21 passes each); `tools.send_after_draft` stays off. Pass 3 has 36 runs per arm at `368d4b0`,
+20 off versus 25 on passing, and keeps `tools.computed_figures` on. Both verdicts are in the
+[ledger](../experiments/LEDGER.md). Human approval rates and reading times still require
+[a person to read and answer the screens](#a-person-reads-and-answers-the-approval-screens).
+Keep `m2-split` / `m2-split-final` as the separate experiment and use published single-agent
+`main` for the console review.
+
+The 36 tracked `dev-myron-live-*` files are retained as historical M1 evidence: M1 cites
+their trace lines and `experiments/evidence/development_manifest.json` identifies the 12 runs.
+This archival exception does not permit committing new development runs. These diagnostics
+are not part of `m2-build` or either improvement pass; use each named arm when recomputing M2.
 
 ### Prepare and freeze the measured build
+
+This procedure records how the completed build was prepared. Do not rerun or replace
+`results/m2-build/`. To inspect it, continue at [Verify and read the build evidence](#verify-and-read-the-build-evidence).
+New improvement arms must follow their own published prediction and source-freeze requirements.
 
 Run these commands from the repository root in a terminal. Stop at any failed command.
 Start on `main` with no tracked edits; preserve unrelated untracked files. The pull is
@@ -276,16 +287,22 @@ unset OPENAI_API_KEY M2_BUILD_COMMIT
 
 ### Remaining team work
 
-Myron owns the **two improvement passes** selected from the observed first failures. Each
-needs its ledger prediction committed **and pushed before either arm starts**, two complete
-three-sweep arms differing only in the planned treatment, and an honest verdict (including
-negative results). A prediction still under `docs/drafts/` is not preregistration. These
-steps require the team's explicit git publication authorization; this runbook does not
-perform them or claim they are done. Read and apply `PLAN_M2.md` P4–P5 and the ledger template
-when the actual failure evidence is available; do not choose the treatments in advance.
+Myron owns the **two improvement passes** selected from the observed first failures.
+Both passes are recorded: Pass 2 keeps `tools.send_after_draft` off and Pass 3 keeps
+`tools.computed_figures` on. Their predictions, all four three-sweep arms and verdicts are
+published. Any future pass must keep its source revision fixed across both arms and publish
+its prediction before either arm starts; a draft under `docs/drafts/` is not preregistration.
+Publication requires the team's explicit authorization.
 
 The final team review must fill measured placeholders in M2, reconcile every number to raw
 evidence, rerun required tests/checks, confirm the preserved split reference, and finish the
 README/ledger/submission status. The final `m2` tag and Canvas submission/receipt remain
 pending team tasks. M1's published tag and its Canvas note above do not establish M2 release
 or submission.
+
+The 2026-11-22 final-review check also found three historical derived files to refresh:
+`baseline_summary.json`, `pass1_summary.json` and `pass1_failures.json` under
+`experiments/evidence/`. `python -m experiments.analysis.recompute --check` reports them
+stale because the current readers add `m2` metrics and `control_events`; comparison with
+fresh output found no changes to existing values. Regenerate and review these derived
+files during F2, preserving every raw run and trace.

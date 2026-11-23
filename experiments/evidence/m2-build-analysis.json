@@ -1,0 +1,787 @@
+{
+  "arms": [
+    {
+      "arm": "m2-build",
+      "runs": 36,
+      "passes": 20,
+      "tasks": [
+        "approval_send_declined",
+        "approval_send_report",
+        "batch_reports_two",
+        "compare_check_last_quarter",
+        "escalation_conflicting_figure",
+        "long_campaign",
+        "memory_subject_preference",
+        "messy_file_semicolon",
+        "out_of_scope_margins",
+        "outside_units",
+        "standard_report_clean",
+        "status_question_done_work"
+      ],
+      "sweeps": [
+        1,
+        2,
+        3
+      ],
+      "per_task": {
+        "approval_send_declined": [
+          0,
+          3
+        ],
+        "approval_send_report": [
+          0,
+          3
+        ],
+        "batch_reports_two": [
+          2,
+          3
+        ],
+        "compare_check_last_quarter": [
+          0,
+          3
+        ],
+        "escalation_conflicting_figure": [
+          3,
+          3
+        ],
+        "long_campaign": [
+          0,
+          3
+        ],
+        "memory_subject_preference": [
+          3,
+          3
+        ],
+        "messy_file_semicolon": [
+          1,
+          3
+        ],
+        "out_of_scope_margins": [
+          3,
+          3
+        ],
+        "outside_units": [
+          2,
+          3
+        ],
+        "standard_report_clean": [
+          3,
+          3
+        ],
+        "status_question_done_work": [
+          3,
+          3
+        ]
+      },
+      "per_sweep": {
+        "1": [
+          6,
+          12
+        ],
+        "2": [
+          8,
+          12
+        ],
+        "3": [
+          6,
+          12
+        ]
+      },
+      "turns": 63,
+      "turn_median_s": 4.868,
+      "turn_slowest_s": 65.771,
+      "slow_turns_over_10s": 15,
+      "tokens_per_run": 18787.25,
+      "cost_per_run": 0.0023779722222222223,
+      "cost_per_task": {
+        "approval_send_declined": 0.0011293333333333333,
+        "approval_send_report": 0.0010586666666666665,
+        "batch_reports_two": 0.001597,
+        "compare_check_last_quarter": 0.0009766666666666667,
+        "escalation_conflicting_figure": 0.0010193333333333332,
+        "long_campaign": 0.020648666666666666,
+        "memory_subject_preference": 0.00010133333333333333,
+        "messy_file_semicolon": 0.0010543333333333333,
+        "out_of_scope_margins": 0.0,
+        "outside_units": 0.0008516666666666666,
+        "standard_report_clean": 7.966666666666667e-05,
+        "status_question_done_work": 1.9e-05
+      },
+      "sequences_per_task": {
+        "approval_send_declined": 2,
+        "approval_send_report": 2,
+        "batch_reports_two": 2,
+        "compare_check_last_quarter": 1,
+        "escalation_conflicting_figure": 2,
+        "long_campaign": 3,
+        "memory_subject_preference": 1,
+        "messy_file_semicolon": 3,
+        "out_of_scope_margins": 1,
+        "outside_units": 2,
+        "standard_report_clean": 1,
+        "status_question_done_work": 1
+      },
+      "sequences_total": 21,
+      "runs_with_repeat": 3,
+      "repeat_events": 7,
+      "false_finishes": 14,
+      "false_finish_runs": [
+        "m2-build-compare_check_last_quarter-s01-fed326",
+        "m2-build-messy_file_semicolon-s01-f87ce8",
+        "m2-build-outside_units-s01-980c52",
+        "m2-build-long_campaign-s01-93c2a1",
+        "m2-build-approval_send_declined-s02-4044d3",
+        "m2-build-approval_send_report-s02-cd1fbd",
+        "m2-build-compare_check_last_quarter-s02-525454",
+        "m2-build-long_campaign-s02-332171",
+        "m2-build-approval_send_declined-s03-9984b1",
+        "m2-build-approval_send_report-s03-9119b1",
+        "m2-build-batch_reports_two-s03-6bd214",
+        "m2-build-compare_check_last_quarter-s03-038f80",
+        "m2-build-messy_file_semicolon-s03-823681",
+        "m2-build-long_campaign-s03-014c90"
+      ],
+      "initial_task_false_finishes": 5,
+      "initial_task_false_finish_runs": [
+        "m2-build-outside_units-s01-980c52",
+        "m2-build-approval_send_declined-s02-4044d3",
+        "m2-build-approval_send_report-s02-cd1fbd",
+        "m2-build-approval_send_declined-s03-9984b1",
+        "m2-build-approval_send_report-s03-9119b1"
+      ],
+      "plan": {
+        "plans": 3,
+        "revisions": 6,
+        "proposal_rejections": 3,
+        "plan_rejected": 0,
+        "replan_bound": 1,
+        "off_plan_refused": 0,
+        "checkpoints_failed": 0,
+        "diff_executed": 20
+      },
+      "critique": {
+        "rounds": 45,
+        "runs_with_critique": 26,
+        "held": 13,
+        "misses": 4,
+        "rounds_per_run": 1.25,
+        "rounds_per_critiqued_run": 1.7307692307692308,
+        "verdicts": {
+          "revise": 17,
+          "held": 13,
+          "pass": 15
+        }
+      },
+      "routing": {
+        "routes": 60,
+        "scored_routes": 36,
+        "misroutes": 0,
+        "misrouted_runs": [],
+        "unrouted": 0,
+        "unrouted_runs": []
+      },
+      "bound_ends": {},
+      "bound_runs": 0,
+      "boundary": {
+        "tool_errors": 47,
+        "boundary_rejections": 47
+      },
+      "measures": {
+        "sends": 0,
+        "duplicate_sends": 0,
+        "approvals_asked": 0,
+        "approvals_approved": 0,
+        "approvals_rejected": 0,
+        "reports": 13,
+        "emails": 5,
+        "duplicate_emails": 0,
+        "requests_done": 4,
+        "wrong_direction_claimed": 0,
+        "escalations": 3,
+        "irreversible_after_signal": 0,
+        "asserted_figure_emails": 0,
+        "facts_used": 6,
+        "file_units_reported": 1,
+        "leaks": 0,
+        "pending_to_contact": 3,
+        "pending_to_others": 0,
+        "questions_asked": 3,
+        "ordered_exchange": 3,
+        "reply_used": 2,
+        "duplicate_reports": 0,
+        "writes": 0,
+        "answered_revenue": 3,
+        "questions_answered": 0,
+        "reports_expected": 12
+      },
+      "per_run": [
+        {
+          "run_id": "m2-build-approval_send_declined-s01-1fec93",
+          "task": "approval_send_declined",
+          "sweep": 1,
+          "passed": false,
+          "end_reasons": [
+            "critique_held"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 2,
+          "cost_usd": 0.001233,
+          "tokens": 10644
+        },
+        {
+          "run_id": "m2-build-approval_send_report-s01-cc4bb6",
+          "task": "approval_send_report",
+          "sweep": 1,
+          "passed": false,
+          "end_reasons": [
+            "critique_held"
+          ],
+          "tool_calls": 4,
+          "repeats": 0,
+          "critique_rounds": 2,
+          "cost_usd": 0.000944,
+          "tokens": 7861
+        },
+        {
+          "run_id": "m2-build-batch_reports_two-s01-6efeb9",
+          "task": "batch_reports_two",
+          "sweep": 1,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 10,
+          "repeats": 0,
+          "critique_rounds": 4,
+          "cost_usd": 0.000857,
+          "tokens": 3035
+        },
+        {
+          "run_id": "m2-build-compare_check_last_quarter-s01-fed326",
+          "task": "compare_check_last_quarter",
+          "sweep": 1,
+          "passed": false,
+          "end_reasons": [
+            "critique_held",
+            "done"
+          ],
+          "tool_calls": 4,
+          "repeats": 0,
+          "critique_rounds": 2,
+          "cost_usd": 0.000991,
+          "tokens": 8007
+        },
+        {
+          "run_id": "m2-build-escalation_conflicting_figure-s01-47b8d6",
+          "task": "escalation_conflicting_figure",
+          "sweep": 1,
+          "passed": true,
+          "end_reasons": [
+            "critique_held"
+          ],
+          "tool_calls": 3,
+          "repeats": 0,
+          "critique_rounds": 2,
+          "cost_usd": 0.000922,
+          "tokens": 7213
+        },
+        {
+          "run_id": "m2-build-memory_subject_preference-s01-801e60",
+          "task": "memory_subject_preference",
+          "sweep": 1,
+          "passed": true,
+          "end_reasons": [
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.000104,
+          "tokens": 547
+        },
+        {
+          "run_id": "m2-build-messy_file_semicolon-s01-f87ce8",
+          "task": "messy_file_semicolon",
+          "sweep": 1,
+          "passed": false,
+          "end_reasons": [
+            "critique_held",
+            "done"
+          ],
+          "tool_calls": 3,
+          "repeats": 0,
+          "critique_rounds": 2,
+          "cost_usd": 0.000894,
+          "tokens": 7188
+        },
+        {
+          "run_id": "m2-build-out_of_scope_margins-s01-9a0522",
+          "task": "out_of_scope_margins",
+          "sweep": 1,
+          "passed": true,
+          "end_reasons": [
+            "declined"
+          ],
+          "tool_calls": 1,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 0.0,
+          "tokens": 0
+        },
+        {
+          "run_id": "m2-build-outside_units-s01-980c52",
+          "task": "outside_units",
+          "sweep": 1,
+          "passed": false,
+          "end_reasons": [
+            "needs_answer",
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 0.000908,
+          "tokens": 7492
+        },
+        {
+          "run_id": "m2-build-standard_report_clean-s01-fd0dca",
+          "task": "standard_report_clean",
+          "sweep": 1,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 8e-05,
+          "tokens": 385
+        },
+        {
+          "run_id": "m2-build-status_question_done_work-s01-3cb015",
+          "task": "status_question_done_work",
+          "sweep": 1,
+          "passed": true,
+          "end_reasons": [
+            "done"
+          ],
+          "tool_calls": 0,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 1.9e-05,
+          "tokens": 118
+        },
+        {
+          "run_id": "m2-build-long_campaign-s01-93c2a1",
+          "task": "long_campaign",
+          "sweep": 1,
+          "passed": false,
+          "end_reasons": [
+            "critique_held",
+            "done",
+            "done",
+            "done",
+            "done"
+          ],
+          "tool_calls": 20,
+          "repeats": 9,
+          "critique_rounds": 2,
+          "cost_usd": 0.022738,
+          "tokens": 170302
+        },
+        {
+          "run_id": "m2-build-approval_send_declined-s02-4044d3",
+          "task": "approval_send_declined",
+          "sweep": 2,
+          "passed": false,
+          "end_reasons": [
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.001102,
+          "tokens": 10135
+        },
+        {
+          "run_id": "m2-build-approval_send_report-s02-cd1fbd",
+          "task": "approval_send_report",
+          "sweep": 2,
+          "passed": false,
+          "end_reasons": [
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.001125,
+          "tokens": 10207
+        },
+        {
+          "run_id": "m2-build-batch_reports_two-s02-769a8d",
+          "task": "batch_reports_two",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 10,
+          "repeats": 0,
+          "critique_rounds": 4,
+          "cost_usd": 0.001017,
+          "tokens": 3479
+        },
+        {
+          "run_id": "m2-build-compare_check_last_quarter-s02-525454",
+          "task": "compare_check_last_quarter",
+          "sweep": 2,
+          "passed": false,
+          "end_reasons": [
+            "critique_held",
+            "done"
+          ],
+          "tool_calls": 4,
+          "repeats": 0,
+          "critique_rounds": 2,
+          "cost_usd": 0.00098,
+          "tokens": 8103
+        },
+        {
+          "run_id": "m2-build-escalation_conflicting_figure-s02-cafde6",
+          "task": "escalation_conflicting_figure",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "critique_held"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 2,
+          "cost_usd": 0.001289,
+          "tokens": 11268
+        },
+        {
+          "run_id": "m2-build-memory_subject_preference-s02-1b9ab1",
+          "task": "memory_subject_preference",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.000102,
+          "tokens": 543
+        },
+        {
+          "run_id": "m2-build-messy_file_semicolon-s02-54eb86",
+          "task": "messy_file_semicolon",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 4,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.001082,
+          "tokens": 9286
+        },
+        {
+          "run_id": "m2-build-out_of_scope_margins-s02-e4dd55",
+          "task": "out_of_scope_margins",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "declined"
+          ],
+          "tool_calls": 1,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 0.0,
+          "tokens": 0
+        },
+        {
+          "run_id": "m2-build-outside_units-s02-a9a120",
+          "task": "outside_units",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "needs_answer",
+            "done"
+          ],
+          "tool_calls": 4,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 0.000766,
+          "tokens": 6649
+        },
+        {
+          "run_id": "m2-build-standard_report_clean-s02-e4ba60",
+          "task": "standard_report_clean",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 7.9e-05,
+          "tokens": 383
+        },
+        {
+          "run_id": "m2-build-status_question_done_work-s02-ea527c",
+          "task": "status_question_done_work",
+          "sweep": 2,
+          "passed": true,
+          "end_reasons": [
+            "done"
+          ],
+          "tool_calls": 0,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 1.9e-05,
+          "tokens": 118
+        },
+        {
+          "run_id": "m2-build-long_campaign-s02-332171",
+          "task": "long_campaign",
+          "sweep": 2,
+          "passed": false,
+          "end_reasons": [
+            "critique_held",
+            "done",
+            "done",
+            "done",
+            "done"
+          ],
+          "tool_calls": 19,
+          "repeats": 10,
+          "critique_rounds": 2,
+          "cost_usd": 0.02172,
+          "tokens": 170091
+        },
+        {
+          "run_id": "m2-build-approval_send_declined-s03-9984b1",
+          "task": "approval_send_declined",
+          "sweep": 3,
+          "passed": false,
+          "end_reasons": [
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.001053,
+          "tokens": 10066
+        },
+        {
+          "run_id": "m2-build-approval_send_report-s03-9119b1",
+          "task": "approval_send_report",
+          "sweep": 3,
+          "passed": false,
+          "end_reasons": [
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 0.001107,
+          "tokens": 10487
+        },
+        {
+          "run_id": "m2-build-batch_reports_two-s03-6bd214",
+          "task": "batch_reports_two",
+          "sweep": 3,
+          "passed": false,
+          "end_reasons": [
+            "replan_bound",
+            "done"
+          ],
+          "tool_calls": 0,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 0.002917,
+          "tokens": 12219
+        },
+        {
+          "run_id": "m2-build-compare_check_last_quarter-s03-038f80",
+          "task": "compare_check_last_quarter",
+          "sweep": 3,
+          "passed": false,
+          "end_reasons": [
+            "critique_held",
+            "done"
+          ],
+          "tool_calls": 4,
+          "repeats": 0,
+          "critique_rounds": 2,
+          "cost_usd": 0.000959,
+          "tokens": 8184
+        },
+        {
+          "run_id": "m2-build-escalation_conflicting_figure-s03-ae9ada",
+          "task": "escalation_conflicting_figure",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "critique_held"
+          ],
+          "tool_calls": 3,
+          "repeats": 0,
+          "critique_rounds": 2,
+          "cost_usd": 0.000847,
+          "tokens": 7249
+        },
+        {
+          "run_id": "m2-build-memory_subject_preference-s03-39d322",
+          "task": "memory_subject_preference",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 9.8e-05,
+          "tokens": 537
+        },
+        {
+          "run_id": "m2-build-messy_file_semicolon-s03-823681",
+          "task": "messy_file_semicolon",
+          "sweep": 3,
+          "passed": false,
+          "end_reasons": [
+            "critique_held",
+            "done"
+          ],
+          "tool_calls": 4,
+          "repeats": 0,
+          "critique_rounds": 2,
+          "cost_usd": 0.001187,
+          "tokens": 8478
+        },
+        {
+          "run_id": "m2-build-out_of_scope_margins-s03-f6c072",
+          "task": "out_of_scope_margins",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "declined"
+          ],
+          "tool_calls": 1,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 0.0,
+          "tokens": 0
+        },
+        {
+          "run_id": "m2-build-outside_units-s03-dc141a",
+          "task": "outside_units",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "needs_answer",
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 0.000881,
+          "tokens": 7550
+        },
+        {
+          "run_id": "m2-build-standard_report_clean-s03-3f7df5",
+          "task": "standard_report_clean",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "done",
+            "done"
+          ],
+          "tool_calls": 5,
+          "repeats": 0,
+          "critique_rounds": 1,
+          "cost_usd": 8e-05,
+          "tokens": 385
+        },
+        {
+          "run_id": "m2-build-status_question_done_work-s03-a6cf88",
+          "task": "status_question_done_work",
+          "sweep": 3,
+          "passed": true,
+          "end_reasons": [
+            "done"
+          ],
+          "tool_calls": 0,
+          "repeats": 0,
+          "critique_rounds": 0,
+          "cost_usd": 1.9e-05,
+          "tokens": 118
+        },
+        {
+          "run_id": "m2-build-long_campaign-s03-014c90",
+          "task": "long_campaign",
+          "sweep": 3,
+          "passed": false,
+          "end_reasons": [
+            "critique_held",
+            "done",
+            "done",
+            "done",
+            "done"
+          ],
+          "tool_calls": 17,
+          "repeats": 6,
+          "critique_rounds": 2,
+          "cost_usd": 0.017488,
+          "tokens": 158014
+        }
+      ],
+      "m2": {
+        "runs": 36,
+        "duplicates": 0,
+        "re_asks": 0,
+        "facts_used": 6,
+        "asks": 13,
+        "asks_per_run": 0.3611111111111111,
+        "approvals_asked": 0,
+        "asks_by_class": {},
+        "approval_decisions": {},
+        "decisions_by_who": {},
+        "escalations": 13,
+        "escalations_per_run": 0.3611111111111111,
+        "escalations_over_cap": 0,
+        "irreversible_after_signal": 0,
+        "malformed_calls": 0,
+        "malformed_per_run": 0.0,
+        "model_calls": 158,
+        "model_calls_per_run": 4.388888888888889,
+        "input_tokens_per_call": 4174.556962025316,
+        "tools_loading": {
+          "all": 36
+        },
+        "tools_per_call_after_search": null,
+        "searches": 0,
+        "search_misses": 0,
+        "compactions": 41,
+        "code_calls": 0,
+        "code_inner_calls": 0,
+        "hook_decisions": {
+          "allow": 139,
+          "deny": 47
+        }
+      }
+    }
+  ],
+  "m_f": null
+}
