@@ -47,9 +47,9 @@ the post-measurement switch settings. Follow the [source checks](docs/submission
 
 The passes' predictions, results and verdicts are in `experiments/LEDGER.md` (Pass 2, Pass 3) and
 `docs/milestones/M2.md` Part 4. `tasks/` alone omits the long session. Scripted task approvals do not
-measure human review; no session answered by a person was recorded. Follow the
-[human-review procedure](docs/submission.md#a-person-reads-and-answers-the-approval-screens) for that
-remaining measurement. `make serve` preserves the app's
+measure human review. One console recording (2026-11-22, `traces/s-20261122-*.jsonl`) has a person
+answer two send approvals; it is too small for a rate. Follow the
+[human-review procedure](docs/submission.md#a-person-reads-and-answers-the-approval-screens) for a larger one. `make serve` preserves the app's
 state; `make app` resets it. On Windows set `PYTHONUTF8=1` and `git config core.longpaths true` first.
 
 **Windows startup, preserving existing data:** activate your virtual environment, then set
