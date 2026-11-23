@@ -241,6 +241,41 @@ def _local_retryable(exc: Exception) -> bool:
     return isinstance(exc, sqlite3.OperationalError) and "locked" in str(exc).casefold()
 
 
+COMPARISON_FIGURES = ("previous_period", "previous_total_revenue", "revenue_change")
+
+
+def computed_figures(request: dict, kind: str, figures: dict) -> dict:
+    """Pass 3 (tools.computed_figures, myron): the report's database figures, computed by code.
+
+    total_revenue and total_units are the request's own distributor in figures.period; for a comparison (the
+    kind, a comparison figure the caller gave, or a question that asks for one) also previous_period,
+    previous_total_revenue and revenue_change. Any value the caller gave for these is replaced. Every other
+    figure (file_total_units, chart_id, ...) is kept as given. Same sandbox reads as the critique's check."""
+    from sandbox.report_validation import comparison_requested
+    period = str(figures["period"])
+    now = sales.distributor_sales(request["distributor_id"], period)
+    out = dict(figures, total_revenue=now["total_revenue"], total_units=now["total_units"])
+    if (kind == "comparison" or any(k in figures for k in COMPARISON_FIGURES)
+            or comparison_requested(request.get("question") or "")):
+        before_period = sales.previous_period(period)
+        before = sales.distributor_sales(request["distributor_id"], before_period)["total_revenue"]
+        out.update(previous_period=before_period, previous_total_revenue=before,
+                   revenue_change=round(now["total_revenue"] - before, 2))
+    return out
+
+
+def _computing_figures(remote_fn, request_id: str | None):
+    """Pass 3 seam in build(): the registry's save_report fn, with the figures computed before the call
+    reaches the server. It runs in the registry's process, which has the run's switches (the server's run
+    scope has none), after the hook and before the server writes. The key is unchanged: it covers kind and
+    figures.period only, and computed_figures keeps both."""
+    def fn(**kwargs):
+        kwargs["figures"] = computed_figures(_request(request_id), kwargs["kind"], kwargs["figures"])
+        return remote_fn(**kwargs)
+    fn.__name__ = getattr(remote_fn, "__name__", "save_report")
+    return fn
+
+
 def _save_report(request_id: str | None, kind: str, figures: dict, body: str,
                  key: str) -> dict:
     request = _request(request_id)
@@ -704,6 +739,11 @@ def build(request_id: str | None = None, use_case: str | None = None) -> Registr
 
     served = [dataclasses.replace(spec, fn=mcp_client.remote(spec.name, request_id, writes=spec.writes))
               for spec in specs(request_id)]
+    if _switch("tools.computed_figures", "off") == "on":
+        # Pass 3 (myron): off stores the figures as the caller gave them; on, code computes the database
+        # figures first. The definitions the model reads are the same in both settings.
+        served = [dataclasses.replace(s, fn=_computing_figures(s.fn, request_id)) if s.name == "save_report"
+                  else s for s in served]
     holder: dict = {}
     if code_calls_on(use_case):
         served.append(_program_spec(holder, request_id))
