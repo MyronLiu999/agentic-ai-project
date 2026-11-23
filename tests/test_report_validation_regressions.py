@@ -194,7 +194,7 @@ class WrongEmailReference(MilestoneModel):
 
 class FullRunValidationRegressionTest(ScratchTest):
     def test_corrupt_report_and_email_mutations_never_complete_successfully(self):
-        # MissingComparison runs with tools.computed_figures=off (edited by myron for Pass 3): with it on, code
+        # MissingComparison runs with tools.computed_figures=off (Pass 3): with it on, code
         # fills the dropped comparison from the database, so the saved report is no longer corrupt. Its on-side
         # behaviour is pinned in tests/test_computed_figures.py. The assertions are unchanged.
         off = ["tools.computed_figures=off"]
